@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mime-info [
+  <!ELEMENT mime-info (mime-type)+>
+  <!ATTLIST mime-info xmlns CDATA #FIXED "http://www.freedesktop.org/standards/shared-mime-info">
+
+  <!ELEMENT mime-type (comment+, (acronym,expanded-acronym)? , (icon? | generic-icon? | glob | magic | treemagic | root-XML | alias | sub-class-of)*)>
+  <!ATTLIST mime-type type CDATA #REQUIRED>
+
+  <!-- a comment describing a document with the respective MIME type. Example: "WMV video" -->
+  <!ELEMENT comment (#PCDATA)>
+  <!ATTLIST comment xml:lang CDATA #IMPLIED>
+
+  <!-- a comment describing the respective unexpanded MIME type acronym. Example: "WMV" -->
+  <!ELEMENT acronym (#PCDATA)>
+  <!ATTLIST acronym xml:lang CDATA #IMPLIED>
+
+  <!-- a comment describing the respective expanded MIME type acronym. Example: "Windows Media Video" -->
+  <!ELEMENT expanded-acronym (#PCDATA)>
+  <!ATTLIST expanded-acronym xml:lang CDATA #IMPLIED>
+
+  <!ELEMENT icon EMPTY>
+  <!ATTLIST icon name CDATA #REQUIRED>
+
+  <!-- a generic icon name as per the Icon Naming Specification, only required if computing
+  it from the mime-type would not work, See "generic-icon" in the Shared Mime Specification -->
+  <!ELEMENT generic-icon EMPTY>
+  <!ATTLIST generic-icon name (application-x-executable|audio-x-generic|folder|font-x-generic|image-x-generic|package-x-generic|text-html|text-x-generic|text-x-generic-template|text-x-script|video-x-generic|x-office-address-book|x-office-calendar|x-office-document|x-office-presentation|x-office-spreadsheet) #REQUIRED>
+
+  <!ELEMENT glob EMPTY>
+  <!ATTLIST glob pattern CDATA #REQUIRED>
+  <!ATTLIST glob weight CDATA "50">
+  <!ATTLIST glob case-sensitive CDATA #IMPLIED>
+
+  <!ELEMENT magic (match)+>
+  <!ATTLIST magic priority CDATA "50">
+
+  <!ELEMENT match (match)*>
+  <!ATTLIST match offset CDATA #REQUIRED>
+  <!ATTLIST match type (string|big16|big32|little16|little32|host16|host32|byte) #REQUIRED>
+  <!ATTLIST match value CDATA #REQUIRED>
+  <!ATTLIST match mask CDATA #IMPLIED>
+
+  <!ELEMENT treemagic (treematch)+>
+  <!ATTLIST treemagic priority CDATA "50">
+
+  <!ELEMENT treematch (treematch)*>
+  <!ATTLIST treematch path CDATA #REQUIRED>
+  <!ATTLIST treematch type (file|directory|link) #IMPLIED>
+  <!ATTLIST treematch match-case (true|false) #IMPLIED>
+  <!ATTLIST treematch executable (true|false) #IMPLIED>
+  <!ATTLIST treematch non-empty (true|false) #IMPLIED>
+  <!ATTLIST treematch mimetype CDATA #IMPLIED>
+
+  <!ELEMENT root-XML EMPTY>
+  <!ATTLIST root-XML namespaceURI CDATA #REQUIRED>
+  <!ATTLIST root-XML localName CDATA #REQUIRED>
+
+  <!ELEMENT alias EMPTY>
+  <!ATTLIST alias type CDATA #REQUIRED>
+
+  <!ELEMENT sub-class-of EMPTY>
+  <!ATTLIST sub-class-of type CDATA #REQUIRED>
+]>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+        <mime-type type="text/css">
+    <comment>CSS stylesheet</comment>
+    <acronym>CSS</acronym>
+    <expanded-acronym>Cascading Style Sheets</expanded-acronym>
+    <sub-class-of type="text/plain"/>
+    <glob pattern="*.css"/>
+  </mime-type>
+  <mime-type type="text/html">
+    <comment>HTML document</comment>
+    <acronym>HTML</acronym>
+    <expanded-acronym>HyperText Markup Language</expanded-acronym>
+    <sub-class-of type="text/plain"/>
+    <magic priority="50">
+      <match value="&lt;!DOCTYPE HTML" type="string" offset="0:256"/>
+      <match value="&lt;!doctype html" type="string" offset="0:256"/>
+      <match value="&lt;HEAD" type="string" offset="0:256"/>
+      <match value="&lt;head" type="string" offset="0:256"/>
+      <match value="&lt;TITLE" type="string" offset="0:256"/>
+      <match value="&lt;title" type="string" offset="0:256"/>
+      <match value="&lt;HTML" type="string" offset="0:256"/>
+      <match value="&lt;html" type="string" offset="0:256"/>
+      <match value="&lt;SCRIPT" type="string" offset="0:256"/>
+      <match value="&lt;script" type="string" offset="0:256"/>
+    </magic>
+    <glob pattern="*.html"/>
+    <glob pattern="*.htm"/>
+  </mime-type>
+  <mime-type type="application/x-php">
+    <comment>PHP script</comment>
+    <comment xml:lang="ar">سكربت PHP</comment>
+    <comment xml:lang="az">PHP skripti</comment>
+    <comment xml:lang="be@latin">Skrypt PHP</comment>
+    <comment xml:lang="bg">Скрипт — PHP</comment>
+    <comment xml:lang="ca">script PHP</comment>
+    <comment xml:lang="cs">skript PHP</comment>
+    <comment xml:lang="cy">Sgript PHP</comment>
+    <comment xml:lang="da">PHP-program</comment>
+    <comment xml:lang="de">PHP-Skript</comment>
+    <comment xml:lang="el">Δέσμη ενεργειών PHP</comment>
+    <comment xml:lang="en_GB">PHP script</comment>
+    <comment xml:lang="eo">PHP-skripto</comment>
+    <comment xml:lang="es">secuencia de órdenes en PHP</comment>
+    <comment xml:lang="eu">PHP script-a</comment>
+    <comment xml:lang="fi">PHP-komentotiedosto</comment>
+    <comment xml:lang="fo">PHP boðrøð</comment>
+    <comment xml:lang="fr">script PHP</comment>
+    <comment xml:lang="ga">script PHP</comment>
+    <comment xml:lang="gl">Script de PHP</comment>
+    <comment xml:lang="he">תסריט מעטפת של PHP</comment>
+    <comment xml:lang="hr">PHP skripta</comment>
+    <comment xml:lang="hu">PHP-parancsfájl</comment>
+    <comment xml:lang="ia">Script PHP</comment>
+    <comment xml:lang="id">Skrip PHP</comment>
+    <comment xml:lang="it">Script PHP</comment>
+    <comment xml:lang="ja">PHP スクリプト</comment>
+    <comment xml:lang="kk">PHP сценарийі</comment>
+    <comment xml:lang="ko">PHP 스크립트</comment>
+    <comment xml:lang="lt">PHP scenarijus</comment>
+    <comment xml:lang="lv">PHP skripts</comment>
+    <comment xml:lang="ms">Skrip PHP</comment>
+    <comment xml:lang="nb">PHP-skript</comment>
+    <comment xml:lang="nl">PHP-script</comment>
+    <comment xml:lang="nn">PHP-skript</comment>
+    <comment xml:lang="oc">escript PHP</comment>
+    <comment xml:lang="pl">Skrypt PHP</comment>
+    <comment xml:lang="pt">script PHP</comment>
+    <comment xml:lang="pt_BR">Script PHP</comment>
+    <comment xml:lang="ro">Script PHP</comment>
+    <comment xml:lang="ru">Сценарий PHP</comment>
+    <comment xml:lang="sk">Skript PHP</comment>
+    <comment xml:lang="sl">Skriptna datoteka PHP</comment>
+    <comment xml:lang="sq">Script PHP</comment>
+    <comment xml:lang="sr">ПХП скрипта</comment>
+    <comment xml:lang="sv">PHP-skript</comment>
+    <comment xml:lang="tr">PHP betiği</comment>
+    <comment xml:lang="uk">скрипт PHP</comment>
+    <comment xml:lang="vi">Văn lệnh PHP</comment>
+    <comment xml:lang="zh_CN">PHP 脚本</comment>
+    <comment xml:lang="zh_TW">PHP 指令稿</comment>
+    <sub-class-of type="text/plain"/>
+    <generic-icon name="text-x-script"/>
+    <magic priority="80">
+      <match value="&lt;?php" type="string" offset="0:64"/>
+    </magic>
+    <glob pattern="*.php"/>
+    <glob pattern="*.php3"/>
+    <glob pattern="*.php4"/>
+    <glob pattern="*.php5"/>
+    <glob pattern="*.phps"/>
+  </mime-type>
+</mime-info>
