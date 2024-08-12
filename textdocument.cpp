@@ -13,7 +13,6 @@
 #include "texteditorconstants.h"
 #include "textindenter.h"
 #include "typingsettings.h"
-#include "core/editormanager.h"
 #include "utils/mimeutils.h"
 #include "utils/textutils.h"
 
@@ -233,39 +232,26 @@ TextDocument::~TextDocument()
 QMap<FilePath, QString> TextDocument::openedTextDocumentContents()
 {
     QMap<FilePath, QString> workingCopy;
-    const QList<IDocument *> documents = DocumentModel::openedDocuments();
-    for (IDocument *document : documents) {
-        auto textEditorDocument = qobject_cast<TextDocument *>(document);
-        if (!textEditorDocument)
-            continue;
-        const FilePath fileName = textEditorDocument->filePath();
-        workingCopy[fileName] = textEditorDocument->plainText();
-    }
+
     return workingCopy;
 }
 
 QMap<FilePath, QTextCodec *> TextDocument::openedTextDocumentEncodings()
 {
     QMap<FilePath, QTextCodec *> workingCopy;
-    const QList<IDocument *> documents = DocumentModel::openedDocuments();
-    for (IDocument *document : documents) {
-        auto textEditorDocument = qobject_cast<TextDocument *>(document);
-        if (!textEditorDocument)
-            continue;
-        const FilePath fileName = textEditorDocument->filePath();
-        workingCopy[fileName] = const_cast<QTextCodec *>(textEditorDocument->codec());
-    }
+
     return workingCopy;
 }
 
 TextDocument *TextDocument::currentTextDocument()
 {
-    return qobject_cast<TextDocument *>(EditorManager::currentDocument());
+    //return qobject_cast<TextDocument *>(EditorManager::currentDocument());
+    return nullptr;
 }
 
 TextDocument *TextDocument::textDocumentForFilePath(const Utils::FilePath &filePath)
 {
-    return qobject_cast<TextDocument *>(DocumentModel::documentForFilePath(filePath));
+    return nullptr;
 }
 
 QString TextDocument::convertToPlainText(const QString &rawText)
@@ -827,7 +813,7 @@ bool TextDocument::reload(QString *errorString, const FilePath &realFilePath)
 
 bool TextDocument::setPlainText(const QString &text)
 {
-    if (text.size() > EditorManager::maxTextFileSize()) {
+    if (text.size() > 10*1024*1024) {
         document()->setPlainText(TextEditorWidget::msgTextTooLarge(text.size()));
         d->resetRevisions();
         document()->setModified(false);

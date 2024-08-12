@@ -61,19 +61,10 @@ add_library(texteditor SHARED
     aggregation/aggregate.h aggregation/aggregate.cpp
 
     core/core_global.h
-    core/ieditor.h core/ieditor.cpp
     core/icontext.h core/icontext.cpp
     core/idocument.h core/idocument.cpp
-    core/ieditorfactory.h core/ieditorfactory.cpp
     core/textdocument.h core/textdocument.cpp
     core/icore.h core/icore.cpp
-    core/editormanager.h core/editormanager.cpp
-    core/documentmodel.h core/documentmodel.cpp
-    core/editorarea.h core/editorarea.cpp
-    core/editorview.h core/editorview.cpp
-    core/actionmanager/actioncontainer.h core/actionmanager/actioncontainer.cpp
-    core/actionmanager/actionmanager.h core/actionmanager/actionmanager.cpp
-    core/actionmanager/command.h core/actionmanager/command.cpp
     core/find/highlightscrollbarcontroller.h core/find/highlightscrollbarcontroller.cpp
     core/find/basetextfind.h core/find/basetextfind.cpp
     core/find/ifindsupport.h core/find/ifindsupport.cpp
@@ -175,7 +166,6 @@ add_library(texteditor SHARED
     displaysettings.h displaysettings.cpp
     marginsettings.h marginsettings.cpp
     fontsettings.h fontsettings.cpp
-    texteditoractionhandler.h texteditoractionhandler.cpp
     autocompleter.h autocompleter.cpp
     basehoverhandler.h basehoverhandler.cpp
     behaviorsettings.h behaviorsettings.cpp

@@ -6,7 +6,6 @@
 #include "textdocument.h"
 
 #include "core/icore.h"
-#include "core/editormanager.h"
 #include "utils/algorithm.h"
 #include "utils/fileutils.h"
 #include "utils/qtcassert.h"
@@ -14,6 +13,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QTextBlock>
+#include <QTextCodec>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QDebug>
@@ -70,7 +70,7 @@ bool RefactoringChanges::createFile(const FilePath &filePath,
 
     // Write the file to disk:
     TextFileFormat format;
-    format.codec = EditorManager::defaultTextCodec();
+    format.codec = QTextCodec::codecForLocale();
     QString error;
     bool saveOk = format.writeFile(filePath, document->toPlainText(), &error);
     delete document;
@@ -100,21 +100,8 @@ TextEditorWidget *RefactoringChanges::openEditor(const FilePath &filePath,
                                                  int line,
                                                  int column)
 {
-    EditorManager::OpenEditorFlags flags = EditorManager::IgnoreNavigationHistory;
-    if (activate)
-        flags |= EditorManager::SwitchSplitIfAlreadyVisible;
-    else
-        flags |= EditorManager::DoNotChangeCurrentEditor;
-    if (line != -1) {
-        // openEditorAt uses a 1-based line and a 0-based column!
-        column -= 1;
-    }
-    IEditor *editor = EditorManager::openEditorAt(Link{filePath, line, column}, Id(), flags);
 
-    if (editor)
-        return TextEditorWidget::fromEditor(editor);
-    else
-        return nullptr;
+    return nullptr;
 }
 
 RefactoringFilePtr RefactoringChanges::file(TextEditorWidget *editor)
@@ -142,12 +129,7 @@ RefactoringFile::RefactoringFile(const FilePath &filePath,
     : m_filePath(filePath)
     , m_data(data)
 {
-    QList<IEditor *> editors = DocumentModel::editorsForFilePath(filePath);
-    if (!editors.isEmpty()) {
-        auto editorWidget = TextEditorWidget::fromEditor(editors.first());
-        if (editorWidget && !editorWidget->isReadOnly())
-            m_editor = editorWidget;
-    }
+
 }
 
 RefactoringFile::~RefactoringFile()
@@ -173,19 +155,7 @@ QTextDocument *RefactoringFile::mutableDocument() const
         return m_editor->document();
     if (!m_document) {
         QString fileContents;
-        if (!m_filePath.isEmpty()) {
-            QString error;
-            QTextCodec *defaultCodec = EditorManager::defaultTextCodec();
-            TextFileFormat::ReadResult result = TextFileFormat::readFile(m_filePath,
-                                                                         defaultCodec,
-                                                                         &fileContents,
-                                                                         &m_textFileFormat,
-                                                                         &error);
-            if (result != TextFileFormat::ReadSuccess) {
-                qWarning() << "Could not read " << m_filePath << ". Error: " << error;
-                m_textFileFormat.codec = nullptr;
-            }
-        }
+
         // always make a QTextDocument to avoid excessive null checks
         m_document = new QTextDocument(fileContents);
     }

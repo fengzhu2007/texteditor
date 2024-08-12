@@ -6,7 +6,7 @@
 #include "displaysettings.h"
 #include "marginsettings.h"
 #include "fontsettings.h"
-#include "texteditoractionhandler.h"
+//#include "texteditoractionhandler.h"
 
 #include "autocompleter.h"
 #include "basehoverhandler.h"
@@ -31,16 +31,10 @@
 #include "texteditorsettings.h"
 //#include "textindenter.h"
 #include "typingsettings.h"
-
 #include "codeassist/assistinterface.h"
 #include "codeassist/codeassistant.h"
-#include "codeassist/completionassistprovider.h"
-#include "codeassist/documentcontentcompletion.h"
-
 #include "aggregation/aggregate.h"
-#include "core/actionmanager/actioncontainer.h"
-#include "core/actionmanager/actionmanager.h"
-#include "core/actionmanager/command.h"
+#include "core/coreconstants.h"
 //#include "core/coreconstants.h"
 
 //#include <coreplugin/dialogs/codecselector.h>
@@ -51,26 +45,18 @@
 
 #include "utils/algorithm.h"
 #include "utils/camelcasecursor.h"
-#include "utils/dropsupport.h"
 #include "utils/executeondestruction.h"
 #include "utils/fadingindicator.h"
 #include "utils/filesearch.h"
-#include "utils/fileutils.h"
-#include "utils/fixedsizeclicklabel.h"
 #include "utils/hostosinfo.h"
 #include "utils/infobar.h"
 #include "utils/mimeutils.h"
-#include "utils/minimizableinfobars.h"
 #include "utils/multitextcursor.h"
 #include "utils/qtcassert.h"
-#include "utils/styledbar.h"
-#include "utils/stylehelper.h"
 #include "utils/textutils.h"
 #include "utils/theme/theme.h"
 #include "utils/tooltip/tooltip.h"
 #include "utils/uncommentselection.h"
-
-
 
 #include "snippets/snippetprovider.h"
 #include "displaysettings.h"
@@ -100,7 +86,7 @@
 #include <QSequentialAnimationGroup>
 #include <QScreen>
 #include <QScrollBar>
-//#include <QShortcut>
+#include <QLabel>
 #include <QStyle>
 #include <QStyleFactory>
 #include <QTextBlock>
@@ -155,47 +141,6 @@ using TransformationMethod = QString(const QString &);
 using ListTransformationMethod = void(QStringList &);
 
 static constexpr char dropProperty[] = "dropProp";
-
-class LineColumnLabel : public FixedSizeClickLabel
-{
-    Q_OBJECT
-public:
-    LineColumnLabel(TextEditorWidget *parent)
-        : FixedSizeClickLabel(parent)
-        , m_editor(parent)
-    {
-        setMaxText(TextEditorWidget::tr("Line: 9999, Col: 999"));
-        connect(m_editor, &QPlainTextEdit::cursorPositionChanged, this, &LineColumnLabel::update);
-        /*connect(this, &FixedSizeClickLabel::clicked, ActionManager::instance(), [this] {
-            emit m_editor->activateEditor(EditorManager::IgnoreNavigationHistory);
-            QMetaObject::invokeMethod(ActionManager::instance(), [] {
-                if (Command *cmd = ActionManager::command(Core::Constants::GOTO)) {
-                    if (QAction *act = cmd->action())
-                        act->trigger();
-                }
-            }, Qt::QueuedConnection);
-        });*/
-    }
-
-private:
-    void update()
-    {
-        const QTextCursor cursor = m_editor->textCursor();
-        const QTextBlock block = cursor.block();
-        const int line = block.blockNumber() + 1;
-        const TabSettings &tabSettings = m_editor->textDocument()->tabSettings();
-        const int column = tabSettings.columnAt(block.text(), cursor.positionInBlock()) + 1;
-        const QString text = TextEditorWidget::tr("Line: %1, Col: %2");
-        setText(text.arg(line).arg(column));
-        const QString toolTipText = TextEditorWidget::tr("Cursor position: %1");
-        setToolTip(toolTipText.arg(QString::number(cursor.position())));
-        QFont f = font();
-        f.setItalic(m_editor->multiTextCursor().hasMultipleCursors());
-        setFont(f);
-    }
-
-    TextEditorWidget *m_editor;
-};
 
 class TextEditorAnimator : public QObject
 {
@@ -645,20 +590,9 @@ public:
 
 public:
     TextEditorWidget *q;
-    QWidget *m_toolBarWidget = nullptr;
-    QToolBar *m_toolBar = nullptr;
-    QWidget *m_stretchWidget = nullptr;
-    QAction *m_stretchAction = nullptr;
-    QAction *m_toolbarOutlineAction = nullptr;
-    LineColumnLabel *m_cursorPositionLabel = nullptr;
-    FixedSizeClickLabel *m_fileEncodingLabel = nullptr;
-    QAction *m_fileEncodingLabelAction = nullptr;
     BaseTextFind *m_find = nullptr;
 
-    QComboBox *m_fileLineEnding = nullptr;
-    QAction *m_fileLineEndingAction = nullptr;
-
-    uint m_optionalActionMask = TextEditorActionHandler::None;
+    //uint m_optionalActionMask = TextEditorActionHandler::None;
     bool m_contentsChanged = false;
     bool m_lastCursorChangeWasInteresting = false;
 
@@ -934,34 +868,7 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     m_extraArea = new TextEditExtraArea(q);
     m_extraArea->setMouseTracking(true);
 
-    auto toolBarLayout = new QHBoxLayout;
-    toolBarLayout->setContentsMargins(0, 0, 0, 0);
-    toolBarLayout->setSpacing(0);
-    m_toolBarWidget = new Utils::StyledBar;
-    m_toolBarWidget->setLayout(toolBarLayout);
-    m_stretchWidget = new QWidget;
-    m_stretchWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    m_toolBar = new QToolBar;
-    m_toolBar->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
-    m_stretchAction = m_toolBar->addWidget(m_stretchWidget);
-    m_toolBarWidget->layout()->addWidget(m_toolBar);
 
-    m_cursorPositionLabel = new LineColumnLabel(q);
-    const int spacing = q->style()->pixelMetric(QStyle::PM_LayoutHorizontalSpacing) / 2;
-    m_cursorPositionLabel->setContentsMargins(spacing, 0, spacing, 0);
-    m_toolBarWidget->layout()->addWidget(m_cursorPositionLabel);
-
-    m_fileLineEnding = new QComboBox();
-    m_fileLineEnding->addItems(ExtraEncodingSettings::lineTerminationModeNames());
-    m_fileLineEnding->setContentsMargins(spacing, 0, spacing, 0);
-    m_fileLineEndingAction = m_toolBar->addWidget(m_fileLineEnding);
-    updateFileLineEndingVisible();
-    connect(q, &TextEditorWidget::readOnlyChanged,
-            this, &TextEditorWidgetPrivate::updateFileLineEndingVisible);
-
-    m_fileEncodingLabel = new FixedSizeClickLabel;
-    m_fileEncodingLabel->setContentsMargins(spacing, 0, spacing, 0);
-    m_fileEncodingLabelAction = m_toolBar->addWidget(m_fileEncodingLabel);
 
     m_extraSelections.reserve(NExtraSelectionKinds);
 
@@ -1002,11 +909,6 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     connect(&m_delayedUpdateTimer, &QTimer::timeout,
             q->viewport(), QOverload<>::of(&QWidget::update));
 
-    connect(m_fileEncodingLabel, &FixedSizeClickLabel::clicked,
-            q, &TextEditorWidget::selectEncoding);
-
-    //connect(m_fileLineEnding, &QComboBox::currentIndexChanged,
-    //        q, &TextEditorWidget::selectLineEnding);
 
     TextEditorSettings *settings = TextEditorSettings::instance();
 
@@ -1040,7 +942,7 @@ TextEditorWidgetPrivate::~TextEditorWidgetPrivate()
     m_document.data()->disconnect(this);
     q->disconnect(documentLayout);
     q->disconnect(this);
-    delete m_toolBarWidget;
+    //delete m_toolBarWidget;
     delete m_highlightScrollBarController;
 }
 
@@ -1560,13 +1462,13 @@ void TextEditorWidget::selectLineEnding(int index)
 
 void TextEditorWidget::updateTextLineEndingLabel()
 {
-    d->m_fileLineEnding->setCurrentIndex(d->m_document->lineTerminationMode());
+    //d->m_fileLineEnding->setCurrentIndex(d->m_document->lineTerminationMode());
 }
 
 void TextEditorWidget::updateTextCodecLabel()
 {
     QString text = QString::fromLatin1(d->m_document->codec()->name());
-    d->m_fileEncodingLabel->setText(text, text);
+    //d->m_fileEncodingLabel->setText(text, text);
 }
 
 QString TextEditorWidget::msgTextTooLarge(quint64 size)
@@ -1765,18 +1667,6 @@ TextDocumentPtr TextEditorWidget::textDocumentPtr() const
     return d->m_document;
 }
 
-TextEditorWidget *TextEditorWidget::currentTextEditorWidget()
-{
-    //return fromEditor(EditorManager::currentEditor());
-    return nullptr;
-}
-
-TextEditorWidget *TextEditorWidget::fromEditor(const IEditor *editor)
-{
-    if (editor)
-        return Aggregation::query<TextEditorWidget>(editor->widget());
-    return nullptr;
-}
 
 void TextEditorWidgetPrivate::editorContentsChange(int position, int charsRemoved, int charsAdded)
 {
@@ -3335,7 +3225,7 @@ void TextEditorWidgetPrivate::updateCodeFoldingVisible()
 
 void TextEditorWidgetPrivate::updateFileLineEndingVisible()
 {
-    m_fileLineEndingAction->setVisible(m_displaySettings.m_displayFileLineEnding && !q->isReadOnly());
+    //m_fileLineEndingAction->setVisible(m_displaySettings.m_displayFileLineEnding && !q->isReadOnly());
 }
 
 void TextEditorWidgetPrivate::reconfigure()
@@ -5800,27 +5690,7 @@ static void appendMenuActionsFromContext(QMenu *menu, Id menuContextId)
         menu->addAction(action);*/
 }
 
-void TextEditorWidget::showDefaultContextMenu(QContextMenuEvent *e, Id menuContextId)
-{
-    QMenu menu;
-    if (menuContextId.isValid())
-        appendMenuActionsFromContext(&menu, menuContextId);
-    appendStandardContextMenuActions(&menu);
-    qDebug()<<"menu:showDefaultContextMenu";
-    menu.exec(e->globalPos());
-}
 
-void TextEditorWidget::addHoverHandler(BaseHoverHandler *handler)
-{
-    if (!d->m_hoverHandlers.contains(handler))
-        d->m_hoverHandlers.append(handler);
-}
-
-void TextEditorWidget::removeHoverHandler(BaseHoverHandler *handler)
-{
-    d->m_hoverHandlers.removeAll(handler);
-    d->m_hoverHandlerRunner.handlerRemoved(handler);
-}
 
 #ifdef WITH_TESTS
 void TextEditorWidget::processTooltipRequest(const QTextCursor &c)
@@ -7512,7 +7382,7 @@ void TextEditorWidget::setDisplaySettings(const DisplaySettings &ds)
     setRevisionsVisible(ds.m_markTextChanges);
     setCenterOnScroll(ds.m_centerCursorOnScroll);
     setParenthesesMatchingEnabled(ds.m_highlightMatchingParentheses);
-    d->m_fileEncodingLabelAction->setVisible(ds.m_displayFileEncoding);
+    //d->m_fileEncodingLabelAction->setVisible(ds.m_displayFileEncoding);
 
     const QTextOption::Flags currentOptionFlags = document()->defaultTextOption().flags();
     QTextOption::Flags optionFlags = currentOptionFlags;
@@ -8045,106 +7915,8 @@ void TextEditorWidget::setupFallBackEditor(Id id)
     setTextDocument(doc);
 }
 
-void TextEditorWidget::appendStandardContextMenuActions(QMenu *menu)
-{
-    if (optionalActions() & TextEditorActionHandler::FindUsage) {
-        const auto findUsage = ActionManager::command(Constants::FIND_USAGES)->action();
-        if (!menu->actions().contains(findUsage))
-            menu->addAction(findUsage);
-    }
-
-    menu->addSeparator();
-    appendMenuActionsFromContext(menu, Constants::M_STANDARDCONTEXTMENU);
-
-    /*if (Command *bomCmd = ActionManager::command(Constants::SWITCH_UTF8BOM)) {
-        QAction *a = bomCmd->action();
-        TextDocument *doc = textDocument();
-        if (doc->codec()->name() == QByteArray("UTF-8") && doc->supportsUtf8Bom()) {
-            a->setVisible(true);
-            a->setText(doc->format().hasUtf8Bom ? tr("Delete UTF-8 BOM on Save")
-                                                : tr("Add UTF-8 BOM on Save"));
-        } else {
-            a->setVisible(false);
-        }
-    }*/
-}
-
-uint TextEditorWidget::optionalActions()
-{
-    return d->m_optionalActionMask;
-}
-
-void TextEditorWidget::setOptionalActions(uint optionalActionMask)
-{
-    if (d->m_optionalActionMask == optionalActionMask)
-        return;
-    d->m_optionalActionMask = optionalActionMask;
-    emit optionalActionMaskChanged();
-}
-
-void TextEditorWidget::addOptionalActions( uint optionalActionMask)
-{
-    setOptionalActions(d->m_optionalActionMask | optionalActionMask);
-}
 
 
-QAction * TextEditorWidget::insertExtraToolBarWidget(TextEditorWidget::Side side,
-                                                     QWidget *widget)
-{
-    if (widget->sizePolicy().horizontalPolicy() & QSizePolicy::ExpandFlag)
-        d->m_stretchAction->setVisible(false);
-
-    if (side == Left) {
-        QAction *before = Utils::findOr(d->m_toolBar->actions(),
-                                        d->m_fileEncodingLabelAction,
-                                        [this](QAction *action) {
-                                            return d->m_toolBar->widgetForAction(action) != nullptr;
-                                        });
-        return d->m_toolBar->insertWidget(before, widget);
-    } else {
-        return d->m_toolBar->insertWidget(d->m_fileEncodingLabelAction, widget);
-    }
-}
-
-void TextEditorWidget::setToolbarOutline(QWidget *widget)
-{
-    if (d->m_toolbarOutlineAction) {
-        if (d->m_toolBar->widgetForAction(d->m_toolbarOutlineAction) == widget)
-            return;
-        d->m_toolBar->removeAction(d->m_toolbarOutlineAction);
-        delete d->m_toolbarOutlineAction;
-        d->m_toolbarOutlineAction = nullptr;
-    } else if (!widget) {
-        return;
-    }
-
-    if (widget) {
-        if (widget->sizePolicy().horizontalPolicy() & QSizePolicy::ExpandFlag)
-            d->m_stretchAction->setVisible(false);
-
-        d->m_toolbarOutlineAction = d->m_toolBar->insertWidget(d->m_stretchAction, widget);
-    } else {
-        // check for a widget with an expanding size policy otherwise re-enable the stretcher
-        for (auto action : d->m_toolBar->actions()) {
-            if (QWidget *toolbarWidget = d->m_toolBar->widgetForAction(action)) {
-                if (toolbarWidget->isVisible()
-                    && toolbarWidget->sizePolicy().horizontalPolicy() & QSizePolicy::ExpandFlag) {
-                    d->m_stretchAction->setVisible(false);
-                    return;
-                }
-            }
-        }
-        d->m_stretchAction->setVisible(true);
-    }
-
-    emit toolbarOutlineChanged(widget);
-}
-
-const QWidget *TextEditorWidget::toolbarOutlineWidget()
-{
-    return d->m_toolbarOutlineAction ? d->m_toolBar->widgetForAction(d->m_toolbarOutlineAction)
-                                     : nullptr;
-}
 
 void TextEditorWidget::keepAutoCompletionHighlight(bool keepHighlight)
 {
@@ -8184,10 +7956,6 @@ void TextEditorWidget::setCursorPosition(int pos)
     setTextCursor(tc);
 }
 
-QToolBar *TextEditorWidget::toolBar()
-{
-    return d->m_toolBar;
-}
 
 
 void TextEditorWidgetPrivate::updateCursorPosition()
@@ -8482,13 +8250,13 @@ void TextEditorWidget::configureGenericHighlighter()
     }
 }
 
-void TextEditorWidget::configureGenericHighlighter(const Utils::MimeType &mimeType)
+/*void TextEditorWidget::configureGenericHighlighter(const Utils::MimeType &mimeType)
 {
     Highlighter::Definitions definitions = Highlighter::definitionsForMimeType(mimeType.name());
     d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition()
                                                          : definitions.first());
     d->removeSyntaxInfoBar();
-}
+}*/
 
 int TextEditorWidget::blockNumberForVisibleRow(int row) const
 {
@@ -8534,57 +8302,8 @@ void TextEditorWidget::setupGenericHighlighter()
             d, &TextEditorWidgetPrivate::reconfigure);
 }
 
-//
-// TextEditorLinkLabel
-//
-TextEditorLinkLabel::TextEditorLinkLabel(QWidget *parent)
-    : Utils::ElidingLabel(parent)
-{
-    setElideMode(Qt::ElideMiddle);
-}
 
-void TextEditorLinkLabel::setLink(Utils::Link link)
-{
-    m_link = link;
-}
 
-Utils::Link TextEditorLinkLabel::link() const
-{
-    return m_link;
-}
-
-void TextEditorLinkLabel::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton)
-        m_dragStartPosition = event->pos();
-}
-
-void TextEditorLinkLabel::mouseMoveEvent(QMouseEvent *event)
-{
-    if (!(event->buttons() & Qt::LeftButton))
-        return;
-    if ((event->pos() - m_dragStartPosition).manhattanLength() < QApplication::startDragDistance())
-        return;
-
-    auto data = new DropMimeData;
-    data->addFile(m_link.targetFilePath, m_link.targetLine, m_link.targetColumn);
-    auto drag = new QDrag(this);
-    //drag->setMimeData(data);
-    //drag->exec(Qt::CopyAction);
-}
-
-void TextEditorLinkLabel::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_UNUSED(event)
-    if (!m_link.hasValidTarget())
-        return;
-
-    //EditorManager::openEditorAt(m_link);
-}
-
-//
-// BaseTextEditorFactory
-//
 
 namespace Internal {
 

@@ -5,7 +5,6 @@
 
 #include "quickfix.h"
 #include "snippets/snippet.h"
-#include "texteditor.h"
 
 #include <QTextCursor>
 

@@ -16,7 +16,6 @@
 #include "texteditor.h"
 #include "texteditorsettings.h"
 #include "completionsettings.h"
-#include "core/editormanager.h"
 //#include <extensionsystem/pluginmanager.h"
 #include "utils/algorithm.h"
 #include "utils/executeondestruction.h"

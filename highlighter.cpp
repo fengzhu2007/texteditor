@@ -9,9 +9,7 @@
 #include "texteditor.h"
 #include "texteditorsettings.h"
 
-//#include <coreplugin/editormanager/documentmodel.h>
-//#include <coreplugin/icore.h>
-//#include <coreplugin/messagemanager.h>
+
 #include "core/icore.h"
 
 #include "utils/mimeutils.h"

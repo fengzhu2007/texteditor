@@ -7,11 +7,10 @@
 #include "textdocument.h"
 #include "texteditor.h"
 
-#include "core/editormanager.h"
 #include "core/icore.h"
 #include "utils/qtcassert.h"
 #include "utils/tooltip/tooltip.h"
-
+#include <QLabel>
 #include <QAction>
 #include <QGridLayout>
 #include <QPainter>
@@ -33,7 +32,6 @@ public:
 private:
     TextMarkRegistry(QObject *parent);
     static TextMarkRegistry* instance();
-    void editorOpened(Core::IEditor *editor);
     void documentRenamed(Core::IDocument *document,
                          const FilePath &oldPath,
                          const FilePath &newPath);
@@ -447,18 +445,7 @@ TextMarkRegistry *TextMarkRegistry::instance()
     return m_instance;
 }
 
-void TextMarkRegistry::editorOpened(IEditor *editor)
-{
-    auto document = qobject_cast<TextDocument *>(editor ? editor->document() : nullptr);
-    if (!document)
-        return;
-    if (!m_marks.contains(document->filePath()))
-        return;
 
-    const QSet<TextMark *> marks = m_marks.value(document->filePath());
-    for (TextMark *mark : marks)
-        document->addMark(mark);
-}
 
 void TextMarkRegistry::documentRenamed(IDocument *document,
                                        const FilePath &oldPath,

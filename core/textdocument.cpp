@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0+ OR GPL-3.0 WITH Qt-GPL-exception-1.0
 
 #include "textdocument.h"
-#include "core/editormanager.h"
 
 #include <QDebug>
 #include <QTextCodec>
@@ -40,8 +39,8 @@ public:
 BaseTextDocument::BaseTextDocument(QObject *parent) :
     IDocument(parent), d(new Internal::TextDocumentPrivate)
 {
-    setCodec(Core::EditorManager::defaultTextCodec());
-    setLineTerminationMode(Core::EditorManager::defaultLineEnding());
+    setCodec(QTextCodec::codecForLocale());
+    setLineTerminationMode(Utils::TextFileFormat::LineTerminationMode::NativeLineTerminator);
 }
 
 BaseTextDocument::~BaseTextDocument()

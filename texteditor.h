@@ -11,20 +11,15 @@
 #include "refactoroverlay.h"
 #include "snippets/snippetparser.h"
 
-/*#include <coreplugin/editormanager/editormanager.h>
-#include <coreplugin/editormanager/ieditor.h>
-#include <coreplugin/editormanager/ieditorfactory.h>
-#include <coreplugin/helpitem.h>*/
 
-#include "core/ieditor.h"
-#include "core/ieditorfactory.h"
+
+//#include "core/ieditor.h"
+//#include "core/ieditorfactory.h"
 #include "core/find/textfindconstants.h"
 
 
-#include "utils/elidinglabel.h"
 #include "utils/link.h"
 #include "utils/multitextcursor.h"
-#include "utils/uncommentselection.h"
 //#include "utils/mimeutils.h"
 
 #include <QPlainTextEdit>
@@ -49,7 +44,6 @@ class BaseTextFind;
 namespace TextEditor {
 class TextDocument;
 class TextMark;
-class BaseHoverHandler;
 class RefactorOverlay;
 class SyntaxHighlighter;
 class AssistInterface;
@@ -118,15 +112,10 @@ public:
     using QPlainTextEdit::cursorRect;
     QRect cursorRect(int pos) const;
     void setCursorPosition(int pos);
-    QToolBar *toolBar();
 
     void print(QPrinter *);
 
-    void appendStandardContextMenuActions(QMenu *menu);
 
-    uint optionalActions();
-    void setOptionalActions(uint optionalActions);
-    void addOptionalActions(uint optionalActions);
 
     void setAutoCompleter(AutoCompleter *autoCompleter);
     AutoCompleter *autoCompleter() const;
@@ -250,10 +239,6 @@ public:
     RefactorMarkers refactorMarkers() const;
     void setRefactorMarkers(const RefactorMarkers &markers);
 
-    enum Side { Left, Right };
-    QAction *insertExtraToolBarWidget(Side side, QWidget *widget);
-    void setToolbarOutline(QWidget* widget);
-    const QWidget *toolbarOutlineWidget();
 
     // keep the auto completion even if the focus is lost
     void keepAutoCompletionHighlight(bool keepHighlight);
@@ -385,7 +370,7 @@ public:
     /// the current document
     void configureGenericHighlighter();
     /// Overwrite the current highlighter with a new generic highlighter based on the given mimetype
-    void configureGenericHighlighter(const Utils::MimeType &mimeType);
+    //void configureGenericHighlighter(const Utils::MimeType &mimeType);
 
     Q_INVOKABLE void inSnippetMode(bool *active); // Used by FakeVim.
 
@@ -406,8 +391,6 @@ public:
 
     Core::HighlightScrollBarController *highlightScrollBarController() const;
 
-    void addHoverHandler(BaseHoverHandler *handler);
-    void removeHoverHandler(BaseHoverHandler *handler);
 
 #ifdef WITH_TESTS
     void processTooltipRequest(const QTextCursor &c);
@@ -474,7 +457,6 @@ protected:
     virtual void triggerPendingUpdates();
     virtual void applyFontSettings();
 
-    void showDefaultContextMenu(QContextMenuEvent *e, Utils::Id menuContextId);
     virtual void finalizeInitialization() {}
     virtual void finalizeInitializationAfterDuplication(TextEditorWidget *) {}
     static QTextCursor flippedCursor(const QTextCursor &cursor);
@@ -502,8 +484,7 @@ public:
 
     Q_INVOKABLE bool inFindScope(const QTextCursor &cursor) const;
 
-    static TextEditorWidget *currentTextEditorWidget();
-    static TextEditorWidget *fromEditor(const Core::IEditor *editor);
+
 
 protected:
     /*!
@@ -560,62 +541,8 @@ private:
     void updateVisualWrapColumn();
 };
 
-class TEXTEDITOR_EXPORT TextEditorLinkLabel : public Utils::ElidingLabel
-{
-public:
-    TextEditorLinkLabel(QWidget *parent = nullptr);
 
-    void setLink(Utils::Link link);
-    Utils::Link link() const;
 
-protected:
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-
-private:
-    QPoint m_dragStartPosition;
-    Utils::Link m_link;
-};
-
-/*class TEXTEDITOR_EXPORT TextEditorFactory : public Core::IEditorFactory
-{
-
-public:
-    TextEditorFactory();
-    ~TextEditorFactory() override;
-
-    using EditorCreator = std::function<BaseTextEditor *()>;
-    using DocumentCreator = std::function<TextDocument *()>;
-    // editor widget must be castable (qobject_cast or Aggregate::query) to TextEditorWidget
-    using EditorWidgetCreator = std::function<QWidget *()>;
-    using SyntaxHighLighterCreator = std::function<SyntaxHighlighter *()>;
-    using IndenterCreator = std::function<Indenter *(QTextDocument *)>;
-    using AutoCompleterCreator = std::function<AutoCompleter *()>;
-
-    void setDocumentCreator(const DocumentCreator &creator);
-    void setEditorWidgetCreator(const EditorWidgetCreator &creator);
-    void setEditorCreator(const EditorCreator &creator);
-    void setIndenterCreator(const IndenterCreator &creator);
-    void setSyntaxHighlighterCreator(const SyntaxHighLighterCreator &creator);
-    void setUseGenericHighlighter(bool enabled);
-    void setAutoCompleterCreator(const AutoCompleterCreator &creator);
-    void setEditorActionHandlers(uint optionalActions);
-
-    void addHoverHandler(BaseHoverHandler *handler);
-    void setCompletionAssistProvider(CompletionAssistProvider *provider);
-
-    void setCommentDefinition(Utils::CommentDefinition definition);
-    void setDuplicatedSupported(bool on);
-    void setMarksVisible(bool on);
-    void setParenthesesMatchingEnabled(bool on);
-    void setCodeFoldingSupported(bool on);
-
-private:
-    friend class BaseTextEditor;
-    friend class PlainTextEditorFactory;
-    Internal::TextEditorFactoryPrivate *d;
-};*/
 
 } // namespace TextEditor
 
