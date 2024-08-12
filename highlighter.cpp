@@ -115,6 +115,13 @@ Highlighter::Definitions Highlighter::definitionsForDocument(const TextDocument 
     // The KSyntaxHighlighting CLI also completely ignores MIME types.
     const FilePath &filePath = document->filePath();
     Definitions definitions = definitionsForFileName(filePath);
+    /*qDebug()<<"Highlighter::definitionsForDocument";
+    for(auto one:definitions){
+        qDebug()<<"name:"<<one.name();
+        for(auto o:one.keywordLists()){
+            qDebug()<<o<<":"<<one.keywordList(o);
+        }
+    }*/
     if (definitions.isEmpty()) {
         // check for *.in filename since those are usually used for
         // cmake configure_file input filenames without the .in extension

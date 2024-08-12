@@ -1634,6 +1634,27 @@ void TextEditorWidget::replaceText(const QString& before,const QString& after,in
         d->m_find->highlightAllRequested(before,findFlags);
     d->m_find->replaceStep(before,after,findFlags);
 }
+
+int TextEditorWidget::replaceAll(const QString& before,const QString& after,int flags){
+    Core::FindFlags findFlags;
+    if((flags & FindBackward)>0){
+        findFlags.setFlag(FindBackward,true);
+    }
+    if((flags & FindCaseSensitively)>0){
+        findFlags.setFlag(FindCaseSensitively,true);
+    }
+    if((flags & FindWholeWords)>0){
+        findFlags.setFlag(FindWholeWords,true);
+    }
+    if((flags & FindRegularExpression)>0){
+        findFlags.setFlag(FindRegularExpression,true);
+    }
+    if((flags & FindPreserveCase)>0){
+        findFlags.setFlag(FindPreserveCase,true);
+    }
+    return d->m_find->replaceAll(before,after,findFlags);
+}
+
 void TextEditorWidget::clearHighlights(){
     d->m_find->clearHighlights();
 }
@@ -7403,9 +7424,13 @@ void TextEditorWidget::showEvent(QShowEvent* e)
     if(d->m_hightlighted==false){
         QTimer::singleShot(0,[this]{
             this->configureGenericHighlighter();
+            //this->setFocus();
+            //this->gotoLine(10);
+
         });
         d->m_hightlighted = true;
     }
+
 }
 
 void TextEditorWidgetPrivate::applyFontSettingsDelayed()
@@ -8449,10 +8474,12 @@ QString TextEditorWidget::textAt(int from, int to) const
 void TextEditorWidget::configureGenericHighlighter()
 {
     Highlighter::Definitions definitions = Highlighter::definitionsForDocument(textDocument());
-    d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition()
-                                                         : definitions.first());
-
+    d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition() : definitions.first());
     d->updateSyntaxInfoBar(definitions, textDocument()->filePath().fileName());
+    //update
+    if(!definitions.isEmpty()){
+        //DocumentContentCompletionProvider keywords functions
+    }
 }
 
 void TextEditorWidget::configureGenericHighlighter(const Utils::MimeType &mimeType)

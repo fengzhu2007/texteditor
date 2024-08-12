@@ -69,8 +69,8 @@ public:
     static int trailingWhitespaces(const QString &text);
     static void removeTrailingWhitespace(QTextCursor cursor, QTextBlock &block);
 
-    TabPolicy m_tabPolicy = SpacesOnlyTabPolicy;
-    int m_tabSize = 8;
+    TabPolicy m_tabPolicy = TabsOnlyTabPolicy;
+    int m_tabSize = 4;
     int m_indentSize = 4;
     ContinuationAlignBehavior m_continuationAlignBehavior = ContinuationAlignWithSpaces;
 

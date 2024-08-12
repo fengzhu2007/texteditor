@@ -137,6 +137,6 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
 void DocumentContentCompletionProcessor::cancel()
 {
-    /*if (running())
-        m_watcher.cancel();*/
+    if (running())
+        m_watcher.cancel();
 }
