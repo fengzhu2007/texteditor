@@ -365,5 +365,11 @@
         <file>resource/styles/solarized-light.xml</file>
         <file>resource/themes/flat-dark.creatortheme</file>
         <file>resource/themes/flat-light.creatortheme</file>
+        <file>resource/icons/Class_16x.svg</file>
+        <file>resource/icons/Constant_16x.svg</file>
+        <file>resource/icons/Field_16x.svg</file>
+        <file>resource/icons/IntelliSenseKeyword_16x.svg</file>
+        <file>resource/icons/LocalVariable_16x.svg</file>
+        <file>resource/icons/Method_16x.svg</file>
     </qresource>
 </RCC>

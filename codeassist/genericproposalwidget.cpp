@@ -573,7 +573,7 @@ bool GenericProposalWidget::eventFilter(QObject *o, QEvent *e)
             }
         }
     } else if (e->type() == QEvent::KeyPress) {
-        qDebug()<<"GenericProposalWidget::eventFilter"<<e;
+        //qDebug()<<"GenericProposalWidget::eventFilter"<<e;
         auto ke = static_cast<QKeyEvent *>(e);
         switch (ke->key()) {
         case Qt::Key_Escape:

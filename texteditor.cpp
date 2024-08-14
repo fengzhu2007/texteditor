@@ -64,6 +64,9 @@
 #include "utils/theme/theme.h"
 #include "utils/theme/theme_p.h"
 
+#include "codeassist/documentcontentcompletion.h"
+#include "qmljsqtstylecodeformatter.h"
+
 #include <QAbstractTextDocumentLayout>
 #include <QApplication>
 #include <QClipboard>
@@ -227,156 +230,6 @@ class BaseTextEditorPrivate
 public:
     BaseTextEditorPrivate() = default;
 
-    TextEditorFactoryPrivate *m_origin = nullptr;
-};
-
-class HoverHandlerRunner
-{
-public:
-    using Callback = std::function<void(TextEditorWidget *, BaseHoverHandler *, int)>;
-
-    HoverHandlerRunner(TextEditorWidget *widget, QList<BaseHoverHandler *> &handlers)
-        : m_widget(widget)
-        , m_handlers(handlers)
-    {
-    }
-
-    ~HoverHandlerRunner() { abortHandlers(); }
-
-    void startChecking(const QTextCursor &textCursor, const Callback &callback)
-    {
-        if (m_handlers.empty())
-            return;
-
-        // Does the last handler still applies?
-        const int documentRevision = textCursor.document()->revision();
-        const int position = Text::wordStartCursor(textCursor).position();
-        if (m_lastHandlerInfo.applies(documentRevision, position)) {
-            callback(m_widget, m_lastHandlerInfo.handler, position);
-            return;
-        }
-
-        if (isCheckRunning(documentRevision, position))
-            return;
-
-        // Update invocation data
-        m_documentRevision = documentRevision;
-        m_position = position;
-        m_callback = callback;
-
-        restart();
-    }
-
-    bool isCheckRunning(int documentRevision, int position) const
-    {
-        return m_currentHandlerIndex >= 0
-            && m_documentRevision == documentRevision
-            && m_position == position;
-    }
-
-    void checkNext()
-    {
-        QTC_ASSERT(m_currentHandlerIndex >= 0, return);
-        QTC_ASSERT(m_currentHandlerIndex < m_handlers.size(), return);
-        BaseHoverHandler *currentHandler = m_handlers[m_currentHandlerIndex];
-
-        currentHandler->checkPriority(m_widget, m_position, [this](int priority) {
-            onHandlerFinished(m_documentRevision, m_position, priority);
-        });
-    }
-
-    void onHandlerFinished(int documentRevision, int position, int priority)
-    {
-        QTC_ASSERT(m_currentHandlerIndex >= 0, return);
-        QTC_ASSERT(m_currentHandlerIndex < m_handlers.size(), return);
-        QTC_ASSERT(documentRevision == m_documentRevision, return);
-        QTC_ASSERT(position == m_position, return);
-
-        BaseHoverHandler *currentHandler = m_handlers[m_currentHandlerIndex];
-        if (priority > m_highestHandlerPriority) {
-            m_highestHandlerPriority = priority;
-            m_bestHandler = currentHandler;
-        }
-
-        // There are more, check next
-        ++m_currentHandlerIndex;
-        if (m_currentHandlerIndex < m_handlers.size()) {
-            checkNext();
-            return;
-        }
-        m_currentHandlerIndex = -1;
-
-        // All were queried, run the best
-        if (m_bestHandler) {
-            m_lastHandlerInfo = LastHandlerInfo(m_bestHandler, m_documentRevision, m_position);
-            m_callback(m_widget, m_bestHandler, m_position);
-        }
-    }
-
-    void handlerRemoved(BaseHoverHandler *handler)
-    {
-        if (m_lastHandlerInfo.handler == handler)
-            m_lastHandlerInfo = LastHandlerInfo();
-        if (m_currentHandlerIndex >= 0)
-            restart();
-    }
-
-    void abortHandlers()
-    {
-        for (BaseHoverHandler *handler : m_handlers)
-            handler->abort();
-        m_currentHandlerIndex = -1;
-    }
-
-private:
-    void restart()
-    {
-        abortHandlers();
-
-        if (m_handlers.empty())
-            return;
-
-        // Re-initialize process data
-        m_currentHandlerIndex = 0;
-        m_bestHandler = nullptr;
-        m_highestHandlerPriority = -1;
-
-        // Start checking
-        checkNext();
-    }
-
-    TextEditorWidget *m_widget;
-    const QList<BaseHoverHandler *> &m_handlers;
-
-    struct LastHandlerInfo {
-        LastHandlerInfo() = default;
-        LastHandlerInfo(BaseHoverHandler *handler, int documentRevision, int cursorPosition)
-            : handler(handler)
-            , documentRevision(documentRevision)
-            , cursorPosition(cursorPosition)
-        {}
-
-        bool applies(int documentRevision, int cursorPosition) const
-        {
-            return handler
-                && documentRevision == this->documentRevision
-                && cursorPosition == this->cursorPosition;
-        }
-
-        BaseHoverHandler *handler = nullptr;
-        int documentRevision = -1;
-        int cursorPosition = -1;
-    } m_lastHandlerInfo;
-
-    // invocation data
-    Callback m_callback;
-    int m_position = -1;
-    int m_documentRevision = -1;
-
-    // processing data
-    int m_currentHandlerIndex = -1;
-    int m_highestHandlerPriority = -1;
-    BaseHoverHandler *m_bestHandler = nullptr;
 };
 
 struct CursorData
@@ -461,7 +314,6 @@ public:
     void handleHomeKey(bool anchor, bool block);
     void handleBackspaceKey();
     void moveLineUpDown(bool up);
-    void copyLineUpDown(bool up);
     void addSelectionNextFindMatch();
     void addCursorsToLineEnds();
     void saveCurrentCursorPositionForNavigation();
@@ -695,8 +547,8 @@ public:
 
     CodeAssistant m_codeAssistant;
 
-    QList<BaseHoverHandler *> m_hoverHandlers; // Not owned
-    HoverHandlerRunner m_hoverHandlerRunner;
+    //QList<BaseHoverHandler *> m_hoverHandlers; // Not owned
+    //HoverHandlerRunner m_hoverHandlerRunner;
 
     QPointer<QSequentialAnimationGroup> m_navigationAnimation;
 
@@ -852,7 +704,7 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     , m_requestMarkEnabled(true)
     , m_lineSeparatorsAllowed(false)
     , m_maybeFakeTooltipEvent(false)
-    , m_hoverHandlerRunner(parent, m_hoverHandlers)
+    //, m_hoverHandlerRunner(parent, m_hoverHandlers)
     , m_clipboardAssistProvider(new ClipboardAssistProvider)
     , m_autoCompleter(new AutoCompleter)
 {
@@ -1960,69 +1812,6 @@ void TextEditorWidget::showContextMenu()
     qGuiApp->postEvent(this, new QContextMenuEvent(QContextMenuEvent::Keyboard, cursorPos));
 }
 
-void TextEditorWidget::copyLineUp()
-{
-    d->copyLineUpDown(true);
-}
-
-void TextEditorWidget::copyLineDown()
-{
-    d->copyLineUpDown(false);
-}
-
-// @todo: Potential reuse of some code around the following functions...
-void TextEditorWidgetPrivate::copyLineUpDown(bool up)
-{
-    if (q->multiTextCursor().hasMultipleCursors())
-        return;
-    QTextCursor cursor = q->textCursor();
-    QTextCursor move = cursor;
-    move.beginEditBlock();
-
-    bool hasSelection = cursor.hasSelection();
-
-    if (hasSelection) {
-        move.setPosition(cursor.selectionStart());
-        move.movePosition(QTextCursor::StartOfBlock);
-        move.setPosition(cursor.selectionEnd(), QTextCursor::KeepAnchor);
-        move.movePosition(move.atBlockStart() ? QTextCursor::Left: QTextCursor::EndOfBlock,
-                          QTextCursor::KeepAnchor);
-    } else {
-        move.movePosition(QTextCursor::StartOfBlock);
-        move.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-    }
-
-    QString text = move.selectedText();
-
-    if (up) {
-        move.setPosition(cursor.selectionStart());
-        move.movePosition(QTextCursor::StartOfBlock);
-        move.insertBlock();
-        move.movePosition(QTextCursor::Left);
-    } else {
-        move.movePosition(QTextCursor::EndOfBlock);
-        if (move.atBlockStart()) {
-            move.movePosition(QTextCursor::NextBlock);
-            move.insertBlock();
-            move.movePosition(QTextCursor::Left);
-        } else {
-            move.insertBlock();
-        }
-    }
-
-    int start = move.position();
-    move.clearSelection();
-    move.insertText(text);
-    int end = move.position();
-
-    move.setPosition(start);
-    move.setPosition(end, QTextCursor::KeepAnchor);
-
-    m_document->autoIndent(move);
-    move.endEditBlock();
-
-    q->setTextCursor(move);
-}
 
 void TextEditorWidget::joinLines()
 {
@@ -2334,7 +2123,6 @@ static inline bool isPrintableText(const QString &text)
 
 void TextEditorWidget::keyPressEvent(QKeyEvent *e)
 {
-    //qDebug()<<"TextEditorWidget::keyPressEvent:"<<e;
     ICore::restartTrimmer();
 
     ExecuteOnDestruction eod([&]() { d->clearBlockSelection(); });
@@ -3493,15 +3281,15 @@ void TextEditorWidgetPrivate::processTooltipRequest(const QTextCursor &c)
     if (handled)
         return;
 
-    if (m_hoverHandlers.isEmpty()) {
+    /*if (m_hoverHandlers.isEmpty()) {
         emit q->tooltipRequested(toolTipPoint, c.position());
         return;
-    }
+    }*/
 
-    const auto callback = [toolTipPoint](TextEditorWidget *widget, BaseHoverHandler *handler, int) {
+    /*const auto callback = [toolTipPoint](TextEditorWidget *widget, BaseHoverHandler *handler, int) {
         handler->showToolTip(widget, toolTipPoint);
-    };
-    m_hoverHandlerRunner.startChecking(c, callback);
+    };*/
+    //m_hoverHandlerRunner.startChecking(c, callback);
 }
 
 bool TextEditorWidgetPrivate::processAnnotaionTooltipRequest(const QTextBlock &block,
@@ -5591,50 +5379,14 @@ void TextEditorWidget::mouseReleaseEvent(QMouseEvent *e)
     QPlainTextEdit::mouseReleaseEvent(e);
 
     d->setClipboardSelection();
-    /*const QTextCursor plainTextEditCursor = textCursor();
+    const QTextCursor plainTextEditCursor = textCursor();
     const QTextCursor multiMainCursor = multiTextCursor().mainCursor();
     if (multiMainCursor.position() != plainTextEditCursor.position()
         || multiMainCursor.anchor() != plainTextEditCursor.anchor()) {
         doSetTextCursor(plainTextEditCursor, true);
-    }*/
-}
-
-void TextEditorWidget::mouseDoubleClickEvent(QMouseEvent *e)
-{
-    if (e->button() == Qt::LeftButton) {
-        QTextCursor cursor = textCursor();
-        const int position = cursor.position();
-        if (TextBlockUserData::findPreviousOpenParenthesis(&cursor, false, true)) {
-            if (position - cursor.position() == 1 && selectBlockUp())
-                return;
-        }
-    }
-
-    QTextCursor eventCursor = cursorForPosition(QPoint(e->pos().x(), e->pos().y()));
-    const int eventDocumentPosition = eventCursor.position();
-
-    QPlainTextEdit::mouseDoubleClickEvent(e);
-
-    // QPlainTextEdit::mouseDoubleClickEvent just selects the word under the text cursor. If the
-    // event is triggered on a position that is inbetween two whitespaces this event selects the
-    // previous word or nothing if the whitespaces are at the block start. Replace this behavior
-    // with selecting the whitespaces starting from the previous word end to the next word.
-    const QChar character = characterAt(eventDocumentPosition);
-    const QChar prevCharacter = characterAt(eventDocumentPosition - 1);
-
-    if (character.isSpace() && prevCharacter.isSpace()) {
-        if (prevCharacter != QChar::ParagraphSeparator) {
-            eventCursor.movePosition(QTextCursor::PreviousWord);
-            eventCursor.movePosition(QTextCursor::EndOfWord);
-        } else if (character == QChar::ParagraphSeparator) {
-            return; // no special handling for empty lines
-        }
-        eventCursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
-        MultiTextCursor cursor = multiTextCursor();
-        cursor.replaceMainCursor(eventCursor);
-        setMultiTextCursor(cursor);
     }
 }
+
 
 void TextEditorWidgetPrivate::setClipboardSelection()
 {
@@ -5642,54 +5394,6 @@ void TextEditorWidgetPrivate::setClipboardSelection()
     if (m_cursors.hasSelection() && clipboard->supportsSelection())
         clipboard->setMimeData(q->createMimeDataFromSelection(), QClipboard::Selection);
 }
-
-void TextEditorWidget::leaveEvent(QEvent *e)
-{
-    // Clear link emulation when the mouse leaves the editor
-    d->clearLink();
-    QPlainTextEdit::leaveEvent(e);
-}
-
-void TextEditorWidget::keyReleaseEvent(QKeyEvent *e)
-{
-    if (e->key() == Qt::Key_Control) {
-        d->clearLink();
-    } else if (e->key() == Qt::Key_Shift
-             && d->m_behaviorSettings.m_constrainHoverTooltips
-             && ToolTip::isVisible()) {
-        ToolTip::hide();
-    } else if (e->key() == Qt::Key_Alt
-               && d->m_maybeFakeTooltipEvent) {
-        d->m_maybeFakeTooltipEvent = false;
-        d->processTooltipRequest(textCursor());
-    }
-
-    QPlainTextEdit::keyReleaseEvent(e);
-}
-
-void TextEditorWidget::dragEnterEvent(QDragEnterEvent *e)
-{
-    // If the drag event contains URLs, we don't want to insert them as text
-    if (e->mimeData()->hasUrls()) {
-        e->ignore();
-        return;
-    }
-
-    QPlainTextEdit::dragEnterEvent(e);
-}
-
-static void appendMenuActionsFromContext(QMenu *menu, Id menuContextId)
-{
-    /*ActionContainer *mcontext = ActionManager::actionContainer(menuContextId);
-    if(mcontext==nullptr)
-        return;
-    QMenu *contextMenu = mcontext->menu();
-
-    const QList<QAction *> actions = contextMenu->actions();
-    for (QAction *action : actions)
-        menu->addAction(action);*/
-}
-
 
 
 #ifdef WITH_TESTS
@@ -6824,7 +6528,7 @@ void TextEditorWidget::focusInEvent(QFocusEvent *e)
 void TextEditorWidget::focusOutEvent(QFocusEvent *e)
 {
     QPlainTextEdit::focusOutEvent(e);
-    d->m_hoverHandlerRunner.abortHandlers();
+    //d->m_hoverHandlerRunner.abortHandlers();
     if (viewport()->cursor().shape() == Qt::BlankCursor)
         viewport()->setCursor(Qt::IBeamCursor);
     d->m_cursorFlashTimer.stop();
@@ -7263,10 +6967,36 @@ void TextEditorWidget::unCommentSelection()
 
 void TextEditorWidget::autoFormat()
 {
-    QTextCursor cursor = textCursor();
+    QTextCursor selection = textCursor();
+    selection.beginEditBlock();
+    QTextDocument *doc = selection.document();
+
+    QTextBlock block = doc->findBlock(selection.selectionStart());
+    const QTextBlock end = doc->findBlock(selection.selectionEnd()).next();
+
+    const TextEditor::TabSettings &tabSettings = d->m_document->tabSettings();
+    QmlJSTools::CreatorCodeFormatter codeFormatter(tabSettings);
+    codeFormatter.updateStateUntil(block);
+    do {
+        int depth = codeFormatter.indentFor(block);
+        if (depth != -1) {
+            if (QStringView(block.text()).trimmed().isEmpty()) {
+                // we do not want to indent empty lines (as one is indentent when pressing tab
+                // assuming that the user will start writing something), and get rid of that
+                // space if one had pressed tab in an empty line just before refactoring.
+                // If depth == -1 (inside a multiline string for example) leave the spaces.
+                depth = 0;
+            }
+            tabSettings.indentLine(block, depth);
+        }
+        codeFormatter.updateLineStateChange(block);
+        block = block.next();
+    } while (block.isValid() && block != end);
+    selection.endEditBlock();
+    /*QTextCursor cursor = textCursor();
     cursor.beginEditBlock();
     d->m_document->autoFormat(cursor);
-    cursor.endEditBlock();
+    cursor.endEditBlock();*/
 }
 
 void TextEditorWidget::encourageApply()
@@ -7965,48 +7695,6 @@ void TextEditorWidgetPrivate::updateCursorPosition()
         q->ensureCursorVisible();
 }
 
-/*void BaseTextEditor::contextHelp(const HelpCallback &callback) const
-{
-    editorWidget()->contextHelpItem(callback);
-}
-
-void BaseTextEditor::setContextHelp(const HelpItem &item)
-{
-    IEditor::setContextHelp(item);
-    editorWidget()->setContextHelpItem(item);
-}
-
-void TextEditorWidget::contextHelpItem(const IContext::HelpCallback &callback)
-{
-    if (!d->m_contextHelpItem.isEmpty()) {
-        callback(d->m_contextHelpItem);
-        return;
-    }
-    const QString fallbackWordUnderCursor = Text::wordUnderCursor(textCursor());
-    if (d->m_hoverHandlers.isEmpty()) {
-        callback(fallbackWordUnderCursor);
-        return;
-    }
-
-    const auto hoverHandlerCallback = [fallbackWordUnderCursor, callback](
-            TextEditorWidget *widget, BaseHoverHandler *handler, int position) {
-        handler->contextHelpId(widget, position,
-                               [fallbackWordUnderCursor, callback](const HelpItem &item) {
-            if (item.isEmpty())
-                callback(fallbackWordUnderCursor);
-            else
-                callback(item);
-        });
-
-    };
-    d->m_hoverHandlerRunner.startChecking(textCursor(), hoverHandlerCallback);
-}
-
-void TextEditorWidget::setContextHelpItem(const HelpItem &item)
-{
-    d->m_contextHelpItem = item;
-}*/
-
 RefactorMarkers TextEditorWidget::refactorMarkers() const
 {
     return d->m_refactorOverlay->markers();
@@ -8245,10 +7933,40 @@ void TextEditorWidget::configureGenericHighlighter()
     d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition() : definitions.first());
     d->updateSyntaxInfoBar(definitions, textDocument()->filePath().fileName());
     //update
+    //qDebug()<<"size:"<<definitions.size();
     if(!definitions.isEmpty()){
-        //DocumentContentCompletionProvider keywords functions
+        const Highlighter::Definition def = definitions.constFirst();
+        const QStringList list = def.keywordLists();
+        //qDebug()<<"list"<<list<<def.name();
+        //auto provider = this->autoco
+        auto provider = static_cast<TextEditor::DocumentContentCompletionProvider*>(d->m_document->completionAssistProvider());
+        //qDebug()<<"provider"<<provider;
+        QStringList keywords;
+        QStringList functions;
+        QStringList classes;
+        QStringList constants;
+        for(auto one:list){
+            auto name = one.toLower();
+            //qDebug()<<"one:"<<one;
+            if(name.contains("function")){
+                //provider->setFunctionList(def.keywordList(one));
+                functions += def.keywordList(one);
+            }else if(name.contains("class") ){
+                classes += def.keywordList(one);
+            }else if(name.contains("keyword") || name.contains("control")){
+                //qDebug()<<"name:"<<name;
+                keywords += def.keywordList(one);
+            }else if(name.contains("constant")){
+                 constants += def.keywordList(one);
+            }
+        }
+        provider->setKeywordList(keywords);
+        provider->setFunctionList(functions);
+        provider->setClassList(classes);
+        provider->setVariableList(constants);
     }
 }
+
 
 /*void TextEditorWidget::configureGenericHighlighter(const Utils::MimeType &mimeType)
 {

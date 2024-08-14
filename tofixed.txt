@@ -1,0 +1,1 @@
+CodeAssistantPrivate::displayProposal  ESC 或者删除后无法再显示自动完成提示  m_abortedBasePosition

@@ -7,6 +7,8 @@
 #include "texteditorconstants.h"
 #include "codeassist/assistproposalitem.h"
 
+#include <QDebug>
+
 using namespace TextEditor;
 using namespace Internal;
 

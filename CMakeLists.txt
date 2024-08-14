@@ -50,7 +50,6 @@ add_library(texteditor SHARED
     codeassist/iassistproposalwidget.cpp codeassist/iassistproposalwidget.h
     codeassist/iassistprovider.cpp codeassist/iassistprovider.h
     codeassist/ifunctionhintproposalmodel.cpp codeassist/ifunctionhintproposalmodel.h
-    codeassist/keywordscompletionassist.cpp codeassist/keywordscompletionassist.h
     codeassist/runner.cpp codeassist/runner.h
     codeassist/textdocumentmanipulator.cpp codeassist/textdocumentmanipulator.h
     codeassist/textdocumentmanipulatorinterface.h
@@ -199,11 +198,14 @@ add_library(texteditor SHARED
     tabsettingswidget.h tabsettingswidget.cpp
     codestyleeditor.h codestyleeditor.cpp
     codestyleselectorwidget.h codestyleselectorwidget.cpp
-    cppqtstyleindenter.h cppqtstyleindenter.cpp
-    cppcodeformatter.h cppcodeformatter.cpp
-    cppcodestylesettings.h cppcodestylesettings.cpp
     javaindenter.h javaindenter.cpp
+    qmljsindenter.h qmljsindenter.cpp
+    qmljsqtstylecodeformatter.h qmljsqtstylecodeformatter.cpp
+    qmljscodeformatter.h qmljscodeformatter.cpp
+    qmljsscanner.h qmljsscanner.cpp
+    qmljsautocompleter.h qmljsautocompleter.cpp
     resource.qrc
+
 
 
 )

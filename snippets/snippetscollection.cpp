@@ -187,7 +187,7 @@ void SnippetsCollection::setSnippetContent(int index,
 int SnippetsCollection::totalActiveSnippets(const QString &groupId) const
 {
     const int group = groupIndex(groupId);
-    qDebug()<<"SnippetsCollection::totalActiveSnippets:"<<groupId<<";i:"<<group<<";total:"<<m_activeSnippetsCount.size();
+    //qDebug()<<"SnippetsCollection::totalActiveSnippets:"<<groupId<<";i:"<<group<<";total:"<<m_activeSnippetsCount.size();
     return m_activeSnippetsCount.at(group);
 }
 

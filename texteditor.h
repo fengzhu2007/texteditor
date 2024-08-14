@@ -55,16 +55,13 @@ using TextMarks = QList<TextMark *>;
 
 namespace Internal {
 class BaseTextEditorPrivate;
-class TextEditorFactoryPrivate;
 class TextEditorWidgetPrivate;
 class TextEditorOverlay;
 }
 
 class AutoCompleter;
 //class BaseTextEditor;
-class TextEditorFactory;
 class TextEditorWidget;
-class PlainTextEditorFactory;
 
 class BehaviorSettings;
 class CompletionSettings;
@@ -336,8 +333,6 @@ public:
     void viewLineUp();
     void viewLineDown();
 
-    void copyLineUp();
-    void copyLineDown();
 
     void joinLines();
 
@@ -432,10 +427,10 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
     void mousePressEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
-    void mouseDoubleClickEvent(QMouseEvent *) override;
-    void leaveEvent(QEvent *) override;
-    void keyReleaseEvent(QKeyEvent *) override;
-    void dragEnterEvent(QDragEnterEvent *e) override;
+    //void mouseDoubleClickEvent(QMouseEvent *) override;
+    //void leaveEvent(QEvent *) override;
+    //void keyReleaseEvent(QKeyEvent *) override;
+    //void dragEnterEvent(QDragEnterEvent *e) override;
 
     QMimeData *createMimeDataFromSelection() const override;
     QMimeData *createMimeDataFromSelection(bool withHtml) const;
@@ -531,9 +526,6 @@ protected:
 
 private:
     Internal::TextEditorWidgetPrivate *d;
-    //friend class BaseTextEditor;
-    //friend class TextEditorFactory;
-    //friend class Internal::TextEditorFactoryPrivate;
     friend class Internal::TextEditorWidgetPrivate;
     friend class Internal::TextEditorOverlay;
     friend class RefactorOverlay;

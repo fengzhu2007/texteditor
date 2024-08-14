@@ -180,7 +180,6 @@ void CodeAssistantPrivate::requestProposal(AssistReason reason,
     Utils::ExecuteOnDestruction earlyReturnContextClear([this] { destroyContext(); });
     if (isWaitingForProposal())
         cancelCurrentRequest();
-
     if (!provider) {
         if (kind == Completion)
             provider = m_editorWidget->textDocument()->completionAssistProvider();
@@ -192,11 +191,9 @@ void CodeAssistantPrivate::requestProposal(AssistReason reason,
         if (!provider)
             return;
     }
-
     AssistInterface *assistInterface = m_editorWidget->createAssistInterface(kind, reason);
     if (!assistInterface)
         return;
-
     // We got an assist provider and interface so no need to reset the current context anymore
     earlyReturnContextClear.reset({});
 
@@ -246,6 +243,7 @@ void CodeAssistantPrivate::requestProposal(AssistReason reason,
             }
             if (processor != m_asyncProcessor)
                 return;
+
             invalidateCurrentRequestData();
             if (processor->needsRestart() && m_receivedContentWhileWaiting) {
                 delete newProposal;
@@ -253,10 +251,12 @@ void CodeAssistantPrivate::requestProposal(AssistReason reason,
                 requestProposal(reason, m_assistKind, m_requestProvider);
             } else {
                 displayProposal(newProposal, reason);
-                if (processor->running())
+                if (processor->running()){
                     m_asyncProcessor = processor;
-                else
+                }else{
                     emit q->finished();
+                }
+
             }
         });
 
@@ -305,18 +305,15 @@ void CodeAssistantPrivate::displayProposal(IAssistProposal *newProposal, AssistR
         && !m_proposalWidget->supportsModelUpdate(proposalCandidate->id())) {
         return;
     }
-
     int basePosition = proposalCandidate->basePosition();
     if (m_editorWidget->position() < basePosition) {
         destroyContext();
         return;
     }
-
     if (m_abortedBasePosition == basePosition && reason != ExplicitlyInvoked) {
         destroyContext();
         return;
     }
-
     const QString prefix = m_editorWidget->textAt(basePosition,
                                                   m_editorWidget->position() - basePosition);
     if (!newProposal->hasItemsToPropose(prefix, reason)) {
@@ -325,7 +322,6 @@ void CodeAssistantPrivate::displayProposal(IAssistProposal *newProposal, AssistR
         destroyContext();
         return;
     }
-
     if (m_proposalWidget
         && basePosition == proposalCandidate->basePosition()
         && m_proposalWidget->supportsModelUpdate(proposalCandidate->id())) {
@@ -335,7 +331,6 @@ void CodeAssistantPrivate::displayProposal(IAssistProposal *newProposal, AssistR
         m_proposalWidget->updateProposal(prefix);
         return;
     }
-
     destroyContext();
 
     clearAbortedPosition();
@@ -540,7 +535,7 @@ void CodeAssistantPrivate::updateFromCompletionSettings(
 void CodeAssistantPrivate::explicitlyAborted()
 {
     QTC_ASSERT(m_proposal, return);
-    m_abortedBasePosition = m_proposal->basePosition();
+    //m_abortedBasePosition = m_proposal->basePosition();
 }
 
 void CodeAssistantPrivate::clearAbortedPosition()

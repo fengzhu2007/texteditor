@@ -174,7 +174,6 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
         skipChars = true;
 
     int skippedChars = 0;
-
     if (isQuote(textToInsert) && m_autoInsertQuotes
             && contextAllowsAutoQuotes(cursor, textToInsert)) {
         autoText = insertMatchingQuote(cursor, textToInsert, lookAhead, skipChars, &skippedChars);
