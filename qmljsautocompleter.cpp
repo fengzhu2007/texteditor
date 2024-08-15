@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0+ OR GPL-3.0 WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qmljsautocompleter.h"
 
@@ -16,7 +16,7 @@ using namespace QmlJS;
 static int blockStartState(const QTextBlock &block)
 {
     int state = block.previous().userState();
-
+    qDebug()<<"blockStartState"<<block.previous().text()<<state;
     if (state == -1)
         return 0;
     else
@@ -31,10 +31,11 @@ static Token tokenUnderCursor(const QTextCursor &cursor)
     Scanner tokenize;
     const QList<Token> tokens = tokenize(blockText, blockState);
     const int pos = cursor.positionInBlock();
-
+    qDebug()<<"token size:"<<tokens.size()<<blockState;
     int tokenIndex = 0;
     for (; tokenIndex < tokens.size(); ++tokenIndex) {
         const Token &token = tokens.at(tokenIndex);
+        qDebug()<<"token item:"<<token.kind<<token.begin()<<token.end();
 
         if (token.is(Token::Comment) || token.is(Token::String)) {
             if (pos > token.begin() && pos <= token.end())
@@ -245,7 +246,6 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,
                                            bool skipChars,
                                            int *skippedChars) const
 {
-    //qDebug()<<"insertMatchingBrace:"<<text;
     if (text.length() != 1)
         return QString();
 

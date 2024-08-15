@@ -204,7 +204,9 @@ add_library(texteditor SHARED
     qmljscodeformatter.h qmljscodeformatter.cpp
     qmljsscanner.h qmljsscanner.cpp
     qmljsautocompleter.h qmljsautocompleter.cpp
+    qmljshighlighter.h qmljshighlighter.cpp
     resource.qrc
+    demo.js
 
 
 

@@ -66,6 +66,7 @@
 
 #include "codeassist/documentcontentcompletion.h"
 #include "qmljsqtstylecodeformatter.h"
+#include "qmljshighlighter.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QApplication>
@@ -2427,7 +2428,6 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
                     && !d->m_autoCompleteHighlightPos.isEmpty()
                     && cursor == d->m_autoCompleteHighlightPos.last();
             autoText = autoCompleter()->autoComplete(cursor, eventText, skipChar);
-            qDebug()<<"autoText:"<<autoText;
         }
         const bool cursorWithinSnippet = d->snippetCheckCursor(cursor);
 
@@ -3077,12 +3077,13 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
 void TextEditorWidgetPrivate::configureGenericHighlighter(
     const KSyntaxHighlighting::Definition &definition)
 {
-    auto highlighter = new Highlighter();
+    //auto highlighter = new Highlighter();
+    auto highlighter = new QmlJSEditor::QmlJSHighlighter();
     m_document->setSyntaxHighlighter(highlighter);
 
     if (definition.isValid()) {
-        highlighter->setDefinition(definition);
-        setupFromDefinition(definition);
+        //highlighter->setDefinition(definition);
+        //setupFromDefinition(definition);
     } else {
         q->setCodeFoldingSupported(false);
     }

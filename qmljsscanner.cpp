@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0+ OR GPL-3.0 WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qmljsscanner.h"
 
@@ -224,6 +224,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
         tokens.append(Token(start, index - start, Token::String));
         setRegexpMayFollow(&_state, false);
     };
+
     if (multiLineState(_state) == MultiLineComment) {
         int start = -1;
         while (index < text.length()) {
@@ -244,6 +245,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 ++index;
             }
         }
+
         if (_scanComments && start != -1)
             tokens.append(Token(start, index - start, Token::Comment));
     } else if (multiLineState(_state) == MultiLineStringDQuote || multiLineState(_state) == MultiLineStringSQuote) {
@@ -310,9 +312,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                     } else {
                         ++index;
                     }
-
                 }
-
                 if (_scanComments)
                     tokens.append(Token(start, index - start, Token::Comment));
             } else if (regexpMayFollow(_state)) {
@@ -452,8 +452,8 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 tokens.append(Token(index, 2, Token::Delimiter));
                 index += 2;
             }else if (la == ch || la == QLatin1Char('?')) {
-                tokens.append(Token(index, 5, Token::Identifier));
-                index += 5;
+                tokens.append(Token(index, 2, Token::Identifier));
+                index += 2;
             } else {
                 tokens.append(Token(index++, 1, Token::Delimiter));
             }
@@ -544,7 +544,7 @@ bool Scanner::isKeyword(const QString &text) const
 
 QStringList Scanner::keywords()
 {
-    static QStringList words = []() {
+    static QStringList words = [] {
         QStringList res;
         for (const QString *word = begin(js_keywords); word != end(js_keywords); ++word)
             res.append(*word);

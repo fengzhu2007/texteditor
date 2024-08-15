@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0+ OR GPL-3.0 WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #pragma once
 
@@ -99,6 +99,7 @@ public: // must be public to make Q_GADGET introspection work
         function_start, // after 'function'
         function_arglist_open, // after '(' starting function argument list
         function_arglist_closed, // after ')' in argument list, expecting '{'
+        function_type_annotated_return, // after ':' expecting a type
 
         binding_or_objectdefinition, // after an identifier
 

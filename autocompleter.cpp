@@ -166,6 +166,7 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
     m_allowSkippingOfBlockEnd = false; // consume blockEnd.
 
     QString autoText = replaceSelection(cursor, textToInsert);
+
     if (!autoText.isEmpty())
         return autoText;
 
@@ -175,6 +176,7 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
     if (m_overwriteClosingChars && (textToInsert == lookAhead))
         skipChars = true;
 
+
     int skippedChars = 0;
     if (isQuote(textToInsert) && m_autoInsertQuotes
             && contextAllowsAutoQuotes(cursor, textToInsert)) {
@@ -183,8 +185,8 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
         if (fixesBracketsError(textToInsert, cursor))
             return QString();
 
-
         autoText = insertMatchingBrace(cursor, textToInsert, lookAhead, skipChars, &skippedChars);
+
 
         if (checkBlockEnd && textToInsert.at(0) == QLatin1Char('}')) {
             if (textToInsert.length() > 1)
