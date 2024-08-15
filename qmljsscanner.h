@@ -30,7 +30,9 @@ public:
         Comma,
         Dot,
         Delimiter,
-        RegExp
+        RegExp,
+        LeftTag,
+        RightTag
     };
 
     inline Token(): offset(0), length(0), kind(EndOfFile) {}

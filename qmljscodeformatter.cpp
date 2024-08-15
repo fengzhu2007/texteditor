@@ -37,19 +37,18 @@ void CodeFormatter::setTabSize(int tabSize)
 void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
 {
     restoreCurrentState(block.previous());
-
     const int lexerState = tokenizeBlock(block);
     m_tokenIndex = 0;
     m_newStates.clear();
-
     //qCDebug(formatterLog) << "Starting to look at " << block.text() << block.blockNumber() + 1;
 
     for (; m_tokenIndex < m_tokens.size(); ) {
         m_currentToken = tokenAt(m_tokenIndex);
         const int kind = extendedTokenKind(m_currentToken);
 
-        //qCDebug(formatterLog) << "Token" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length) << m_tokenIndex << "in line" << block.blockNumber() + 1;
+        //qDebug() << "Token" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length) << m_tokenIndex << "in line" << block.blockNumber() + 1;
         //dump();
+        qDebug()<<block.text()<<"kind"<<kind<<"type"<<state().type;
 
         if (kind == Comment
                 && state().type != multiline_comment_cont
@@ -57,7 +56,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
             m_tokenIndex += 1;
             continue;
         }
-
+        qDebug()<<"m_currentState:"<<m_currentState.top().type;
         switch (m_currentState.top().type) {
         case topmost_intro:
             switch (kind) {
@@ -522,14 +521,13 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
             && (lexerState & Scanner::MultiLineMask) == Scanner::MultiLineComment) {
         enter(multiline_comment_start);
     }
-
+    qDebug()<<"m_indentDepth"<<m_indentDepth;
     saveCurrentState(block);
 }
 
 int CodeFormatter::indentFor(const QTextBlock &block)
 {
 //    qCDebug(formatterLog) << "indenting for" << block.blockNumber() + 1;
-
     restoreCurrentState(block.previous());
     correctIndentation(block);
     return m_indentDepth;
@@ -700,7 +698,6 @@ void CodeFormatter::correctIndentation(const QTextBlock &block)
 {
     tokenizeBlock(block);
     Q_ASSERT(m_currentState.size() >= 1);
-
     const int startLexerState = loadLexerState(block.previous());
     adjustIndent(m_tokens, startLexerState, &m_indentDepth);
 }
@@ -927,7 +924,7 @@ CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const QmlJS::Token &to
 {
     const int kind = token.kind;
     const QStringView text = QStringView(m_currentLine).mid(token.begin(), token.length);
-
+    qDebug()<<"token:"<<text;
     if (kind == Identifier) {
         if (text == QLatin1String("as"))
             return As;
@@ -1021,12 +1018,12 @@ CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const QmlJS::Token &to
 
 void CodeFormatter::dump() const
 {
-    qCDebug(formatterLog) << "Current token index" << m_tokenIndex;
-    qCDebug(formatterLog) << "Current state:";
+    qDebug() << "Current token index" << m_tokenIndex;
+    qDebug() << "Current state:";
     foreach (const State &s, m_currentState) {
-        qCDebug(formatterLog) << stateToString(s.type) << s.savedIndentDepth;
+        qDebug() << stateToString(s.type) << s.savedIndentDepth;
     }
-    qCDebug(formatterLog) << "Current indent depth:" << m_indentDepth;
+    qDebug() << "Current indent depth:" << m_indentDepth;
 }
 
 QString CodeFormatter::stateToString(int type) const

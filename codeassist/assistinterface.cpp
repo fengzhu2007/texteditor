@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0+ OR GPL-3.0 WITH Qt-GPL-exception-1.0
 
 #include "assistinterface.h"
+#include <QDebug>
 
 using namespace TextEditor;
 
@@ -127,6 +128,7 @@ void AssistInterface::recreateTextDocument()
 
     QTC_CHECK(m_textDocument->blockCount() == m_userStates.count());
     QTextBlock block = m_textDocument->firstBlock();
+    qDebug()<<"m_userStates"<<m_userStates;
     for (int i = 0; i < m_userStates.count() && block.isValid(); ++i, block = block.next())
         block.setUserState(m_userStates[i]);
 }

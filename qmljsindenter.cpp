@@ -37,10 +37,8 @@ void Indenter::indentBlock(const QTextBlock &block,
     const int depth = indentFor(block, tabSettings);
     if (depth == -1)
         return;
-
     QmlJSTools::CreatorCodeFormatter codeFormatter(tabSettings);
     codeFormatter.updateStateUntil(block);
-
     if (isElectricCharacter(typedChar)) {
         // only reindent the current line when typing electric characters if the
         // indent is the same it would be if the line were empty
@@ -48,6 +46,7 @@ void Indenter::indentBlock(const QTextBlock &block,
         if (tabSettings.indentationColumn(block.text()) != newlineIndent)
             return;
     }
+
 
     tabSettings.indentLine(block, depth);
 }

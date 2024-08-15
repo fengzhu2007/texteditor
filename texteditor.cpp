@@ -2427,6 +2427,7 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
                     && !d->m_autoCompleteHighlightPos.isEmpty()
                     && cursor == d->m_autoCompleteHighlightPos.last();
             autoText = autoCompleter()->autoComplete(cursor, eventText, skipChar);
+            qDebug()<<"autoText:"<<autoText;
         }
         const bool cursorWithinSnippet = d->snippetCheckCursor(cursor);
 
