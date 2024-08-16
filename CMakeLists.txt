@@ -206,7 +206,10 @@ add_library(texteditor SHARED
     qmljsautocompleter.h qmljsautocompleter.cpp
     qmljshighlighter.h qmljshighlighter.cpp
     resource.qrc
-    demo.js
+    languages/python/pythonhighlighter.cpp languages/python/pythonhighlighter.h languages/python/pythonindenter.cpp languages/python/pythonindenter.h languages/python/pythonscanner.cpp languages/python/pythonscanner.h languages/python/pythonformattoken.h
+
+
+
 
 
 

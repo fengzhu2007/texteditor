@@ -245,7 +245,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 ++index;
             }
         }
-
+        //qDebug()<<"MultiLineCommentMultiLineCommentMultiLineComment";
         if (_scanComments && start != -1)
             tokens.append(Token(start, index - start, Token::Comment));
     } else if (multiLineState(_state) == MultiLineStringDQuote || multiLineState(_state) == MultiLineStringSQuote) {
@@ -452,7 +452,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 tokens.append(Token(index, 2, Token::Delimiter));
                 index += 2;
             }else if (la == ch || la == QLatin1Char('?')) {
-                tokens.append(Token(index, 2, Token::Identifier));
+                tokens.append(Token(index, 2, Token::Keyword));
                 index += 2;
             } else {
                 tokens.append(Token(index++, 1, Token::Delimiter));

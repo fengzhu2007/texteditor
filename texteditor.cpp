@@ -3074,16 +3074,15 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
     infoBar->removeInfo(Constants::INFO_MULTIPLE_SYNTAX_DEFINITIONS);
 }
 
-void TextEditorWidgetPrivate::configureGenericHighlighter(
-    const KSyntaxHighlighting::Definition &definition)
+void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlighting::Definition &definition)
 {
-    //auto highlighter = new Highlighter();
-    auto highlighter = new QmlJSEditor::QmlJSHighlighter();
+    auto highlighter = new Highlighter();
+    //auto highlighter = new QmlJSEditor::QmlJSHighlighter();
     m_document->setSyntaxHighlighter(highlighter);
 
     if (definition.isValid()) {
-        //highlighter->setDefinition(definition);
-        //setupFromDefinition(definition);
+        highlighter->setDefinition(definition);
+        setupFromDefinition(definition);
     } else {
         q->setCodeFoldingSupported(false);
     }
@@ -6969,12 +6968,18 @@ void TextEditorWidget::unCommentSelection()
 
 void TextEditorWidget::autoFormat()
 {
-    QTextCursor selection = textCursor();
-    selection.beginEditBlock();
-    QTextDocument *doc = selection.document();
+    QTextCursor cursor = textCursor();
+    QTextDocument *doc = cursor.document();
 
-    QTextBlock block = doc->findBlock(selection.selectionStart());
-    const QTextBlock end = doc->findBlock(selection.selectionEnd()).next();
+    bool hasSelection = cursor.hasSelection();
+
+    QTextBlock block = hasSelection?doc->findBlock(cursor.selectionStart()):doc->begin();
+    const QTextBlock end = hasSelection?doc->findBlock(cursor.selectionEnd()).next():doc->end();
+
+    cursor.beginEditBlock();
+
+
+
 
     const TextEditor::TabSettings &tabSettings = d->m_document->tabSettings();
     QmlJSTools::CreatorCodeFormatter codeFormatter(tabSettings);
@@ -6994,7 +6999,7 @@ void TextEditorWidget::autoFormat()
         codeFormatter.updateLineStateChange(block);
         block = block.next();
     } while (block.isValid() && block != end);
-    selection.endEditBlock();
+    cursor.endEditBlock();
     /*QTextCursor cursor = textCursor();
     cursor.beginEditBlock();
     d->m_document->autoFormat(cursor);
@@ -7958,7 +7963,7 @@ void TextEditorWidget::configureGenericHighlighter()
             }else if(name.contains("keyword") || name.contains("control")){
                 //qDebug()<<"name:"<<name;
                 keywords += def.keywordList(one);
-            }else if(name.contains("constant")){
+            }else if(name.contains("constant") || name.contains("variable")){
                  constants += def.keywordList(one);
             }
         }

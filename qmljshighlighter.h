@@ -12,6 +12,8 @@
 
 namespace QmlJSEditor {
 
+
+
 class TEXTEDITOR_EXPORT QmlJSHighlighter : public TextEditor::SyntaxHighlighter
 {
     Q_OBJECT

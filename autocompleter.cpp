@@ -72,7 +72,6 @@ static bool fixesBracketsError(const QString &textToInsert, const QTextCursor &c
 {
     const QChar character = textToInsert.at(0);
     const QString allParentheses = QLatin1String("()[]{}");
-    qDebug()<<"fixesBracketsError:"<<textToInsert<<character;
     if (!allParentheses.contains(character))
         return false;
 
@@ -95,7 +94,6 @@ static bool fixesBracketsError(const QString &textToInsert, const QTextCursor &c
     countBracket(openChar, closeChar, character, &errors, &stillopen);
     countBrackets(cursor, cursor.position(), blockEnd, openChar, closeChar, &errors, &stillopen);
     int errorsAfterInsertion = errors + stillopen;
-    qDebug()<<"fixesBracketsError:"<<errorsAfterInsertion<<errorsBeforeInsertion;
     return errorsAfterInsertion < errorsBeforeInsertion;
 }
 
