@@ -139,7 +139,6 @@ add_library(texteditor SHARED
     syntax-highlighting/definition_p.h
     syntax-highlighting/foldingregion.cpp syntax-highlighting/foldingregion.h
     syntax-highlighting/format.cpp syntax-highlighting/format.h syntax-highlighting/format_p.h
-    syntax-highlighting/htmlhighlighter.cpp syntax-highlighting/htmlhighlighter.h
     syntax-highlighting/highlightingdata.cpp syntax-highlighting/highlightingdata_p.hpp
     syntax-highlighting/keywordlist.cpp syntax-highlighting/keywordlist_p.h
     syntax-highlighting/matchresult_p.h
@@ -199,14 +198,30 @@ add_library(texteditor SHARED
     codestyleeditor.h codestyleeditor.cpp
     codestyleselectorwidget.h codestyleselectorwidget.cpp
     javaindenter.h javaindenter.cpp
-    qmljsindenter.h qmljsindenter.cpp
-    qmljsqtstylecodeformatter.h qmljsqtstylecodeformatter.cpp
-    qmljscodeformatter.h qmljscodeformatter.cpp
-    qmljsscanner.h qmljsscanner.cpp
-    qmljsautocompleter.h qmljsautocompleter.cpp
-    qmljshighlighter.h qmljshighlighter.cpp
     resource.qrc
     languages/python/pythonhighlighter.cpp languages/python/pythonhighlighter.h languages/python/pythonindenter.cpp languages/python/pythonindenter.h languages/python/pythonscanner.cpp languages/python/pythonscanner.h languages/python/pythonformattoken.h
+    languages/cstyle/cstyleindenter.h languages/cstyle/cstyleindenter.cpp
+    languages/cstyle/cstyleqtcodeformatter.h languages/cstyle/cstyleqtcodeformatter.cpp
+    languages/cstyle/cstylecodeformatter.h languages/cstyle/cstylecodeformatter.cpp
+    languages/cstyle/cstylescanner.h languages/cstyle/cstylescanner.cpp
+    languages/cstyle/cstyleautocompleter.h languages/cstyle/cstyleautocompleter.cpp
+    languages/cstyle/cstylehighlighter.h languages/cstyle/cstylehighlighter.cpp
+    codeformatter.h codeformatter.cpp
+    languages/html/htmlscanner.h languages/html/htmlscanner.cpp
+    languages/token.h
+    languages/php/phpscanner.h languages/php/phpscanner.cpp
+    languages/php/phpautocompleter.h languages/php/phpautocompleter.cpp languages/php/phpindenter.h languages/php/phpindenter.cpp languages/php/phpcodeformatter.h languages/php/phpcodeformatter.cpp
+    languages/javascript/jsscanner.h languages/javascript/jsscanner.cpp
+    languages/css/cssscanner.h languages/css/cssscanner.cpp
+    languages/html/htmlcodeformatter.h languages/html/htmlcodeformatter.cpp
+    languages/html/htmlindenter.h
+    languages/html/htmlindenter.cpp
+    languages/html/htmlautocompleter.h languages/html/htmlautocompleter.cpp
+    languages/html/htmlhighlighter.h languages/html/htmlhighlighter.cpp
+    languages/javascript/jscodeformatter.h languages/javascript/jscodeformatter.cpp
+    languages/css/csscodeformatter.h languages/css/csscodeformatter.cpp
+
+
 
 
 

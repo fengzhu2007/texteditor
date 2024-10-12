@@ -7,7 +7,7 @@
 
 #include <QStringList>
 
-namespace QmlJS {
+namespace CStyle {
 
 class TEXTEDITOR_EXPORT Token
 {
@@ -93,7 +93,7 @@ public:
         TemplateExpressionOpenBracesMask3 = 0x7F << 18,
         TemplateExpressionOpenBracesMask4 = 0x7F << 25,
         TemplateExpressionOpenBracesMask = TemplateExpressionOpenBracesMask1 | TemplateExpressionOpenBracesMask2
-           | TemplateExpressionOpenBracesMask3 | TemplateExpressionOpenBracesMask4
+                                           | TemplateExpressionOpenBracesMask3 | TemplateExpressionOpenBracesMask4
     };
 
     Scanner();
@@ -113,4 +113,4 @@ private:
     bool _scanComments: 1;
 };
 
-} // namespace QmlJS
+} // namespace CStyle

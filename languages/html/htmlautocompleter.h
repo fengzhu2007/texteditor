@@ -1,11 +1,8 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-
 #pragma once
 
 #include "autocompleter.h"
-#include "texteditor_global.h"
-namespace QmlJSEditor {
+
+namespace Html {
 
 class TEXTEDITOR_EXPORT AutoCompleter : public TextEditor::AutoCompleter
 {
@@ -23,13 +20,17 @@ public:
                                 const QString &text,
                                 QChar lookAhead,
                                 bool skipChars,
-                                int *skippedChars) const override;
+                                int *skippedChars,int* adjustPos) const override;
     QString insertMatchingQuote(const QTextCursor &tc,
                                 const QString &text,
                                 QChar lookAhead,
                                 bool skipChars,
                                 int *skippedChars) const override;
     QString insertParagraphSeparator(const QTextCursor &tc) const override;
+
+    virtual void languageState(int state,TextEditor::TextDocument* textDocument) override;
 };
 
-} // QmlJSEditor
+} // namespace Html
+
+

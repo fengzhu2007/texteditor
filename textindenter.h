@@ -22,6 +22,8 @@ public:
     explicit TextIndenter(QTextDocument *doc);
     ~TextIndenter() override;
 
+    virtual QString name() override {return QString::fromUtf8("Text");}
+
     int indentFor(const QTextBlock &block,
                   const TabSettings &tabSettings,
                   int cursorPositionInEditor = -1) override;

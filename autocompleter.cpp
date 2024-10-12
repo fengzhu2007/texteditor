@@ -3,7 +3,10 @@
 
 #include "autocompleter.h"
 #include "textdocumentlayout.h"
+#include "textdocument.h"
 #include "tabsettings.h"
+
+#include "codeassist/documentcontentcompletion.h"
 
 #include <QDebug>
 #include <QTextCursor>
@@ -16,7 +19,8 @@ AutoCompleter::AutoCompleter() :
     m_surroundWithBrackets(true),
     m_autoInsertQuotes(true),
     m_surroundWithQuotes(true),
-    m_overwriteClosingChars(false)
+    m_overwriteClosingChars(false),
+    m_lang(-1)
 {}
 
 AutoCompleter::~AutoCompleter() = default;
@@ -145,6 +149,43 @@ bool AutoCompleter::isNextBlockIndented(const QTextBlock &currentBlock) const
 
     return false;
 }
+void AutoCompleter::languageState(int state,TextDocument* textDocument){
+    if(m_lang==-1){
+        //init provider
+        Highlighter::Definitions definitions = Highlighter::definitionsForDocument(textDocument);
+        if(!definitions.isEmpty()){
+            const Highlighter::Definition def = definitions.constFirst();
+            auto provider = static_cast<TextEditor::DocumentContentCompletionProvider*>(textDocument->completionAssistProvider());
+            this->initProvider(def,provider);
+        }
+        m_lang = 0;
+    }
+    return ;
+}
+
+void AutoCompleter::initProvider(const Highlighter::Definition& def,DocumentContentCompletionProvider* provider){
+    const QStringList list = def.keywordLists();
+    QStringList keywords;
+    QStringList functions;
+    QStringList classes;
+    QStringList constants;
+    for(auto one:list){
+        auto name = one.toLower();
+        if(name.contains("function")){
+            functions += def.keywordList(one);
+        }else if(name.contains("class") ){
+            classes += def.keywordList(one);
+        }else if(name.contains("keyword") || name.contains("control")){
+            keywords += def.keywordList(one);
+        }else if(name.contains("constant") || name.contains("variable")){
+            constants += def.keywordList(one);
+        }
+    }
+    provider->setKeywordList(keywords);
+    provider->setFunctionList(functions);
+    provider->setClassList(classes);
+    provider->setVariableList(constants);
+}
 
 QString AutoCompleter::replaceSelection(QTextCursor &cursor, const QString &textToInsert) const
 {
@@ -157,8 +198,7 @@ QString AutoCompleter::replaceSelection(QTextCursor &cursor, const QString &text
     return QString();
 }
 
-QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToInsert,
-                                    bool skipChars) const
+QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToInsert,bool skipChars,int* adjustPos) const
 {
     const bool checkBlockEnd = m_allowSkippingOfBlockEnd;
     m_allowSkippingOfBlockEnd = false; // consume blockEnd.
@@ -176,14 +216,13 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
 
 
     int skippedChars = 0;
-    if (isQuote(textToInsert) && m_autoInsertQuotes
-            && contextAllowsAutoQuotes(cursor, textToInsert)) {
+    if (isQuote(textToInsert) && m_autoInsertQuotes && contextAllowsAutoQuotes(cursor, textToInsert)) {
         autoText = insertMatchingQuote(cursor, textToInsert, lookAhead, skipChars, &skippedChars);
     } else if (m_autoInsertBrackets && contextAllowsAutoBrackets(cursor, textToInsert)) {
         if (fixesBracketsError(textToInsert, cursor))
             return QString();
 
-        autoText = insertMatchingBrace(cursor, textToInsert, lookAhead, skipChars, &skippedChars);
+        autoText = insertMatchingBrace(cursor, textToInsert, lookAhead, skipChars, &skippedChars,adjustPos);
 
 
         if (checkBlockEnd && textToInsert.at(0) == QLatin1Char('}')) {
@@ -200,12 +239,12 @@ QString AutoCompleter::autoComplete(QTextCursor &cursor, const QString &textToIn
     } else {
         return QString();
     }
+
     if (skipChars && skippedChars) {
         const int pos = cursor.position();
         cursor.setPosition(pos + skippedChars);
         cursor.setPosition(pos, QTextCursor::KeepAnchor);
     }
-
     return autoText;
 }
 
@@ -350,17 +389,14 @@ bool AutoCompleter::isInString(const QTextCursor &cursor) const
     return false;
 }
 
-QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,
-                                           const QString &text,
-                                           QChar lookAhead,
-                                           bool skipChars,
-                                           int *skippedChars) const
+QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QString &text,QChar lookAhead,bool skipChars,int *skippedChars,int* adjustPos) const
 {
     Q_UNUSED(cursor)
     Q_UNUSED(text)
     Q_UNUSED(lookAhead)
     Q_UNUSED(skipChars)
     Q_UNUSED(skippedChars)
+    Q_UNUSED(adjustPos)
     return QString();
 }
 

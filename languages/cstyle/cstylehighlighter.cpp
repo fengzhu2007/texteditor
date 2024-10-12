@@ -1,18 +1,17 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmljshighlighter.h"
+#include "cstylehighlighter.h"
 
 #include <QSet>
 
 #include <utils/qtcassert.h>
 
-using namespace QmlJS;
 using namespace TextEditor;
 
-namespace QmlJSEditor {
+namespace CStyle {
 
-QmlJSHighlighter::QmlJSHighlighter(QTextDocument *parent)
+CStyleHighlighter::CStyleHighlighter(QTextDocument *parent)
     : SyntaxHighlighter(parent),
       m_qmlEnabled(true),
       m_braceDepth(0),
@@ -23,20 +22,21 @@ QmlJSHighlighter::QmlJSHighlighter(QTextDocument *parent)
     setDefaultTextFormatCategories();
 }
 
-QmlJSHighlighter::~QmlJSHighlighter() = default;
+CStyleHighlighter::~CStyleHighlighter() = default;
 
-bool QmlJSHighlighter::isQmlEnabled() const
+bool CStyleHighlighter::isQmlEnabled() const
 {
     return m_qmlEnabled;
 }
 
-void QmlJSHighlighter::setQmlEnabled(bool qmlEnabled)
+void CStyleHighlighter::setQmlEnabled(bool qmlEnabled)
 {
     m_qmlEnabled = qmlEnabled;
 }
 
-void QmlJSHighlighter::highlightBlock(const QString &text)
+void CStyleHighlighter::highlightBlock(const QString &text)
 {
+
     const QList<Token> tokens = m_scanner(text, onBlockStart());
 
     int index = 0;
@@ -175,7 +175,7 @@ void QmlJSHighlighter::highlightBlock(const QString &text)
     onBlockEnd(m_scanner.state());
 }
 
-bool QmlJSHighlighter::maybeQmlKeyword(QStringView text) const
+bool CStyleHighlighter::maybeQmlKeyword(QStringView text) const
 {
     if (text.isEmpty())
         return false;
@@ -201,7 +201,7 @@ bool QmlJSHighlighter::maybeQmlKeyword(QStringView text) const
         return false;
 }
 
-bool QmlJSHighlighter::maybeQmlBuiltinType(QStringView text) const
+bool CStyleHighlighter::maybeQmlBuiltinType(QStringView text) const
 {
     if (text.isEmpty())
         return false;
@@ -258,7 +258,7 @@ bool QmlJSHighlighter::maybeQmlBuiltinType(QStringView text) const
         return false;
 }
 
-int QmlJSHighlighter::onBlockStart()
+int CStyleHighlighter::onBlockStart()
 {
     m_currentBlockParentheses.clear();
     m_braceDepth = 0;
@@ -282,14 +282,14 @@ int QmlJSHighlighter::onBlockStart()
     return state;
 }
 
-void QmlJSHighlighter::onBlockEnd(int state)
+void CStyleHighlighter::onBlockEnd(int state)
 {
     setCurrentBlockState((m_braceDepth << 8) | state);
     TextDocumentLayout::setParentheses(currentBlock(), m_currentBlockParentheses);
     TextDocumentLayout::setFoldingIndent(currentBlock(), m_foldingIndent);
 }
 
-void QmlJSHighlighter::onOpeningParenthesis(QChar parenthesis, int pos, bool atStart)
+void CStyleHighlighter::onOpeningParenthesis(QChar parenthesis, int pos, bool atStart)
 {
     if (parenthesis == QLatin1Char('{') || parenthesis == QLatin1Char('[') || parenthesis == QLatin1Char('+')) {
         ++m_braceDepth;
@@ -301,7 +301,7 @@ void QmlJSHighlighter::onOpeningParenthesis(QChar parenthesis, int pos, bool atS
     m_currentBlockParentheses.push_back(Parenthesis(Parenthesis::Opened, parenthesis, pos));
 }
 
-void QmlJSHighlighter::onClosingParenthesis(QChar parenthesis, int pos, bool atEnd)
+void CStyleHighlighter::onClosingParenthesis(QChar parenthesis, int pos, bool atEnd)
 {
     if (parenthesis == QLatin1Char('}') || parenthesis == QLatin1Char(']') || parenthesis == QLatin1Char('-')) {
         --m_braceDepth;

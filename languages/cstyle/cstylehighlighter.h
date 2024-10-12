@@ -5,22 +5,22 @@
 
 #include "texteditor_global.h"
 
-#include "qmljsscanner.h"
+#include "cstylescanner.h"
 
 #include "textdocumentlayout.h"
 #include "syntaxhighlighter.h"
 
-namespace QmlJSEditor {
+namespace CStyle {
 
 
 
-class TEXTEDITOR_EXPORT QmlJSHighlighter : public TextEditor::SyntaxHighlighter
+class TEXTEDITOR_EXPORT CStyleHighlighter : public TextEditor::SyntaxHighlighter
 {
     Q_OBJECT
 
 public:
-    QmlJSHighlighter(QTextDocument *parent = nullptr);
-    ~QmlJSHighlighter() override;
+    CStyleHighlighter(QTextDocument *parent = nullptr);
+    ~CStyleHighlighter() override;
 
     bool isQmlEnabled() const;
     void setQmlEnabled(bool duiEnabled);
@@ -45,7 +45,7 @@ private:
     int m_foldingIndent;
     bool m_inMultilineComment;
 
-    QmlJS::Scanner m_scanner;
+    CStyle::Scanner m_scanner;
     TextEditor::Parentheses m_currentBlockParentheses;
 };
 

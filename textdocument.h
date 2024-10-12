@@ -5,7 +5,7 @@
 
 #include "texteditor_global.h"
 #include "blockrange.h"
-#include "formatter.h"
+//#include "formatter.h"
 #include "indenter.h"
 
 #include "core/textdocument.h"
@@ -38,6 +38,7 @@ class TabSettings;
 class TextDocumentPrivate;
 class TextMark;
 class TypingSettings;
+class CodeFormatter;
 
 using TextMarks = QList<TextMark *>;
 
@@ -79,9 +80,9 @@ public:
     Utils::MultiTextCursor indent(const Utils::MultiTextCursor &cursor);
     Utils::MultiTextCursor unindent(const Utils::MultiTextCursor &cursor);
 
-    void setFormatter(Formatter *indenter); // transfers ownership
-    void autoFormat(const QTextCursor &cursor);
-    bool applyChangeSet(const Utils::ChangeSet &changeSet);
+    void setFormatter(CodeFormatter *indenter); // transfers ownership
+    void autoFormat(QTextCursor &cursor);
+    //bool applyChangeSet(const Utils::ChangeSet &changeSet);
 
     // the blocks list must be sorted
     void setIfdefedOutBlocks(const QList<BlockRange> &blocks);

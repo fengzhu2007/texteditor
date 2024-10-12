@@ -43,6 +43,8 @@ public:
 
     virtual ~Indenter() = default;
 
+    virtual QString name(){return QString::fromUtf8("Unknow");}
+
     // Returns true if key triggers an indent.
     virtual bool isElectricCharacter(const QChar & /*ch*/) const { return false; }
 

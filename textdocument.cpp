@@ -15,6 +15,7 @@
 #include "typingsettings.h"
 #include "utils/mimeutils.h"
 #include "utils/textutils.h"
+#include "codeformatter.h"
 
 #include <QAction>
 #include <QApplication>
@@ -72,7 +73,8 @@ public:
     CompletionAssistProvider *m_functionHintAssistProvider = nullptr;
     IAssistProvider *m_quickFixProvider = nullptr;
     QScopedPointer<Indenter> m_indenter;
-    QScopedPointer<Formatter> m_formatter;
+    //QScopedPointer<Formatter> m_formatter;
+    QScopedPointer<CodeFormatter> m_codeFormatter;
 
     int m_autoSaveRevision = -1;
     bool m_silentReload = false;
@@ -439,26 +441,57 @@ Utils::MultiTextCursor TextDocument::unindent(const Utils::MultiTextCursor &curs
     return d->indentOrUnindent(cursor, false, tabSettings());
 }
 
-void TextDocument::setFormatter(Formatter *formatter)
+void TextDocument::setFormatter(CodeFormatter *formatter)
 {
-    d->m_formatter.reset(formatter);
+    d->m_codeFormatter.reset(formatter);
 }
 
-void TextDocument::autoFormat(const QTextCursor &cursor)
+void TextDocument::autoFormat(QTextCursor &cursor)
 {
     using namespace Utils::Text;
-    if (!d->m_formatter)
+    if (!d->m_codeFormatter)
         return;
-    if (QFutureWatcher<ChangeSet> *watcher = d->m_formatter->format(cursor, tabSettings())) {
+
+    QTextDocument *doc = cursor.document();
+
+    bool hasSelection = cursor.hasSelection();
+
+    QTextBlock block = hasSelection?doc->findBlock(cursor.selectionStart()):doc->begin();
+    const QTextBlock end = hasSelection?doc->findBlock(cursor.selectionEnd()).next():doc->end();
+
+    cursor.beginEditBlock();
+
+    const TextEditor::TabSettings &tabSettings = this->tabSettings();
+    //QmlJSTools::CreatorCodeFormatter codeFormatter(tabSettings);
+    d->m_codeFormatter->updateStateUntil(block);
+    do {
+        int depth = d->m_codeFormatter->indentFor(block);
+        if (depth != -1) {
+            if (QStringView(block.text()).trimmed().isEmpty()) {
+                // we do not want to indent empty lines (as one is indentent when pressing tab
+                // assuming that the user will start writing something), and get rid of that
+                // space if one had pressed tab in an empty line just before refactoring.
+                // If depth == -1 (inside a multiline string for example) leave the spaces.
+                depth = 0;
+            }
+            tabSettings.indentLine(block, depth);
+        }
+        d->m_codeFormatter->updateLineStateChange(block);
+        block = block.next();
+    } while (block.isValid() && block != end);
+    cursor.endEditBlock();
+
+
+    /*if (QFutureWatcher<ChangeSet> *watcher = d->m_formatter->format(cursor, tabSettings())) {
         connect(watcher, &QFutureWatcher<ChangeSet>::finished, this, [this, watcher]() {
             if (!watcher->isCanceled())
                 applyChangeSet(watcher->result());
             delete watcher;
         });
-    }
+    }*/
 }
 
-bool TextDocument::applyChangeSet(const ChangeSet &changeSet)
+/*bool TextDocument::applyChangeSet(const ChangeSet &changeSet)
 {
     if (changeSet.isEmpty())
         return true;
@@ -466,7 +499,7 @@ bool TextDocument::applyChangeSet(const ChangeSet &changeSet)
     const RefactoringFilePtr file = changes.file(filePath());
     file->setChangeSet(changeSet);
     return file->apply();
-}
+}*/
 
 // the blocks list must be sorted
 void TextDocument::setIfdefedOutBlocks(const QList<BlockRange> &blocks)

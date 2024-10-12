@@ -94,6 +94,7 @@ Highlighter::Highlighter()
                             &categoryForTextStyle);
 
     this->m_theme = highlightRepository()->theme("GitHub Light");//define color
+    //this->m_theme = highlightRepository()->defaultTheme();
 }
 
 Highlighter::Definition Highlighter::definitionForName(const QString &name)
@@ -296,13 +297,14 @@ void Highlighter::highlightBlock(const QString &text)
         if (data->syntaxState() != state) {
             data->setSyntaxState(state);
             // Toggles the LSB of current block's userState. It forces rehighlight of next block.
-            int state = currentBlockState();
+            /*int state = currentBlockState();
             if(state==4096){
                 state = 0;
             }else{
                 state = 4096;
             }
-            setCurrentBlockState(state);
+            setCurrentBlockState(state);*/
+            setCurrentBlockState(currentBlockState() ^ 1);
         }
         data->setFoldingIndent(TextDocumentLayout::braceDepth(block));
     }

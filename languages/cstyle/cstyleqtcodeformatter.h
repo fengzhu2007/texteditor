@@ -1,18 +1,23 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-
-#pragma once
+#ifndef CSTYLEQTCODEFORMATTER_H
+#define CSTYLEQTCODEFORMATTER_H
 
 #include "texteditor_global.h"
-
 #include "textdocumentlayout.h"
-#include "qmljscodeformatter.h"
+#include "cstylecodeformatter.h"
+
+class CStyleCodeFormatter
+{
+public:
+    CStyleCodeFormatter();
+};
+
+
 
 namespace TextEditor { class TabSettings; }
 
-namespace QmlJSTools {
+namespace CStyle {
 
-class TEXTEDITOR_EXPORT CreatorCodeFormatter : public QmlJS::QtStyleCodeFormatter
+class TEXTEDITOR_EXPORT CreatorCodeFormatter : public CStyle::QtStyleCodeFormatter
 {
 public:
     CreatorCodeFormatter();
@@ -26,11 +31,14 @@ protected:
     int loadLexerState(const QTextBlock &block) const override;
 
 private:
-    class QmlJSCodeFormatterData: public TextEditor::CodeFormatterData
+    class CStyleCodeFormatterData: public TextEditor::CodeFormatterData
     {
     public:
-        QmlJS::CodeFormatter::BlockData m_data;
+        CStyle::CodeFormatter::BlockData m_data;
     };
 };
 
 } // namespace QmlJSTools
+
+
+#endif // CSTYLEQTCODEFORMATTER_H

@@ -35,6 +35,8 @@ public:
         : TextEditor::TextIndenter(doc)
     {}
 
+    virtual QString name() override {return QString::fromUtf8("Python");}
+
 private:
     bool isElectricCharacter(const QChar &ch) const override;
     int indentFor(const QTextBlock &block,

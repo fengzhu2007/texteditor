@@ -1,48 +1,76 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-
-#include "qmljsscanner.h"
-
+#include "phpscanner.h"
+#include "languages/html/htmlscanner.h"
 #include <QDebug>
-
 #include <algorithm>
 
-using namespace QmlJS;
+using namespace Php;
 
 namespace {
-static const QString js_keywords[] = {
+static const QString php_keywords[] = {
+    QLatin1String("abstract"),
+    QLatin1String("and"),
+    QLatin1String("array"),
+    QLatin1String("as"),
     QLatin1String("break"),
+    QLatin1String("callable"),
     QLatin1String("case"),
     QLatin1String("catch"),
     QLatin1String("class"),
+    QLatin1String("clone"),
     QLatin1String("const"),
     QLatin1String("continue"),
-    QLatin1String("debugger"),
+    QLatin1String("declare"),
     QLatin1String("default"),
-    QLatin1String("delete"),
     QLatin1String("do"),
+    QLatin1String("echo"),
     QLatin1String("else"),
+    QLatin1String("elseif"),
+    QLatin1String("enddeclare"),
+    QLatin1String("endfor"),
+    QLatin1String("endforeach"),
+    QLatin1String("endif"),
+    QLatin1String("endswitch"),
+    QLatin1String("endwhile"),
+    QLatin1String("enum"),
+    QLatin1String("exit"),
     QLatin1String("extends"),
+    QLatin1String("final"),
     QLatin1String("finally"),
+    QLatin1String("fn"),
     QLatin1String("for"),
+    QLatin1String("foreach"),
     QLatin1String("function"),
+    QLatin1String("global"),
+    QLatin1String("goto"),
     QLatin1String("if"),
-    QLatin1String("in"),
+    QLatin1String("implements"),
+    QLatin1String("include"),
+    QLatin1String("include_once"),
     QLatin1String("instanceof"),
-    QLatin1String("let"),
+    QLatin1String("insteadof"),
+    QLatin1String("interface"),
+    QLatin1String("list"),
+    QLatin1String("match"),
+    QLatin1String("namespace"),
     QLatin1String("new"),
+    QLatin1String("or"),
+    QLatin1String("print"),
+    QLatin1String("private"),
+    QLatin1String("protected"),
+    QLatin1String("public"),
+    QLatin1String("readonly"),
+    QLatin1String("require"),
+    QLatin1String("require_once"),
     QLatin1String("return"),
-    QLatin1String("super"),
+    QLatin1String("static"),
     QLatin1String("switch"),
-    QLatin1String("this"),
     QLatin1String("throw"),
+    QLatin1String("trait"),
     QLatin1String("try"),
-    QLatin1String("typeof"),
+    QLatin1String("use"),
     QLatin1String("var"),
-    QLatin1String("void"),
     QLatin1String("while"),
-    QLatin1String("with"),
-    QLatin1String("yield")
+    QLatin1String("xor"),
 };
 } // end of anonymous namespace
 
@@ -58,9 +86,10 @@ const _Tp *end(const _Tp (&a)[N])
     return a + N;
 }
 
-Scanner::Scanner()
+Scanner::Scanner(Html::Scanner* htmlScanner)
     : _state(Normal),
-      _scanComments(true)
+    _scanComments(true),
+    pHtmlScanner(htmlScanner)
 {
 }
 
@@ -102,46 +131,6 @@ static bool isNumberChar(QChar ch)
     }
 }
 
-static int findRegExpEnd(const QString &text, int start)
-{
-    if (start >= text.size() || text.at(start) != QLatin1Char('/'))
-        return start;
-
-    // find the second /
-    int index = start + 1;
-    for (; index < text.length(); ++index) {
-        const QChar ch = text.at(index);
-
-        if (ch == QLatin1Char('\\')) {
-            ++index;
-        } else if (ch == QLatin1Char('[')) {
-            // find closing ]
-            for (; index < text.length(); ++index) {
-                const QChar ch2 = text.at(index);
-                if (ch2 == QLatin1Char('\\')) {
-                    ++index;
-                } else if (ch2 == QLatin1Char(']'))
-                    break;
-            }
-            if (index >= text.size())
-                return text.size();
-        } else if (ch == QLatin1Char('/'))
-            break;
-    }
-    if (index >= text.size())
-        return text.size();
-    ++index;
-
-    // find end of reg exp flags
-    for (; index < text.size(); ++index) {
-        const QChar ch = text.at(index);
-        if (!isIdentifierChar(ch))
-            break;
-    }
-
-    return index;
-}
-
 
 static inline int multiLineState(int state)
 {
@@ -153,78 +142,27 @@ static inline void setMultiLineState(int *state, int s)
     *state = s | (*state & ~Scanner::MultiLineMask);
 }
 
-static inline bool regexpMayFollow(int state)
-{
-    return state & Scanner::RegexpMayFollow;
-}
-
-static inline void setRegexpMayFollow(int *state, bool on)
-{
-    *state = (on ? Scanner::RegexpMayFollow : 0) | (*state & ~Scanner::RegexpMayFollow);
-}
 
 static inline int templateExpressionDepth(int state)
 {
-    if ((state & Scanner::TemplateExpressionOpenBracesMask) == 0)
-        return 0;
-    if ((state & (Scanner::TemplateExpressionOpenBracesMask3 | Scanner::TemplateExpressionOpenBracesMask4)) == 0) {
-        if ((state & Scanner::TemplateExpressionOpenBracesMask2) == 0)
-            return 1;
-        else
-            return 2;
-    }
-    if ((state & Scanner::TemplateExpressionOpenBracesMask4) == 0)
-        return 3;
-    else
+    if((state & Scanner::TemplateExpressionOpenBracesMask4) == Scanner::TemplateExpressionOpenBracesMask4){
         return 4;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask3) == Scanner::TemplateExpressionOpenBracesMask3){
+        return 3;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask2) == Scanner::TemplateExpressionOpenBracesMask2){
+        return 2;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask1) == Scanner::TemplateExpressionOpenBracesMask1){
+        return 1;
+    }else{
+        return 0;
+    }
 }
 
-QList<Token> Scanner::operator()(const QString &text, int startState)
+QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& startState)
 {
     _state = startState;
-    QList<Token> tokens;
-
-    int index = 0;
-
-    auto scanTemplateString = [&index, &text, &tokens, this](int startShift = 0){
-        const QChar quote = QLatin1Char('`');
-        const int start = index + startShift;
-        while (index < text.length()) {
-            const QChar ch = text.at(index);
-
-            if (ch == quote)
-                break;
-            else if (ch == QLatin1Char('$') && index + 1 < text.length() && text.at(index + 1) == QLatin1Char('{')) {
-                tokens.append(Token(start, index - start, Token::String));
-                tokens.append(Token(index, 2, Token::Delimiter));
-                index += 2;
-                setRegexpMayFollow(&_state, true);
-                setMultiLineState(&_state, Normal);
-                int depth = templateExpressionDepth(_state);
-                if (depth == 4) {
-                    qWarning() << "QQmljs::Dom::Scanner reached maximum nesting of template expressions (4), parsing will fail";
-                } else {
-                    _state |= 1 << (4 + depth * 7);
-                }
-                return;
-            } else if (ch == QLatin1Char('\\') && index + 1 < text.length())
-                index += 2;
-            else
-                ++index;
-        }
-
-        if (index < text.length()) {
-            setMultiLineState(&_state, Normal);
-            ++index;
-            // good one
-        } else {
-            setMultiLineState(&_state, MultiLineStringBQuote);
-        }
-
-        tokens.append(Token(start, index - start, Token::String));
-        setRegexpMayFollow(&_state, false);
-    };
-
+    QList<Code::Token> tokens;
+    int index = from;
     if (multiLineState(_state) == MultiLineComment) {
         int start = -1;
         while (index < text.length()) {
@@ -247,7 +185,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
         }
         //qDebug()<<"MultiLineCommentMultiLineCommentMultiLineComment";
         if (_scanComments && start != -1)
-            tokens.append(Token(start, index - start, Token::Comment));
+            tokens.append(Code::Token(start, index - start, Code::Token::Comment,Code::Token::Php));
     } else if (multiLineState(_state) == MultiLineStringDQuote || multiLineState(_state) == MultiLineStringSQuote) {
         const QChar quote = (_state == MultiLineStringDQuote ? QLatin1Char('"') : QLatin1Char('\''));
         const int start = index;
@@ -266,10 +204,10 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
             setMultiLineState(&_state, Normal);
         }
         if (start < index)
-            tokens.append(Token(start, index - start, Token::String));
-        setRegexpMayFollow(&_state, false);
-    } else if (multiLineState(_state) == MultiLineStringBQuote) {
-        scanTemplateString();
+            tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Php));
+    } else if (multiLineState(_state) == MultiLineStringTQuote) {
+        //<<<
+
     }
 
     auto braceCounterOffset = [](int templateDepth) {
@@ -284,16 +222,10 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
             la = text.at(index + 1);
 
         switch (ch.unicode()) {
-        case '#':
-            if (_scanComments)
-                tokens.append(Token(index, text.length() - index, Token::Comment));
-            index = text.length();
-            break;
-
         case '/':
             if (la == QLatin1Char('/')) {
                 if (_scanComments)
-                    tokens.append(Token(index, text.length() - index, Token::Comment));
+                    tokens.append(Code::Token(index, text.length() - index, Code::Token::Comment,Code::Token::Php));
                 index = text.length();
             } else if (la == QLatin1Char('*')) {
                 const int start = index;
@@ -314,18 +246,12 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                     }
                 }
                 if (_scanComments)
-                    tokens.append(Token(start, index - start, Token::Comment));
-            } else if (regexpMayFollow(_state)) {
-                const int end = findRegExpEnd(text, index);
-                tokens.append(Token(index, end - index, Token::RegExp));
-                index = end;
-                setRegexpMayFollow(&_state, false);
-            } else if (la == QLatin1Char('=')) {
-                tokens.append(Token(index, 2, Token::Delimiter));
+                    tokens.append(Code::Token(start, index - start, Code::Token::Comment,Code::Token::Php));
+            }else if (la == QLatin1Char('=')) {
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter));
-                setRegexpMayFollow(&_state, true);
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
             break;
 
@@ -355,13 +281,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                     setMultiLineState(&_state, MultiLineStringSQuote);
             }
 
-            tokens.append(Token(start, index - start, Token::String));
-            setRegexpMayFollow(&_state, false);
-        } break;
-
-        case '`': {
-            ++index;
-            scanTemplateString(-1);
+            tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Php));
         } break;
 
         case '.':
@@ -370,133 +290,130 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 do {
                     ++index;
                 } while (index < text.length() && isNumberChar(text.at(index)));
-                tokens.append(Token(start, index - start, Token::Number));
+                tokens.append(Code::Token(start, index - start, Code::Token::Number,Code::Token::Php));
                 break;
             }
-            tokens.append(Token(index++, 1, Token::Dot));
-            setRegexpMayFollow(&_state, false);
+            tokens.append(Code::Token(index++, 1, Code::Token::Dot,Code::Token::Php));
             break;
 
-         case '(':
-            tokens.append(Token(index++, 1, Token::LeftParenthesis));
-            setRegexpMayFollow(&_state, true);
+        case '(':
+            tokens.append(Code::Token(index++, 1, Code::Token::LeftParenthesis,Code::Token::Php));
             break;
 
-         case ')':
-            tokens.append(Token(index++, 1, Token::RightParenthesis));
-            setRegexpMayFollow(&_state, false);
+        case ')':
+            tokens.append(Code::Token(index++, 1, Code::Token::RightParenthesis,Code::Token::Php));
             break;
 
-         case '[':
-            tokens.append(Token(index++, 1, Token::LeftBracket));
-            setRegexpMayFollow(&_state, true);
+        case '[':
+            tokens.append(Code::Token(index++, 1, Code::Token::LeftBracket,Code::Token::Php));
             break;
 
-         case ']':
-            tokens.append(Token(index++, 1, Token::RightBracket));
-            setRegexpMayFollow(&_state, false);
+        case ']':
+            tokens.append(Code::Token(index++, 1, Code::Token::RightBracket,Code::Token::Php));
             break;
 
-         case '{':{
-            tokens.append(Token(index++, 1, Token::LeftBrace));
-            setRegexpMayFollow(&_state, true);
+        case '{':{
+            tokens.append(Code::Token(index++, 1, Code::Token::LeftBrace,Code::Token::Php));
             int depth = templateExpressionDepth(_state);
-            if (depth > 0) {
+            /*if (depth > 0) {
                 int shift = braceCounterOffset(depth);
                 int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
                 if ((_state & mask) == mask) {
-                    qWarning() << "QQmljs::Dom::Scanner reached maximum open braces of template expressions (127), parsing will fail";
+                    qWarning() << "php::Dom::Scanner reached maximum open braces of template expressions (127), parsing will fail";
                 } else {
                     _state = (_state & ~mask) | (((Scanner::TemplateExpressionOpenBracesMask0 & (_state >> shift)) + 1) << shift);
                 }
-            }
+            }*/
         } break;
 
         case '}': {
-            setRegexpMayFollow(&_state, false);
             int depth = templateExpressionDepth(_state);
-            if (depth > 0) {
+            /*if (depth > 0) {
                 int shift = braceCounterOffset(depth);
                 int s = _state;
                 int nBraces = Scanner::TemplateExpressionOpenBracesMask0 & (s >> shift);
                 int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
                 _state = (s & ~mask) | ((nBraces - 1) << shift);
                 if (nBraces == 1) {
-                    tokens.append(Token(index++, 1, Token::Delimiter));
-                    scanTemplateString();
+                    tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
                     break;
                 }
-            }
-            tokens.append(Token(index++, 1, Token::RightBrace));
+            }*/
+            tokens.append(Code::Token(index++, 1, Code::Token::RightBrace,Code::Token::Php));
         } break;
 
-         case ';':
-            tokens.append(Token(index++, 1, Token::Semicolon));
-            setRegexpMayFollow(&_state, true);
+        case ';':
+            tokens.append(Code::Token(index++, 1, Code::Token::Semicolon,Code::Token::Php));
             break;
 
-         case ':':
-            tokens.append(Token(index++, 1, Token::Colon));
-            setRegexpMayFollow(&_state, true);
+        case ':':
+            tokens.append(Code::Token(index++, 1, Code::Token::Colon,Code::Token::Php));
             break;
 
-         case ',':
-            tokens.append(Token(index++, 1, Token::Comma));
-            setRegexpMayFollow(&_state, true);
+        case ',':
+            tokens.append(Code::Token(index++, 1, Code::Token::Comma,Code::Token::Php));
             break;
 
         case '+':
         case '-':
         case '<':
             if (la == ch || la == QLatin1Char('=')) {
-                tokens.append(Token(index, 2, Token::Delimiter));
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
             }else if (la == ch || la == QLatin1Char('?')) {
-                tokens.append(Token(index, 2, Token::Keyword));
+                tokens.append(Code::Token(index, 2, Code::Token::PhpLeftBracket,Code::Token::Php));
                 index += 2;
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter));
+
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
-            setRegexpMayFollow(&_state, true);
             break;
 
         case '>':
             if (la == ch && index + 2 < text.length() && text.at(index + 2) == ch) {
-                tokens.append(Token(index, 2, Token::Delimiter));
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 3;
             } else if (la == ch || la == QLatin1Char('=')) {
-                tokens.append(Token(index, 2, Token::Delimiter));
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter));
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
-            setRegexpMayFollow(&_state, true);
             break;
 
         case '|':
         case '=':
         case '&':
             if (la == ch) {
-                tokens.append(Token(index, 2, Token::Delimiter));
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter));
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
-            setRegexpMayFollow(&_state, true);
             break;
 
         case '?':
             switch (la.unicode()) {
             case '?':
             case '.':
-                tokens.append(Token(index, 2, Token::Delimiter));
+                tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
                 break;
+            case  '>':
+                //end php script
+                //_state = Normal;
+                tokens.append(Code::Token(index, 2, Code::Token::PhpRightBracket,Code::Token::Php));
+                index += 2;
+                if(pHtmlScanner!=nullptr){
+                    //pHtmlScanner->endPHP();
+                    _state &= ~Html::Scanner::MultiLinePhp;
+                    goto result;
+                }
+                break;
             default:
-                tokens.append(Token(index++, 1, Token::Delimiter));
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
                 break;
             }
-            setRegexpMayFollow(&_state, true);
             break;
 
         default:
@@ -509,8 +426,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 do {
                     ++index;
                 } while (index < text.length() && isNumberChar(text.at(index)));
-                tokens.append(Token(start, index - start, Token::Number));
-                setRegexpMayFollow(&_state, false);
+                tokens.append(Code::Token(start, index - start, Code::Token::Number,Code::Token::Php));
             } else if (ch.isLetter() || ch == QLatin1Char('_') || ch == QLatin1Char('$')) {
                 const int start = index;
                 do {
@@ -518,17 +434,18 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
                 } while (index < text.length() && isIdentifierChar(text.at(index)));
 
                 if (isKeyword(text.mid(start, index - start)))
-                    tokens.append(Token(start, index - start, Token::Keyword)); // ### fixme
+                    tokens.append(Code::Token(start, index - start, Code::Token::Keyword,Code::Token::Php)); // ### fixme
                 else
-                    tokens.append(Token(start, index - start, Token::Identifier));
-                setRegexpMayFollow(&_state, false);
+                    tokens.append(Code::Token(start, index - start, Code::Token::Identifier,Code::Token::Php));
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter));
-                setRegexpMayFollow(&_state, true);
+                tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
         } // end of switch
     }
 
+    result:
+    startState = _state;
+    from = index;
     return tokens;
 }
 
@@ -539,14 +456,14 @@ int Scanner::state() const
 
 bool Scanner::isKeyword(const QString &text) const
 {
-    return std::binary_search(begin(js_keywords), end(js_keywords), text);
+    return std::binary_search(begin(php_keywords), end(php_keywords), text);
 }
 
 QStringList Scanner::keywords()
 {
     static QStringList words = [] {
         QStringList res;
-        for (const QString *word = begin(js_keywords); word != end(js_keywords); ++word)
+        for (const QString *word = begin(php_keywords); word != end(php_keywords); ++word)
             res.append(*word);
         return res;
     }();

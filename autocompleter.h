@@ -5,7 +5,7 @@
 
 #include "texteditor_global.h"
 #include "tabsettings.h"
-
+#include "highlighter.h"
 #include <QString>
 
 QT_BEGIN_NAMESPACE
@@ -15,6 +15,8 @@ QT_END_NAMESPACE
 
 namespace TextEditor {
 
+class TextDocument;
+class DocumentContentCompletionProvider;
 class TEXTEDITOR_EXPORT AutoCompleter
 {
 public:
@@ -38,7 +40,7 @@ public:
     const TabSettings &tabSettings() const { return m_tabSettings; }
 
     // Returns the text to complete at the cursor position, or an empty string
-    virtual QString autoComplete(QTextCursor &cursor, const QString &text, bool skipChars) const;
+    virtual QString autoComplete(QTextCursor &cursor, const QString &text, bool skipChars ,int* adjustPos) const;
 
     // Handles backspace. When returning true, backspace processing is stopped
     virtual bool autoBackspace(QTextCursor &cursor);
@@ -61,7 +63,7 @@ public:
     virtual QString insertMatchingBrace(const QTextCursor &cursor, const
                                         QString &text,
                                         QChar lookAhead, bool skipChars,
-                                        int *skippedChars) const;
+                                        int *skippedChars,int* adjustPos) const;
 
     virtual QString insertMatchingQuote(const QTextCursor &cursor, const
                                         QString &text,
@@ -74,8 +76,13 @@ public:
     static bool isQuote(const QString &text);
     bool isNextBlockIndented(const QTextBlock &currentBlock) const;
 
+    virtual void languageState(int state,TextDocument* textDocument);
+
+    void initProvider(const Highlighter::Definition& def,DocumentContentCompletionProvider* provider);
+
 private:
     QString replaceSelection(QTextCursor &cursor, const QString &textToInsert) const;
+
 
 private:
     TabSettings m_tabSettings;
@@ -85,6 +92,9 @@ private:
     bool m_autoInsertQuotes;
     bool m_surroundWithQuotes;
     bool m_overwriteClosingChars;
+
+protected:
+    int m_lang;
 };
 
 } // TextEditor

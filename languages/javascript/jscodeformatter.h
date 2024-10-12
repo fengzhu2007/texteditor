@@ -1,12 +1,11 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-
 #pragma once
 
 #include "texteditor_global.h"
 
-#include "qmljsscanner.h"
-
+#include "jsscanner.h"
+#include "codeformatter.h"
+#include "languages/token.h"
+#include "textdocumentlayout.h"
 #include <QStack>
 #include <QList>
 #include <QVector>
@@ -17,58 +16,47 @@ class QTextDocument;
 class QTextBlock;
 QT_END_NAMESPACE
 
-namespace QmlJS {
+namespace Html{
+class CodeFormatter;
+class EditorCodeFormatter;
+}
 
-class TEXTEDITOR_EXPORT CodeFormatter
+using namespace Code;
+
+
+namespace Javascript {
+
+class TEXTEDITOR_EXPORT CodeFormatter : public TextEditor::CodeFormatter
 {
     Q_GADGET
 public:
-    CodeFormatter();
+    CodeFormatter(Html::CodeFormatter* formatter=nullptr);
+    explicit CodeFormatter(const TextEditor::TabSettings &tabSettings,Html::CodeFormatter* formatter=nullptr);
     virtual ~CodeFormatter();
 
     // updates all states up until block if necessary
     // it is safe to call indentFor on block afterwards
-    void updateStateUntil(const QTextBlock &block);
+    virtual void updateStateUntil(const QTextBlock &block) override;
 
     // calculates the state change introduced by changing a single line
-    void updateLineStateChange(const QTextBlock &block);
+    virtual void updateLineStateChange(const QTextBlock &block) override;
 
-    int indentFor(const QTextBlock &block);
-    int indentForNewLineAfter(const QTextBlock &block);
+    virtual int indentFor(const QTextBlock &block) override;
+    virtual int indentForNewLineAfter(const QTextBlock &block) override;
 
-    void setTabSize(int tabSize);
+    virtual void setTabSize(int tabSize) override;
 
-    void invalidateCache(QTextDocument *document);
+    virtual void invalidateCache(QTextDocument *document) override;
 
-protected:
-    virtual void onEnter(int newState, int *indentDepth, int *savedIndentDepth) const = 0;
-    virtual void adjustIndent(const QList<Token> &tokens, int startLexerState, int *indentDepth) const = 0;
+    void initState();
 
-    struct State;
-    class TEXTEDITOR_EXPORT BlockData
-    {
-    public:
-        BlockData();
 
-        QStack<State> m_beginState;
-        QStack<State> m_endState;
-        int m_indentDepth;
-        int m_blockRevision;
-    };
-
-    virtual void saveBlockData(QTextBlock *block, const BlockData &data) const = 0;
-    virtual bool loadBlockData(const QTextBlock &block, BlockData *data) const = 0;
-
-    virtual void saveLexerState(QTextBlock *block, int state) const = 0;
-    virtual int loadLexerState(const QTextBlock &block) const = 0;
 
 public: // must be public to make Q_GADGET introspection work
     enum StateType {
         invalid = 0,
 
-        topmost_intro, // The first line in a "topmost" definition.
-
-        top_qml, // root state for qml
+        topmost_intro_js=80,
         top_js, // root for js
         objectdefinition_or_js, // file starts with identifier
 
@@ -124,7 +112,7 @@ public: // must be public to make Q_GADGET introspection work
         ternary_op, // The ? : operator
         ternary_op_after_colon, // after the : in a ternary
 
-        jsblock_open,
+        block_open,
 
         empty_statement, // for a ';', will be popped directly
         breakcontinue_statement, // for continue/break, may be followed by identifier
@@ -164,25 +152,7 @@ protected:
     // extends Token::Kind from qmljsscanner.h
     // the entries until EndOfExistingTokenKinds must match
     enum TokenKind {
-        EndOfFile,
-        Keyword,
-        Identifier,
-        String,
-        Comment,
-        Number,
-        LeftParenthesis,
-        RightParenthesis,
-        LeftBrace,
-        RightBrace,
-        LeftBracket,
-        RightBracket,
-        Semicolon,
-        Colon,
-        Comma,
-        Dot,
-        Delimiter,
-        RegExp,
-
+        None = Code::Token::TokenEnd+1,
         EndOfExistingTokenKinds,
 
         Break,
@@ -228,34 +198,16 @@ protected:
         MinusMinus
     };
 
-    TokenKind extendedTokenKind(const QmlJS::Token &token) const;
+    TokenKind extendedTokenKind(const Code::Token &token) const;
 
-    struct State {
-        State()
-            : savedIndentDepth(0)
-            , type(0)
-        {}
 
-        State(quint8 ty, quint16 savedDepth)
-            : savedIndentDepth(savedDepth)
-            , type(ty)
-        {}
-
-        quint16 savedIndentDepth;
-        quint8 type;
-
-        bool operator==(const State &other) const {
-            return type == other.type
-                && savedIndentDepth == other.savedIndentDepth;
-        }
-    };
 
     State state(int belowTop = 0) const;
     const QVector<State> &newStatesThisLine() const;
     int tokenIndex() const;
     int tokenCount() const;
-    const Token &currentToken() const;
-    const Token &tokenAt(int idx) const;
+    const Code::Token &currentToken() const;
+    const Code::Token &tokenAt(int idx) const;
     int column(int position) const;
 
     bool isBracelessState(int type) const;
@@ -266,6 +218,10 @@ protected:
 
 private:
     void recalculateStateAfter(const QTextBlock &block);
+    inline void setTokens(const QList<Token>& tokens){
+        this->m_tokens = tokens;
+    }
+    void recalculateStateAfter(const QTextBlock &block,int lexerState,const QString& currentLine,int* tokenIndex);
     void saveCurrentState(const QTextBlock &block);
     void restoreCurrentState(const QTextBlock &block);
 
@@ -298,21 +254,34 @@ private:
     int m_indentDepth;
 
     int m_tabSize;
-};
 
-class TEXTEDITOR_EXPORT QtStyleCodeFormatter : public CodeFormatter
-{
+    Html::CodeFormatter* pHtmlFormatter;
+
+
+
 public:
-    QtStyleCodeFormatter();
 
     void setIndentSize(int size);
 
 protected:
-    void onEnter(int newState, int *indentDepth, int *savedIndentDepth) const override;
-    void adjustIndent(const QList<QmlJS::Token> &tokens, int lexerState, int *indentDepth) const override;
+    void onEnter(int newState, int *indentDepth, int *savedIndentDepth) const ;
+    void adjustIndent(const QList<Code::Token> &tokens, int lexerState, int *indentDepth) const ;
+
+    void saveBlockData(QTextBlock *block, const BlockData &data) const ;
+    bool loadBlockData(const QTextBlock &block, BlockData *data) const ;
+
+    void saveLexerState(QTextBlock *block, int state) const ;
+    int loadLexerState(const QTextBlock &block) const ;
 
 private:
     int m_indentSize;
+
+    friend class Html::CodeFormatter;
 };
 
-} // namespace QmlJS
+
+
+
+} // namespace
+
+

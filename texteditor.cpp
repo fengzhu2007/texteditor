@@ -65,8 +65,10 @@
 #include "utils/theme/theme_p.h"
 
 #include "codeassist/documentcontentcompletion.h"
-#include "qmljsqtstylecodeformatter.h"
-#include "qmljshighlighter.h"
+
+#include "codeformatter.h"
+#include "languages/html/htmlhighlighter.h"
+
 
 #include <QAbstractTextDocumentLayout>
 #include <QApplication>
@@ -352,8 +354,8 @@ public:
                           PaintEventBlockData &blockData) const;
     void setupSelections(const PaintEventData &data, PaintEventBlockData &blockData) const;
     void addCursorsPosition(PaintEventData &data,
-                           QPainter &painter,
-                           const PaintEventBlockData &blockData) const;
+                            QPainter &painter,
+                            const PaintEventBlockData &blockData) const;
     QTextBlock nextVisibleBlock(const QTextBlock &block) const;
     void cleanupAnnotationCache();
 
@@ -860,6 +862,7 @@ void TextEditorWidgetPrivate::showTextMarksToolTip(const QPoint &pos,
                       layout->rowCount(), 0, 1, -1, Qt::AlignRight);
     ToolTip::show(pos, layout, q);
 }
+
 
 } // namespace Internal
 
@@ -2423,13 +2426,13 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
         // because AltGr maps to Alt + Ctrl
         QTextCursor cursor = textCursor();
         QString autoText;
+        int adjustPos = 0;
         if (!inOverwriteMode) {
-            const bool skipChar = d->m_skipAutoCompletedText
-                    && !d->m_autoCompleteHighlightPos.isEmpty()
-                    && cursor == d->m_autoCompleteHighlightPos.last();
-            autoText = autoCompleter()->autoComplete(cursor, eventText, skipChar);
+            const bool skipChar = d->m_skipAutoCompletedText && !d->m_autoCompleteHighlightPos.isEmpty() && cursor == d->m_autoCompleteHighlightPos.last();
+            autoText = autoCompleter()->autoComplete(cursor, eventText, skipChar,&adjustPos);
         }
         const bool cursorWithinSnippet = d->snippetCheckCursor(cursor);
+        //qDebug()<<"autoText"<<autoText;
 
         QChar electricChar;
         if (d->m_document->typingSettings().m_autoIndent) {
@@ -2470,7 +2473,7 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
         if (!electricChar.isNull() && d->m_autoCompleter->contextAllowsElectricCharacters(cursor))
             d->m_document->autoIndent(cursor, electricChar, cursor.position());
         if (!autoText.isEmpty())
-            cursor.setPosition(autoText.length() == 1 ? cursor.position() : cursor.anchor());
+            cursor.setPosition(cursor.position() + adjustPos);
 
         if (doEditBlock) {
             cursor.endEditBlock();
@@ -3076,12 +3079,13 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
 
 void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlighting::Definition &definition)
 {
-    auto highlighter = new Highlighter();
+    //auto highlighter = new Highlighter();
     //auto highlighter = new QmlJSEditor::QmlJSHighlighter();
+    auto highlighter = new Html::Highlighter;
     m_document->setSyntaxHighlighter(highlighter);
 
     if (definition.isValid()) {
-        highlighter->setDefinition(definition);
+        //highlighter->setDefinition(definition);
         setupFromDefinition(definition);
     } else {
         q->setCodeFoldingSupported(false);
@@ -6969,41 +6973,7 @@ void TextEditorWidget::unCommentSelection()
 void TextEditorWidget::autoFormat()
 {
     QTextCursor cursor = textCursor();
-    QTextDocument *doc = cursor.document();
-
-    bool hasSelection = cursor.hasSelection();
-
-    QTextBlock block = hasSelection?doc->findBlock(cursor.selectionStart()):doc->begin();
-    const QTextBlock end = hasSelection?doc->findBlock(cursor.selectionEnd()).next():doc->end();
-
-    cursor.beginEditBlock();
-
-
-
-
-    const TextEditor::TabSettings &tabSettings = d->m_document->tabSettings();
-    QmlJSTools::CreatorCodeFormatter codeFormatter(tabSettings);
-    codeFormatter.updateStateUntil(block);
-    do {
-        int depth = codeFormatter.indentFor(block);
-        if (depth != -1) {
-            if (QStringView(block.text()).trimmed().isEmpty()) {
-                // we do not want to indent empty lines (as one is indentent when pressing tab
-                // assuming that the user will start writing something), and get rid of that
-                // space if one had pressed tab in an empty line just before refactoring.
-                // If depth == -1 (inside a multiline string for example) leave the spaces.
-                depth = 0;
-            }
-            tabSettings.indentLine(block, depth);
-        }
-        codeFormatter.updateLineStateChange(block);
-        block = block.next();
-    } while (block.isValid() && block != end);
-    cursor.endEditBlock();
-    /*QTextCursor cursor = textCursor();
-    cursor.beginEditBlock();
     d->m_document->autoFormat(cursor);
-    cursor.endEditBlock();*/
 }
 
 void TextEditorWidget::encourageApply()
@@ -7697,9 +7667,22 @@ void TextEditorWidget::setCursorPosition(int pos)
 
 void TextEditorWidgetPrivate::updateCursorPosition()
 {
+    //update provider if needed
+    const QTextBlock block = q->textCursor().block();
+    if(block.isValid()){
+        const int state =  TextEditor::TextDocumentLayout::lexerState(block);
+        if(!m_autoCompleter.isNull()){
+            m_autoCompleter->languageState(state,q->textDocument());
+        }
+    }
     //m_contextHelpItem = HelpItem();
-    if (!q->textCursor().block().isVisible())
+    if (!block.isVisible())
         q->ensureCursorVisible();
+
+
+
+
+
 }
 
 RefactorMarkers TextEditorWidget::refactorMarkers() const
@@ -7939,49 +7922,10 @@ void TextEditorWidget::configureGenericHighlighter()
     Highlighter::Definitions definitions = Highlighter::definitionsForDocument(textDocument());
     d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition() : definitions.first());
     d->updateSyntaxInfoBar(definitions, textDocument()->filePath().fileName());
-    //update
-    //qDebug()<<"size:"<<definitions.size();
-    if(!definitions.isEmpty()){
-        const Highlighter::Definition def = definitions.constFirst();
-        const QStringList list = def.keywordLists();
-        //qDebug()<<"list"<<list<<def.name();
-        //auto provider = this->autoco
-        auto provider = static_cast<TextEditor::DocumentContentCompletionProvider*>(d->m_document->completionAssistProvider());
-        //qDebug()<<"provider"<<provider;
-        QStringList keywords;
-        QStringList functions;
-        QStringList classes;
-        QStringList constants;
-        for(auto one:list){
-            auto name = one.toLower();
-            //qDebug()<<"one:"<<one;
-            if(name.contains("function")){
-                //provider->setFunctionList(def.keywordList(one));
-                functions += def.keywordList(one);
-            }else if(name.contains("class") ){
-                classes += def.keywordList(one);
-            }else if(name.contains("keyword") || name.contains("control")){
-                //qDebug()<<"name:"<<name;
-                keywords += def.keywordList(one);
-            }else if(name.contains("constant") || name.contains("variable")){
-                 constants += def.keywordList(one);
-            }
-        }
-        provider->setKeywordList(keywords);
-        provider->setFunctionList(functions);
-        provider->setClassList(classes);
-        provider->setVariableList(constants);
-    }
+
+
 }
 
-
-/*void TextEditorWidget::configureGenericHighlighter(const Utils::MimeType &mimeType)
-{
-    Highlighter::Definitions definitions = Highlighter::definitionsForMimeType(mimeType.name());
-    d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition()
-                                                         : definitions.first());
-    d->removeSyntaxInfoBar();
-}*/
 
 int TextEditorWidget::blockNumberForVisibleRow(int row) const
 {

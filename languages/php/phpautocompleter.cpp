@@ -1,17 +1,13 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+#include "phpautocompleter.h"
 
-#include "qmljsautocompleter.h"
-
-#include "qmljsscanner.h"
+#include "phpscanner.h"
 
 #include <QTextDocument>
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QDebug>
 
-using namespace QmlJSEditor;
-using namespace QmlJS;
+using namespace Php;
 
 static int blockStartState(const QTextBlock &block)
 {
@@ -22,20 +18,21 @@ static int blockStartState(const QTextBlock &block)
         return state & 0xff;
 }
 
-static Token tokenUnderCursor(const QTextCursor &cursor)
+static Code::Token tokenUnderCursor(const QTextCursor &cursor)
 {
     const QString blockText = cursor.block().text();
-    const int blockState = blockStartState(cursor.block());
+    int blockState = blockStartState(cursor.block());
 
     Scanner tokenize;
-    const QList<Token> tokens = tokenize(blockText, blockState);
+    int index = 0;
+    const QList<Code::Token> tokens = tokenize(index,blockText, blockState);
     const int pos = cursor.positionInBlock();
     int tokenIndex = 0;
     for (; tokenIndex < tokens.size(); ++tokenIndex) {
-        const Token &token = tokens.at(tokenIndex);
-        qDebug()<<"token:"<<token.kind<<"index:"<<tokenIndex<<token.begin()<<token.end();
+        const Code::Token &token = tokens.at(tokenIndex);
+        //qDebug()<<"token:"<<token.kind<<"index:"<<tokenIndex<<token.begin()<<token.end();
 
-        if (token.is(Token::Comment) || token.is(Token::String)) {
+        if (token.is(Code::Token::Comment,Code::Token::Php) || token.is(Code::Token::String,Code::Token::Php)) {
             if (pos > token.begin() && pos <= token.end())
                 break;
         } else {
@@ -47,7 +44,7 @@ static Token tokenUnderCursor(const QTextCursor &cursor)
     if (tokenIndex != tokens.size())
         return tokens.at(tokenIndex);
 
-    return Token();
+    return Code::Token();
 }
 
 static bool shouldInsertMatchingText(QChar lookAhead)
@@ -139,15 +136,15 @@ bool AutoCompleter::contextAllowsAutoBrackets(const QTextCursor &cursor,
         return false;
     } // end of switch
 
-    const Token token = tokenUnderCursor(cursor);
+    const Code::Token token = tokenUnderCursor(cursor);
     switch (token.kind) {
-    case Token::Comment:
+    case Code::Token::Comment:
         return false;
 
-    case Token::RightBrace:
+    case Code::Token::RightBrace:
         return false;
 
-    case Token::String: {
+    case Code::Token::String: {
         const QString blockText = cursor.block().text();
         const QStringView tokenText = QStringView(blockText).mid(token.offset, token.length);
         QChar quote = tokenText.at(0);
@@ -183,15 +180,15 @@ bool AutoCompleter::contextAllowsAutoQuotes(const QTextCursor &cursor,
     if (!isQuote(textToInsert))
         return false;
 
-    const Token token = tokenUnderCursor(cursor);
+    const Code::Token token = tokenUnderCursor(cursor);
     switch (token.kind) {
-    case Token::Comment:
+    case Code::Token::Comment:
         return false;
 
-    case Token::RightBrace:
+    case Code::Token::RightBrace:
         return false;
 
-    case Token::String: {
+    case Code::Token::String: {
         const QString blockText = cursor.block().text();
         const QStringView tokenText = QStringView(blockText).mid(token.offset, token.length);
         QChar quote = tokenText.at(0);
@@ -223,10 +220,10 @@ bool AutoCompleter::contextAllowsAutoQuotes(const QTextCursor &cursor,
 
 bool AutoCompleter::contextAllowsElectricCharacters(const QTextCursor &cursor) const
 {
-    Token token = tokenUnderCursor(cursor);
+    Code::Token token = tokenUnderCursor(cursor);
     switch (token.kind) {
-    case Token::Comment:
-    case Token::String:
+    case Code::Token::Comment:
+    case Code::Token::String:
         return false;
     default:
         return true;
@@ -235,14 +232,14 @@ bool AutoCompleter::contextAllowsElectricCharacters(const QTextCursor &cursor) c
 
 bool AutoCompleter::isInComment(const QTextCursor &cursor) const
 {
-    return tokenUnderCursor(cursor).is(Token::Comment);
+    return tokenUnderCursor(cursor).is(Code::Token::Comment,Code::Token::Php);
 }
 
 QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,
                                            const QString &text,
                                            QChar lookAhead,
                                            bool skipChars,
-                                           int *skippedChars) const
+                                           int *skippedChars,int* adjustPos) const
 {
     if (text.length() != 1)
         return QString();

@@ -129,7 +129,7 @@ public:
 private:
     TextMarks m_marks;
     int m_foldingIndent : 16;
-    int m_lexerState : 8;
+    int m_lexerState : 32;
     uint m_folded : 1;
     uint m_ifdefedOut : 1;
     uint m_foldingStartIncluded : 1;

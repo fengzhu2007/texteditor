@@ -1,13 +1,10 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-
-#include "qmljsqtstylecodeformatter.h"
-
+#include "cstyleqtcodeformatter.h"
 #include "tabsettings.h"
 
-using namespace QmlJS;
-using namespace QmlJSTools;
 using namespace TextEditor;
+
+
+namespace CStyle{
 
 CreatorCodeFormatter::CreatorCodeFormatter() = default;
 
@@ -20,9 +17,9 @@ CreatorCodeFormatter::CreatorCodeFormatter(const TabSettings &tabSettings)
 void CreatorCodeFormatter::saveBlockData(QTextBlock *block, const BlockData &data) const
 {
     TextBlockUserData *userData = TextDocumentLayout::userData(*block);
-    auto cppData = static_cast<QmlJSCodeFormatterData *>(userData->codeFormatterData());
+    auto cppData = static_cast<CStyleCodeFormatterData *>(userData->codeFormatterData());
     if (!cppData) {
-        cppData = new QmlJSCodeFormatterData;
+        cppData = new CStyleCodeFormatterData;
         userData->setCodeFormatterData(cppData);
     }
     cppData->m_data = data;
@@ -33,7 +30,7 @@ bool CreatorCodeFormatter::loadBlockData(const QTextBlock &block, BlockData *dat
     TextBlockUserData *userData = TextDocumentLayout::textUserData(block);
     if (!userData)
         return false;
-    auto cppData = static_cast<const QmlJSCodeFormatterData *>(userData->codeFormatterData());
+    auto cppData = static_cast<const CStyleCodeFormatterData *>(userData->codeFormatterData());
     if (!cppData)
         return false;
 
@@ -49,4 +46,7 @@ void CreatorCodeFormatter::saveLexerState(QTextBlock *block, int state) const
 int CreatorCodeFormatter::loadLexerState(const QTextBlock &block) const
 {
     return TextDocumentLayout::lexerState(block);
+}
+
+
 }
