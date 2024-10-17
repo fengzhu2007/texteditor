@@ -12,6 +12,10 @@
 #include "../completionsettings.h"
 #include "../texteditorsettings.h"
 
+#include "textdocumentlayout.h"
+#include "autocompleter.h"
+#include "languages/token.h"
+
 #include "utils/algorithm.h"
 #include "utils/runextensions.h"
 
@@ -100,10 +104,12 @@ QStringList Keywords::argsForFunction(const QString &function) const
     return m_functionArgs.value(function);
 }
 
+
+
 class DocumentContentCompletionProcessor final : public IAssistProcessor
 {
 public:
-    DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords);
+    DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,AutoCompleter* autoCompleter);
     ~DocumentContentCompletionProcessor() final;
     QList<AssistProposalItemInterface *> generateProposalList(const QStringList &words, const QIcon &icon);
     IAssistProposal *perform(const AssistInterface *interface) override;
@@ -120,6 +126,7 @@ private:
     QIcon m_variantIcon;
     QIcon m_constantIcon;
     QIcon m_fieldIcon;
+    AutoCompleter* m_autoCompleter;
 };
 
 
@@ -129,6 +136,7 @@ DocumentContentCompletionProvider::DocumentContentCompletionProvider(const QStri
     : m_snippetGroup(snippetGroup)
 {
     d = new DocumentContentCompletionProviderPrivate;
+    m_autoCompleter = nullptr;
 
 }
 DocumentContentCompletionProvider::~DocumentContentCompletionProvider(){
@@ -143,7 +151,7 @@ IAssistProvider::RunType DocumentContentCompletionProvider::runType() const
 IAssistProcessor *DocumentContentCompletionProvider::createProcessor(const AssistInterface *) const
 {
     //qDebug()<<"DocumentContentCompletionProvider::createProcessor";
-    return new DocumentContentCompletionProcessor(m_snippetGroup,d->keywords);
+    return new DocumentContentCompletionProcessor(m_snippetGroup,d->keywords,m_autoCompleter);
 }
 
 
@@ -166,8 +174,8 @@ void DocumentContentCompletionProvider::setOtherList(const QStringList& words){
 
 
 
-DocumentContentCompletionProcessor::DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords)
-    : m_snippetGroup(snippetGroupId),m_keywords(keywords)
+DocumentContentCompletionProcessor::DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,TextEditor::AutoCompleter* autoCompleter)
+    : m_snippetGroup(snippetGroupId),m_keywords(keywords),m_autoCompleter(autoCompleter)
 {
     m_keywordIcon = QIcon(":/resource/icons/IntelliSenseKeyword_16x.svg");
     m_classIcon = QIcon(":/resource/icons/Class_16x.svg");
@@ -245,24 +253,43 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
         }
     }
 
+    QTextCursor startPositionCursor(interface->textDocument());
+    startPositionCursor.setPosition(pos);
+    QTextBlock block = startPositionCursor.block();
+    //int lexerState = TextDocumentLayout::lexerState(block);
+
+    if(m_autoCompleter!=nullptr){
+        //const int startPos =
+        //auto tokens = m_autoCompleter->tokenizeBlock(block);
+        if(m_autoCompleter->isInStringLiteral(block,pos - block.position())){
+            return nullptr;
+        }
+    }
+
+
+
+
     const QString wordUnderCursor = interface->textAt(pos, length);
     const QString text = interface->textDocument()->toPlainText();
 
 
+
+
+
     m_watcher.setFuture(Utils::runAsync(&createProposal, text, wordUnderCursor,this->m_keywords));
     QObject::connect(&m_watcher, &QFutureWatcher<QStringList>::resultReadyAt,
-                     &m_watcher, [this, pos](int index){
+                     &m_watcher, [this, pos](int index ){
 
         /*const TextEditor::SnippetAssistCollector snippetCollector(m_snippetGroup, QIcon(":/texteditor/images/snippet.png"));
         QList<AssistProposalItemInterface *> items = snippetCollector.collect();*/
         QList<AssistProposalItemInterface *> items;
-
         for (const QString &word : m_watcher.resultAt(index)) {
             auto item = new AssistProposalItem();
             item->setText(word);
             item->setIcon(this->m_variantIcon);
             items.append(item);
         }
+
         for(const QString &word:this->m_keywords.keywords()){
             auto item = new AssistProposalItem();
             item->setText(word);
@@ -287,6 +314,7 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
             item->setIcon(this->m_classIcon);
             items.append(item);
         }
+
         setAsyncProposalAvailable(new GenericProposal(pos, items));
     });
     return nullptr;

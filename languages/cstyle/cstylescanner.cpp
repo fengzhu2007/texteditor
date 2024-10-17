@@ -158,21 +158,6 @@ static inline void setRegexpMayFollow(int *state, bool on)
     *state = (on ? Scanner::RegexpMayFollow : 0) | (*state & ~Scanner::RegexpMayFollow);
 }
 
-static inline int templateExpressionDepth(int state)
-{
-    if ((state & Scanner::TemplateExpressionOpenBracesMask) == 0)
-        return 0;
-    if ((state & (Scanner::TemplateExpressionOpenBracesMask3 | Scanner::TemplateExpressionOpenBracesMask4)) == 0) {
-        if ((state & Scanner::TemplateExpressionOpenBracesMask2) == 0)
-            return 1;
-        else
-            return 2;
-    }
-    if ((state & Scanner::TemplateExpressionOpenBracesMask4) == 0)
-        return 3;
-    else
-        return 4;
-}
 
 QList<Token> Scanner::operator()(const QString &text, int startState)
 {
@@ -181,44 +166,7 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
 
     int index = 0;
 
-    auto scanTemplateString = [&index, &text, &tokens, this](int startShift = 0){
-        const QChar quote = QLatin1Char('`');
-        const int start = index + startShift;
-        while (index < text.length()) {
-            const QChar ch = text.at(index);
 
-            if (ch == quote)
-                break;
-            else if (ch == QLatin1Char('$') && index + 1 < text.length() && text.at(index + 1) == QLatin1Char('{')) {
-                tokens.append(Token(start, index - start, Token::String));
-                tokens.append(Token(index, 2, Token::Delimiter));
-                index += 2;
-                setRegexpMayFollow(&_state, true);
-                setMultiLineState(&_state, Normal);
-                int depth = templateExpressionDepth(_state);
-                if (depth == 4) {
-                    qWarning() << "QQmljs::Dom::Scanner reached maximum nesting of template expressions (4), parsing will fail";
-                } else {
-                    _state |= 1 << (4 + depth * 7);
-                }
-                return;
-            } else if (ch == QLatin1Char('\\') && index + 1 < text.length())
-                index += 2;
-            else
-                ++index;
-        }
-
-        if (index < text.length()) {
-            setMultiLineState(&_state, Normal);
-            ++index;
-            // good one
-        } else {
-            setMultiLineState(&_state, MultiLineStringBQuote);
-        }
-
-        tokens.append(Token(start, index - start, Token::String));
-        setRegexpMayFollow(&_state, false);
-    };
 
     if (multiLineState(_state) == MultiLineComment) {
         int start = -1;
@@ -263,8 +211,6 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
         if (start < index)
             tokens.append(Token(start, index - start, Token::String));
         setRegexpMayFollow(&_state, false);
-    } else if (multiLineState(_state) == MultiLineStringBQuote) {
-        scanTemplateString();
     }
 
     auto braceCounterOffset = [](int templateDepth) {
@@ -354,11 +300,6 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
             setRegexpMayFollow(&_state, false);
         } break;
 
-        case '`': {
-            ++index;
-            scanTemplateString(-1);
-        } break;
-
         case '.':
             if (la.isDigit()) {
                 const int start = index;
@@ -395,33 +336,11 @@ QList<Token> Scanner::operator()(const QString &text, int startState)
         case '{':{
             tokens.append(Token(index++, 1, Token::LeftBrace));
             setRegexpMayFollow(&_state, true);
-            int depth = templateExpressionDepth(_state);
-            if (depth > 0) {
-                int shift = braceCounterOffset(depth);
-                int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
-                if ((_state & mask) == mask) {
-                    qWarning() << "QQmljs::Dom::Scanner reached maximum open braces of template expressions (127), parsing will fail";
-                } else {
-                    _state = (_state & ~mask) | (((Scanner::TemplateExpressionOpenBracesMask0 & (_state >> shift)) + 1) << shift);
-                }
-            }
+
         } break;
 
         case '}': {
             setRegexpMayFollow(&_state, false);
-            int depth = templateExpressionDepth(_state);
-            if (depth > 0) {
-                int shift = braceCounterOffset(depth);
-                int s = _state;
-                int nBraces = Scanner::TemplateExpressionOpenBracesMask0 & (s >> shift);
-                int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
-                _state = (s & ~mask) | ((nBraces - 1) << shift);
-                if (nBraces == 1) {
-                    tokens.append(Token(index++, 1, Token::Delimiter));
-                    scanTemplateString();
-                    break;
-                }
-            }
             tokens.append(Token(index++, 1, Token::RightBrace));
         } break;
 

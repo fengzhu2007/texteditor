@@ -165,6 +165,8 @@ protected:
     void saveLexerState(QTextBlock *block, int state) const ;
     int loadLexerState(const QTextBlock &block) const ;
 
+    void saveTQouteTag(QTextBlock *block,const QByteArray& tag) const ;
+    QByteArray loadTQouteTag(const QTextBlock &block) const ;
 
 
     friend class Php::CodeFormatter;

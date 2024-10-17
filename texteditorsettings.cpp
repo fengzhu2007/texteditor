@@ -54,7 +54,8 @@ public:
     QMap<QString, Utils::Id> m_mimeTypeToLanguage;
 
     void initFontSetting(){
-        m_fontSettings.loadColorScheme(":/resource/styles/default_classic.xml",initialFormats());
+        //creator-dark.xml
+        m_fontSettings.loadColorScheme(":/resource/styles/default_light.xml",initialFormats());
     }
 
 private:
@@ -183,31 +184,7 @@ FormatDescriptions TextEditorSettingsPrivate::initialFormats()
                                 "binding to another property."),
                              Qt::darkRed);
 
-    Format qmlLocalNameFormat;
-    qmlLocalNameFormat.setItalic(true);
-    formatDescr.emplace_back(C_QML_LOCAL_ID, tr("QML Local Id"),
-                             tr("QML item id within a QML file."), qmlLocalNameFormat);
-    formatDescr.emplace_back(C_QML_ROOT_OBJECT_PROPERTY,
-                             tr("QML Root Object Property"),
-                             tr("QML property of a parent item."), qmlLocalNameFormat);
-    formatDescr.emplace_back(C_QML_SCOPE_OBJECT_PROPERTY,
-                             tr("QML Scope Object Property"),
-                             tr("Property of the same QML item."), qmlLocalNameFormat);
-    formatDescr.emplace_back(C_QML_STATE_NAME, tr("QML State Name"),
-                             tr("Name of a QML state."), qmlLocalNameFormat);
 
-    formatDescr.emplace_back(C_QML_TYPE_ID, tr("QML Type Name"),
-                             tr("Name of a QML type."), Qt::darkMagenta);
-
-    Format qmlExternalNameFormat = qmlLocalNameFormat;
-    qmlExternalNameFormat.setForeground(Qt::darkBlue);
-    formatDescr.emplace_back(C_QML_EXTERNAL_ID, tr("QML External Id"),
-                             tr("QML id defined in another QML file."),
-                             qmlExternalNameFormat);
-    formatDescr.emplace_back(C_QML_EXTERNAL_OBJECT_PROPERTY,
-                             tr("QML External Object Property"),
-                             tr("QML property defined in another QML file."),
-                             qmlExternalNameFormat);
 
     Format jsLocalFormat;
     jsLocalFormat.setForeground(QColor(41, 133, 199)); // very light blue
@@ -564,7 +541,9 @@ Utils::Id TextEditorSettings::languageId(const QString &mimeType)
 
 static void setFontZoom(int zoom)
 {
-
+    d->m_fontSettings.setFontZoom(zoom);
+    d->m_fontSettings.toSettings(Core::ICore::settings());
+    emit m_instance->fontSettingsChanged(d->m_fontSettings);
 }
 
 int TextEditorSettings::increaseFontZoom(int step)

@@ -7,8 +7,8 @@
 
 #include <QString>
 
-namespace Python::Internal {
-
+namespace Python {
+using namespace  Internal;
 /**
  * @brief The Scanner class - scans source code for highlighting only
  */
@@ -72,4 +72,4 @@ private:
     int m_state;
 };
 
-} // Python::Internal
+} // Python

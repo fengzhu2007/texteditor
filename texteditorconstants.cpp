@@ -55,16 +55,9 @@ const char *nameForStyle(TextStyle style)
     case C_DOXYGEN_COMMENT:     return "Doxygen.Comment";
     case C_DOXYGEN_TAG:         return "Doxygen.Tag";
     case C_VISUAL_WHITESPACE:   return "VisualWhitespace";
-    case C_QML_LOCAL_ID:        return "QmlLocalId";
-    case C_QML_EXTERNAL_ID:     return "QmlExternalId";
-    case C_QML_TYPE_ID:         return "QmlTypeId";
-    case C_QML_ROOT_OBJECT_PROPERTY:     return "QmlRootObjectProperty";
-    case C_QML_SCOPE_OBJECT_PROPERTY:    return "QmlScopeObjectProperty";
-    case C_QML_EXTERNAL_OBJECT_PROPERTY: return "QmlExternalObjectProperty";
     case C_JS_SCOPE_VAR:        return "JsScopeVar";
     case C_JS_IMPORT_VAR:       return "JsImportVar";
     case C_JS_GLOBAL_VAR:       return "JsGlobalVar";
-    case C_QML_STATE_NAME:      return "QmlStateName";
     case C_BINDING:             return "Binding";
 
     case C_DISABLED_CODE:       return "DisabledCode";

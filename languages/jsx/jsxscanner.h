@@ -5,11 +5,10 @@
 
 #include "texteditor_global.h"
 #include "../token.h"
+
 #include <QStringList>
-namespace Html{
-class Scanner;
-}
-namespace Php {
+
+namespace Jsx {
 
 class TEXTEDITOR_EXPORT Scanner
 {
@@ -23,13 +22,10 @@ public:
         MultiLineComment = 1,
         MultiLineStringDQuote = MultiLineComment<<1,
         MultiLineStringSQuote = MultiLineComment<<2,
-        MultiLineStringTQuote = MultiLineComment<<3,
-        MultiLineMask = MultiLineComment | MultiLineStringDQuote | MultiLineStringSQuote | MultiLineStringTQuote,
+        MultiLineStringBQuote = MultiLineComment<<3,
+        MultiLineMask = MultiLineComment | MultiLineStringDQuote | MultiLineStringBQuote,
 
-
-        PHPTQouteStart = MultiLineComment << 11,
-
-        //RegexpMayFollow = 8, // flag that may be combined with the above
+        RegexpMayFollow = MultiLineComment<<11, // flag that may be combined with the above
 
         // templates can be nested, which means that the scanner/lexer cannot
         // be a simple state machine anymore, but should have a stack to store
@@ -49,7 +45,7 @@ public:
                                            | TemplateExpressionOpenBracesMask3 | TemplateExpressionOpenBracesMask4
     };
 
-    Scanner(Html::Scanner* htmlScanner=nullptr);
+    Scanner();
     virtual ~Scanner();
 
     bool scanComments() const;
@@ -61,14 +57,9 @@ public:
     bool isKeyword(const QString &text) const;
     static QStringList keywords();
 
-    static QString currentTQouteTag();
-    static void setCurrentTQouteTag(const QString& tag);
-
 private:
     int _state;
     bool _scanComments: 1;
-    Html::Scanner* pHtmlScanner;
-    static QString TQuoteTag;
 };
 
 } // namespace CStyle

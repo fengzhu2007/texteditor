@@ -220,6 +220,12 @@ add_library(texteditor SHARED
     languages/html/htmlhighlighter.h languages/html/htmlhighlighter.cpp
     languages/javascript/jscodeformatter.h languages/javascript/jscodeformatter.cpp
     languages/css/csscodeformatter.h languages/css/csscodeformatter.cpp
+    languages/loader.h languages/loader.cpp
+    languages/javascript/jsautocompleter.cpp languages/javascript/jsautocompleter.h languages/javascript/jshighlighter.cpp languages/javascript/jshighlighter.h languages/javascript/jsindenter.cpp languages/javascript/jsindenter.h
+    languages/css/cssautocompleter.cpp languages/css/cssautocompleter.h languages/css/csshighlighter.cpp languages/css/csshighlighter.h languages/css/cssindenter.cpp languages/css/cssindenter.h
+    languages/jsx/jsxscanner.h languages/jsx/jsxscanner.cpp
+
+
 
 
 

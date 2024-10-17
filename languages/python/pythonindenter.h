@@ -8,6 +8,6 @@
 
 namespace Python {
 
-TEXTEDITOR_EXPORT TextEditor::TextIndenter *createPythonIndenter(QTextDocument *doc);
+TEXTEDITOR_EXPORT TextEditor::TextIndenter *createIndenter(QTextDocument *doc);
 
 } // namespace Python

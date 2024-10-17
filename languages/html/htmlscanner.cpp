@@ -275,9 +275,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
             }else if(la== QLatin1Char('?')){
                 if(maybyText() && start>-1 && index > start){
                     tokens.append(Token(start, index - start, Token::InnerText));
-                    //if(isMarkState(_state,MultiLineText)){
-                    //    unSetMarkState(&_state,MultiLineText);
-                    //}
                 }
                 setMarkState(&_state,MultiLinePhp);
                 break;

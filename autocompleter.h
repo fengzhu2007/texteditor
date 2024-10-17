@@ -6,6 +6,7 @@
 #include "texteditor_global.h"
 #include "tabsettings.h"
 #include "highlighter.h"
+#include "languages/token.h"
 #include <QString>
 
 QT_BEGIN_NAMESPACE
@@ -76,9 +77,15 @@ public:
     static bool isQuote(const QString &text);
     bool isNextBlockIndented(const QTextBlock &currentBlock) const;
 
+    virtual QList<Code::Token> tokenizeBlock(const QTextBlock& block);
+    virtual bool isInStringLiteral(const QTextBlock& block,int pos);
+
     virtual void languageState(int state,TextDocument* textDocument);
 
+
+
     void initProvider(const Highlighter::Definition& def,DocumentContentCompletionProvider* provider);
+
 
 private:
     QString replaceSelection(QTextCursor &cursor, const QString &textToInsert) const;

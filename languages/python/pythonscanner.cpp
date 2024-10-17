@@ -5,7 +5,7 @@
 
 #include <QSet>
 
-namespace Python::Internal {
+namespace Python {
 
 Scanner::Scanner(const QChar *text, const int length)
     : m_text(text), m_textLength(length), m_state(0)
@@ -375,4 +375,4 @@ void Scanner::parseState(State &state, QChar &savedData) const
     savedData = static_cast<ushort>(m_state);
 }
 
-} // Python::Internal
+} // Python

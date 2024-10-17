@@ -1,9 +1,9 @@
-#include "jsscanner.h"
+#include "jsxscanner.h"
 #include "languages/html/htmlscanner.h"
 #include <QDebug>
 #include <algorithm>
 
-using namespace Javascript;
+using namespace Jsx;
 using namespace Code;
 
 namespace {
@@ -20,7 +20,6 @@ static const QString js_keywords[] = {
     QLatin1String("do"),
     QLatin1String("else"),
     QLatin1String("extends"),
-    QLatin1String("false"),
     QLatin1String("finally"),
     QLatin1String("for"),
     QLatin1String("function"),
@@ -34,7 +33,6 @@ static const QString js_keywords[] = {
     QLatin1String("switch"),
     QLatin1String("this"),
     QLatin1String("throw"),
-    QLatin1String("true"),
     QLatin1String("try"),
     QLatin1String("typeof"),
     QLatin1String("var"),
@@ -57,10 +55,9 @@ const _Tp *end(const _Tp (&a)[N])
     return a + N;
 }
 
-Scanner::Scanner(Html::Scanner* htmlScanner)
+Scanner::Scanner()
     : _state(Normal),
-    _scanComments(true),
-    pHtmlScanner(htmlScanner)
+    _scanComments(true)
 {
 }
 
@@ -475,22 +472,9 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                 tokens.append(Token(index, 2, Token::Keyword,Code::Token::Javascript));
                 index += 2;
             }else if(la == QLatin1Char('/')){
-                //like  </
-                /*if(index + 2 < text.length() && text.at(index+2).isLetter() && this->pHtmlScanner!=nullptr){
-                    //html tag
-                    this->pHtmlScanner->endJS();
-                }else{
-                    tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
-                }*/
-                if(this->pHtmlScanner!=nullptr){
-                    //this->pHtmlScanner->endJS();
-                    //unSetMarkState(&_state,Html::Scanner::MultiLineCss);
-                    //|Html::Scanner::JavascriptTagStart
-                    _state &= ~(Html::Scanner::MultiLineJavascript | Html::Scanner::JavascriptTagStart);
-                    goto result;
-                }else{
-                    tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
-                }
+
+                tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
+
             }else {
                 tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
             }
@@ -565,7 +549,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             }
         } // end of switch
     }
-    result:
+result:
     startState = _state;
     from = index;
     return tokens;

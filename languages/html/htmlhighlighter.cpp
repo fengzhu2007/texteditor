@@ -41,6 +41,7 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::PhpLeftBracket:
         case Token::PhpRightBracket:
         case Token::Selector:
+        case Token::AtRules:
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
              break;
 
@@ -52,7 +53,7 @@ void Highlighter::highlightBlock(const QString &text)
              setFormat(token.offset, token.length, formatForCategory(C_STRING));
              break;
         case Token::AttrName:
-             setFormat(token.offset, token.length, formatForCategory(C_LOCAL));
+             setFormat(token.offset, token.length, formatForCategory(C_FIELD));
              break;
             //php js
         case Token::Keyword:
@@ -63,16 +64,6 @@ void Highlighter::highlightBlock(const QString &text)
             setFormat(token.offset, token.length, formatForCategory(C_STRING));
             break;
         case Token::Comment:
-//            if (m_inMultilineComment
-//                && QStringView(text).mid(token.end() - 2, 2) == QLatin1String("*/")) {
-//                onClosingParenthesis(QLatin1Char('-'), token.end() - 1, index == tokens.size()-1);
-//                m_inMultilineComment = false;
-//            } else if (!m_inMultilineComment
-//                       && (m_scanner.state() & Scanner::MultiLineMask) == Scanner::MultiLineComment
-//                       && index == tokens.size() - 1) {
-//                onOpeningParenthesis(QLatin1Char('+'), token.offset, index == 0);
-//                m_inMultilineComment = true;
-//            }
             setFormat(token.offset, token.length, formatForCategory(C_COMMENT));
             break;
 
@@ -82,38 +73,39 @@ void Highlighter::highlightBlock(const QString &text)
 
         case Token::LeftParenthesis:
             onOpeningParenthesis(QLatin1Char('('), token.offset, index == 0);
-            setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::RightParenthesis:
             onClosingParenthesis(QLatin1Char(')'), token.offset, index == tokens.size()-1);
-            setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::LeftBrace:
             onOpeningParenthesis(QLatin1Char('{'), token.offset, index == 0);
-            setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::RightBrace:
             onClosingParenthesis(QLatin1Char('}'), token.offset, index == tokens.size()-1);
-            setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::LeftBracket:
             onOpeningParenthesis(QLatin1Char('['), token.offset, index == 0);
-            setFormat(token.offset, token.length, formatForCategory(C_FIELD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::RightBracket:
             onClosingParenthesis(QLatin1Char(']'), token.offset, index == tokens.size()-1);
-            setFormat(token.offset, token.length, formatForCategory(C_FIELD));
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         case Token::Identifier:
 
             break;
         case Token::Delimiter:
+            setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 
         default:

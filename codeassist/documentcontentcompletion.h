@@ -6,6 +6,7 @@
 #include "completionassistprovider.h"
 
 #include "texteditorconstants.h"
+
 //#include "assistproposaliteminterface.h"
 
 #include <QMap>
@@ -13,6 +14,7 @@ namespace TextEditor {
 
 class AssistProposalItemInterface;
 class DocumentContentCompletionProviderPrivate;
+
 
 class TEXTEDITOR_EXPORT Keywords
 {
@@ -65,11 +67,10 @@ public:
     void setClassList(const QStringList& words);
     void setOtherList(const QStringList& words);
 
-
-
 private:
     QString m_snippetGroup;
     DocumentContentCompletionProviderPrivate* d;
+
     //Keywords m_keyWords;
 
 };

@@ -73,7 +73,7 @@ bool isAutoClose(QStringView tag){
 
         //qCDebug(formatterLog) << "Starting to look at " << block.text() << block.blockNumber() + 1;
 
-        Scanner scanner;
+        //Scanner scanner;
         //qDebug()<<"token size:"<<m_tokens.size();
         //scanner.dump(block.text(),m_tokens);
 
@@ -200,11 +200,8 @@ bool isAutoClose(QStringView tag){
 
     int CodeFormatter::indentFor(const QTextBlock &block)
     {
-        //qDebug() << "indenting for"<<block.text() << block.blockNumber() + 1;
-        //qDebug()<<"indentFor:"<<m_indentDepth;
         restoreCurrentState(block.previous());
         correctIndentation(block);
-        //()<<"indentFor:"<<m_indentDepth;
         return m_indentDepth;
     }
 
@@ -490,9 +487,16 @@ bool isAutoClose(QStringView tag){
 
     int CodeFormatter::tokenizeBlock(const QTextBlock &block)
     {
-        int startState = loadLexerState(block.previous());
-        if (block.blockNumber() == 0)
+        const QTextBlock previous = block.previous();
+        int startState = loadLexerState(previous);
+        QByteArray startTQouteTag;
+        if((startState&Php::Scanner::MultiLineStringTQuote) == Php::Scanner::MultiLineStringTQuote){
+            startTQouteTag = loadTQouteTag(previous);
+            Php::Scanner::setCurrentTQouteTag(startTQouteTag);
+        }
+        if (block.blockNumber() == 0){
             startState = 0;
+        }
         Q_ASSERT(startState != -1);
         Scanner tokenize;
         tokenize.setScanComments(true);
@@ -505,8 +509,17 @@ bool isAutoClose(QStringView tag){
         m_tokens = tokenize(from,m_currentLine, startState);
 
         const int lexerState = tokenize.state();
+
         QTextBlock saveableBlock(block);
         saveLexerState(&saveableBlock, lexerState);
+
+        if((lexerState&Php::Scanner::MultiLineStringTQuote) == Php::Scanner::MultiLineStringTQuote){
+            //load expected suffix
+            if(startTQouteTag.isEmpty()){
+                startTQouteTag = Php::Scanner::currentTQouteTag().toLatin1();
+            }
+            saveTQouteTag(&saveableBlock,startTQouteTag);
+        }
         return lexerState;
     }
 
@@ -618,6 +631,8 @@ bool isAutoClose(QStringView tag){
             cppData = new Code::CodeFormatterData;
             userData->setCodeFormatterData(cppData);
         }
+
+        //userData->setExpectedRawStringSuffix("111");
         cppData->m_data = data;
     }
 
@@ -626,6 +641,7 @@ bool isAutoClose(QStringView tag){
         TextBlockUserData *userData = TextDocumentLayout::textUserData(block);
         if (!userData)
             return false;
+        //qDebug()<<"expectedRawStringSuffix"<<userData->expectedRawStringSuffix();
         auto cppData = static_cast<const Code::CodeFormatterData *>(userData->codeFormatterData());
         if (!cppData)
             return false;
@@ -644,6 +660,16 @@ bool isAutoClose(QStringView tag){
         return TextDocumentLayout::lexerState(block);
     }
 
+
+    //save php <<< string tag
+    void CodeFormatter::saveTQouteTag(QTextBlock *block,const QByteArray& tag) const {
+        TextDocumentLayout::setExpectedRawStringSuffix(*block, tag);
+    }
+
+    //load php <<< string tag
+    QByteArray CodeFormatter::loadTQouteTag(const QTextBlock &block) const {
+        return TextDocumentLayout::expectedRawStringSuffix(block);
+    }
 
 
 

@@ -107,7 +107,7 @@ int PythonIndenter::getIndentDiff(const QString &previousLine,
     static const QStringList jumpKeywords = {
         "return", "yield", "break", "continue", "raise", "pass" };
 
-    Internal::Scanner sc(previousLine.constData(), previousLine.length());
+    Scanner sc(previousLine.constData(), previousLine.length());
     forever {
         Internal::FormatToken tk = sc.read();
         if (tk.format() == Internal::Format_Keyword && jumpKeywords.contains(sc.value(tk)))
@@ -118,7 +118,7 @@ int PythonIndenter::getIndentDiff(const QString &previousLine,
     return 0;
 }
 
-TextEditor::TextIndenter *createPythonIndenter(QTextDocument *doc)
+TextEditor::TextIndenter *createIndenter(QTextDocument *doc)
 {
     return new PythonIndenter(doc);
 }

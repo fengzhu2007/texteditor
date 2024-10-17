@@ -19,8 +19,10 @@
 #include "texteditorconstants.h"
 #include <utils/qtcassert.h>
 
+
 namespace Python {
-namespace Internal {
+
+using namespace Internal;
 
 /**
  * @class PythonEditor::Internal::PythonHighlighter
@@ -43,23 +45,23 @@ namespace Internal {
 static TextEditor::TextStyle styleForFormat(int format)
 {
     using namespace TextEditor;
-    const auto f = Format(format);
+    const auto f = Internal::Format(format);
     switch (f) {
-    case Format_Number: return C_NUMBER;
-    case Format_String: return C_STRING;
-    case Format_Keyword: return C_KEYWORD;
-    case Format_Type: return C_TYPE;
-    case Format_ClassField: return C_FIELD;
-    case Format_MagicAttr: return C_JS_SCOPE_VAR;
-    case Format_Operator: return C_OPERATOR;
-    case Format_Comment: return C_COMMENT;
-    case Format_Doxygen: return C_DOXYGEN_COMMENT;
-    case Format_Identifier: return C_TEXT;
-    case Format_Whitespace: return C_VISUAL_WHITESPACE;
-    case Format_ImportedModule: return C_STRING;
-    case Format_LParen: return C_OPERATOR;
-    case Format_RParen: return C_OPERATOR;
-    case Format_FormatsAmount:
+    case Internal::Format_Number: return C_NUMBER;
+    case Internal::Format_String: return C_STRING;
+    case Internal::Format_Keyword: return C_KEYWORD;
+    case Internal::Format_Type: return C_TYPE;
+    case Internal::Format_ClassField: return C_FIELD;
+    case Internal::Format_MagicAttr: return C_JS_SCOPE_VAR;
+    case Internal::Format_Operator: return C_OPERATOR;
+    case Internal::Format_Comment: return C_COMMENT;
+    case Internal::Format_Doxygen: return C_DOXYGEN_COMMENT;
+    case Internal::Format_Identifier: return C_TEXT;
+    case Internal::Format_Whitespace: return C_VISUAL_WHITESPACE;
+    case Internal::Format_ImportedModule: return C_STRING;
+    case Internal::Format_LParen: return C_OPERATOR;
+    case Internal::Format_RParen: return C_OPERATOR;
+    case Internal::Format_FormatsAmount:
         QTC_CHECK(false); // should never get here
         return C_TEXT;
     }
@@ -67,9 +69,9 @@ static TextEditor::TextStyle styleForFormat(int format)
     return C_TEXT;
 }
 
-PythonHighlighter::PythonHighlighter()
+Highlighter::Highlighter()
 {
-    setTextFormatCategories(Format_FormatsAmount, styleForFormat);
+    setTextFormatCategories(Internal::Format_FormatsAmount, styleForFormat);
 }
 
 /**
@@ -81,7 +83,7 @@ PythonHighlighter::PythonHighlighter()
  * scans block using received state and sets initial highlighting for current
  * block. At the end, it saves internal state in current block.
  */
-void PythonHighlighter::highlightBlock(const QString &text)
+void Highlighter::highlightBlock(const QString &text)
 {
     int initialState = previousBlockState();
     if (initialState == -1)
@@ -121,7 +123,7 @@ static void setFoldingIndent(const QTextBlock &block, int indent)
  * @param initialState Initial state of scanner, retrieved from previous block
  * @return Final state of scanner, should be saved with current block
  */
-int PythonHighlighter::highlightLine(const QString &text, int initialState)
+int Highlighter::highlightLine(const QString &text, int initialState)
 {
     Scanner scanner(text.constData(), text.size());
     scanner.setState(initialState);
@@ -143,17 +145,17 @@ int PythonHighlighter::highlightLine(const QString &text, int initialState)
         }
     }
 
-    FormatToken tk;
+    Internal::FormatToken tk;
     TextEditor::Parentheses parentheses;
     bool hasOnlyWhitespace = true;
     while (!(tk = scanner.read()).isEndOfBlock()) {
-        Format format = tk.format();
-        if (format == Format_Keyword && isImportKeyword(scanner.value(tk)) && hasOnlyWhitespace) {
+        Internal::Format format = tk.format();
+        if (format == Internal::Format_Keyword && isImportKeyword(scanner.value(tk)) && hasOnlyWhitespace) {
             setFormat(tk.begin(), tk.length(), formatForCategory(format));
             highlightImport(scanner);
-        } else if (format == Format_Comment
-                   || format == Format_String
-                   || format == Format_Doxygen) {
+        } else if (format == Internal::Format_Comment
+                   || format == Internal::Format_String
+                   || format == Internal::Format_Doxygen) {
             setFormatWithSpaces(text, tk.begin(), tk.length(), formatForCategory(format));
         } else {
             if (format == Format_LParen) {
@@ -176,7 +178,7 @@ int PythonHighlighter::highlightLine(const QString &text, int initialState)
 /**
  * @brief Highlights rest of line as import directive
  */
-void PythonHighlighter::highlightImport(Scanner &scanner)
+void Highlighter::highlightImport(Scanner &scanner)
 {
     FormatToken tk;
     while (!(tk = scanner.read()).isEndOfBlock()) {
@@ -187,5 +189,4 @@ void PythonHighlighter::highlightImport(Scanner &scanner)
     }
 }
 
-} // namespace Internal
 } // namespace Python

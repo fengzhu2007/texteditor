@@ -1,8 +1,8 @@
 #pragma once
 
 #include "autocompleter.h"
-
-namespace Html {
+#include "texteditor_global.h"
+namespace Javascript {
 
 class TEXTEDITOR_EXPORT AutoCompleter : public TextEditor::AutoCompleter
 {
@@ -27,13 +27,6 @@ public:
                                 bool skipChars,
                                 int *skippedChars) const override;
     QString insertParagraphSeparator(const QTextCursor &tc) const override;
-
-    virtual void languageState(int state,TextEditor::TextDocument* textDocument) override;
-
-    virtual QList<Code::Token> tokenizeBlock(const QTextBlock& block) override;
-    //virtual bool isInStringLiteral(const QTextBlock& block,int pos) override;
 };
 
-} // namespace Html
-
-
+} //

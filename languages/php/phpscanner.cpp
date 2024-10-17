@@ -4,6 +4,7 @@
 #include <algorithm>
 
 using namespace Php;
+QString Scanner::TQuoteTag;
 
 namespace {
 static const QString php_keywords[] = {
@@ -34,6 +35,7 @@ static const QString php_keywords[] = {
     QLatin1String("enum"),
     QLatin1String("exit"),
     QLatin1String("extends"),
+    QLatin1String("false"),
     QLatin1String("final"),
     QLatin1String("finally"),
     QLatin1String("fn"),
@@ -66,6 +68,7 @@ static const QString php_keywords[] = {
     QLatin1String("switch"),
     QLatin1String("throw"),
     QLatin1String("trait"),
+    QLatin1String("true"),
     QLatin1String("try"),
     QLatin1String("use"),
     QLatin1String("var"),
@@ -143,20 +146,7 @@ static inline void setMultiLineState(int *state, int s)
 }
 
 
-static inline int templateExpressionDepth(int state)
-{
-    if((state & Scanner::TemplateExpressionOpenBracesMask4) == Scanner::TemplateExpressionOpenBracesMask4){
-        return 4;
-    }else if((state & Scanner::TemplateExpressionOpenBracesMask3) == Scanner::TemplateExpressionOpenBracesMask3){
-        return 3;
-    }else if((state & Scanner::TemplateExpressionOpenBracesMask2) == Scanner::TemplateExpressionOpenBracesMask2){
-        return 2;
-    }else if((state & Scanner::TemplateExpressionOpenBracesMask1) == Scanner::TemplateExpressionOpenBracesMask1){
-        return 1;
-    }else{
-        return 0;
-    }
-}
+
 
 QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& startState)
 {
@@ -205,14 +195,55 @@ QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& start
         }
         if (start < index)
             tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Php));
-    } else if (multiLineState(_state) == MultiLineStringTQuote) {
-        //<<<
+    } else if (multiLineState(_state) == MultiLineStringTQuote || (_state&PHPTQouteStart)==PHPTQouteStart) {
+        const int ss = index;
+        if(ss!=0){
+            //find key_13
+            while(index<text.size()){
+                QChar ch = text.at(index);
+                if(ch==QLatin1Char('\xd')){
+                    break;
+                }
+                ++index;
+            }
+            if(index > ss)
+                tokens.append(Code::Token(ss, index - ss, Code::Token::String,Code::Token::Php));
+        }else{
+            //find ;
+            while (index < text.length()) {
+                const QChar ch = text.at(index);
+                if(ch.isLetterOrNumber()==false){
+                    break;
+                }
+                ++index;
+            }
+            const int len = index - ss;
+
+            if(len>0 && Scanner::TQuoteTag.size() == len && text.mid(ss,len) == Scanner::TQuoteTag){
+                tokens.append(Code::Token(ss, index - ss, Code::Token::TQouteTag,Code::Token::Php));
+                setMultiLineState(&_state, Normal);
+                //Scanner::TQuoteTag.clear();
+            }else{
+                //find all
+                while(index<text.size()){
+                    QChar ch = text.at(index);
+                    if(ch==QLatin1Char('\xd')){
+                        break;
+                    }
+                    ++index;
+                }
+                if(index > ss)
+                    tokens.append(Code::Token(ss, index - ss, Code::Token::String,Code::Token::Php));
+            }
+        }
+
+        if((_state&PHPTQouteStart)==PHPTQouteStart){
+            _state = (_state&~PHPTQouteStart);
+            setMultiLineState(&_state, MultiLineStringTQuote);
+        }
 
     }
 
-    auto braceCounterOffset = [](int templateDepth) {
-        return FlagsBits + (templateDepth - 1) * BraceCounterBits;
-    };
 
     while (index < text.length()) {
         const QChar ch = text.at(index);
@@ -314,31 +345,9 @@ QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& start
 
         case '{':{
             tokens.append(Code::Token(index++, 1, Code::Token::LeftBrace,Code::Token::Php));
-            int depth = templateExpressionDepth(_state);
-            /*if (depth > 0) {
-                int shift = braceCounterOffset(depth);
-                int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
-                if ((_state & mask) == mask) {
-                    qWarning() << "php::Dom::Scanner reached maximum open braces of template expressions (127), parsing will fail";
-                } else {
-                    _state = (_state & ~mask) | (((Scanner::TemplateExpressionOpenBracesMask0 & (_state >> shift)) + 1) << shift);
-                }
-            }*/
         } break;
 
         case '}': {
-            int depth = templateExpressionDepth(_state);
-            /*if (depth > 0) {
-                int shift = braceCounterOffset(depth);
-                int s = _state;
-                int nBraces = Scanner::TemplateExpressionOpenBracesMask0 & (s >> shift);
-                int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
-                _state = (s & ~mask) | ((nBraces - 1) << shift);
-                if (nBraces == 1) {
-                    tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
-                    break;
-                }
-            }*/
             tokens.append(Code::Token(index++, 1, Code::Token::RightBrace,Code::Token::Php));
         } break;
 
@@ -357,14 +366,43 @@ QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& start
         case '+':
         case '-':
         case '<':
-            if (la == ch || la == QLatin1Char('=')) {
+            if(la == ch && index + 3 < text.size() && text.at(index+1) == ch && text.at(index+2) == ch){
+                tokens.append(Code::Token(index, 3, Code::Token::String,Code::Token::Php));
+                index += 3;
+                //find start words
+                const int ss = index;
+                while(index < text.size()){
+                    QChar ch = text.at(index);
+                    if(!ch.isLetterOrNumber()){
+                        break;
+                    }
+                    ++index;
+                }
+                if(index > ss){
+                    tokens.append(Code::Token(ss, index - ss, Code::Token::TQouteTag,Code::Token::Php));
+                    setMultiLineState(&_state, PHPTQouteStart);
+                    Scanner::TQuoteTag = text.mid(ss,index-ss);
+
+                    //find last
+                    const int sss = index+1;
+                    while(index<text.size()){
+                        QChar ch = text.at(index);
+                        if(ch==QLatin1Char('\xd')){
+                            break;
+                        }
+                        ++index;
+                    }
+                    if(index>sss){
+                        tokens.append(Code::Token(sss, index-sss, Code::Token::String,Code::Token::Php));
+                    }
+                }
+            }else if (la == ch || la == QLatin1Char('=')) {
                 tokens.append(Code::Token(index, 2, Code::Token::Delimiter,Code::Token::Php));
                 index += 2;
             }else if (la == ch || la == QLatin1Char('?')) {
                 tokens.append(Code::Token(index, 2, Code::Token::PhpLeftBracket,Code::Token::Php));
                 index += 2;
-            } else {
-
+            }else{
                 tokens.append(Code::Token(index++, 1, Code::Token::Delimiter,Code::Token::Php));
             }
             break;
@@ -434,7 +472,7 @@ QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& start
                 } while (index < text.length() && isIdentifierChar(text.at(index)));
 
                 if (isKeyword(text.mid(start, index - start)))
-                    tokens.append(Code::Token(start, index - start, Code::Token::Keyword,Code::Token::Php)); // ### fixme
+                    tokens.append(Code::Token(start, index - start, Code::Token::Keyword,Code::Token::Php));
                 else
                     tokens.append(Code::Token(start, index - start, Code::Token::Identifier,Code::Token::Php));
             } else {
@@ -442,7 +480,6 @@ QList<Code::Token> Scanner::operator()(int& from,const QString &text, int& start
             }
         } // end of switch
     }
-
     result:
     startState = _state;
     from = index;
@@ -456,7 +493,11 @@ int Scanner::state() const
 
 bool Scanner::isKeyword(const QString &text) const
 {
-    return std::binary_search(begin(php_keywords), end(php_keywords), text);
+    bool ret = std::binary_search(begin(php_keywords), end(php_keywords), text);
+    if(ret==false){
+        ret = text.size()==3 && text.startsWith(QLatin1String("php"),Qt::CaseInsensitive);
+    }
+    return ret;
 }
 
 QStringList Scanner::keywords()
@@ -468,4 +509,12 @@ QStringList Scanner::keywords()
         return res;
     }();
     return words;
+}
+
+QString Scanner::currentTQouteTag(){
+    return TQuoteTag;
+}
+
+void Scanner::setCurrentTQouteTag(const QString& tag){
+    TQuoteTag = tag;
 }

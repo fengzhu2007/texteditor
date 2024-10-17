@@ -526,6 +526,7 @@ protected:
 
 private:
     Internal::TextEditorWidgetPrivate *d;
+    bool isDestory=false;
     friend class Internal::TextEditorWidgetPrivate;
     friend class Internal::TextEditorOverlay;
     friend class RefactorOverlay;

@@ -3,6 +3,7 @@
 #include "htmlcodeformatter.h"
 #include "highlighter.h"
 #include "codeassist/documentcontentcompletion.h"
+#include "textdocumentlayout.h"
 
 #include <QTextDocument>
 #include <QTextCursor>
@@ -313,3 +314,28 @@ void AutoCompleter::languageState(int state,TextEditor::TextDocument* textDocume
         m_lang = lang;
     }
 }
+
+QList<Code::Token> AutoCompleter::tokenizeBlock(const QTextBlock& block){
+    const QTextBlock previous = block.previous();
+    int startState = TextEditor::TextDocumentLayout::lexerState(previous);
+    Q_ASSERT(startState != -1);
+    Scanner tokenize;
+    tokenize.setScanComments(true);
+
+    QString text = block.text();
+    text.append(QLatin1Char('\n'));
+    int from = 0;
+    return tokenize(from,text, startState);
+}
+
+/*bool AutoCompleter::isInStringLiteral(const QTextBlock& block,int pos){
+    auto tokens = this->tokenizeBlock(block);
+    for(auto tk:tokens){
+        if(tk.offset<=pos && pos <(tk.offset+tk.length)){
+            if(tk.kind==Code::Token::String){
+                return true;
+            }
+        }
+    }
+    return false;
+}*/

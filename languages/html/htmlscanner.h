@@ -36,7 +36,7 @@ public:
         JavascriptTagStart = MultiLineComment << 9,
         CSSTagStart = MultiLineComment << 10,
 
-
+        PHPTQouteStart = MultiLineComment << 11,
 
         TemplateExpressionOpenBracesMask0 = MultiLineComment << 21,
         TemplateExpressionOpenBracesMask1 = MultiLineComment << 22,
@@ -72,9 +72,9 @@ private:
     Javascript::Scanner jsScanner;
     Css::Scanner cssScanner;
 
-    friend Php::Scanner;
-    friend Javascript::Scanner;
-    friend Css::Scanner;
+    friend class Php::Scanner;
+    friend class Javascript::Scanner;
+    friend class Css::Scanner;
 
 };
 

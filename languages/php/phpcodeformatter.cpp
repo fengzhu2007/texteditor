@@ -1343,13 +1343,17 @@ namespace Php {
             }
         }
         // don't touch multi-line strings at all
-        if ((startLexerState & Scanner::MultiLineMask) == Scanner::MultiLineStringDQuote || (startLexerState & Scanner::MultiLineMask) == Scanner::MultiLineStringSQuote) {
+        if ((startLexerState & Scanner::MultiLineStringDQuote) == Scanner::MultiLineStringDQuote || (startLexerState & Scanner::MultiLineStringSQuote) == Scanner::MultiLineStringSQuote || (startLexerState & Scanner::MultiLineStringTQuote) == Scanner::MultiLineStringTQuote) {
             *indentDepth = -1;
             return;
         }
+
         //qDebug()<<"adjustIndent11:"<<*indentDepth;
         const int kind = extendedTokenKind(tokenAt(0));
         switch (kind) {
+        case Code::Token::TQouteTag:
+            *indentDepth = -1;
+            break;
         case Code::Token::LeftBrace:
             if (topState.type == substatement || topState.type == binding_assignment || topState.type == case_cont) {
                 *indentDepth = topState.savedIndentDepth;

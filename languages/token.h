@@ -67,6 +67,7 @@ public:
         String,
         Comment,
         Number,
+        Operator,
         LeftParenthesis,//(
         RightParenthesis,//)
         LeftBrace,//{
@@ -96,6 +97,7 @@ public:
         //php
         PhpLeftBracket,//<?
         PhpRightBracket,//?>
+        TQouteTag,
 
         //css
         Selector,

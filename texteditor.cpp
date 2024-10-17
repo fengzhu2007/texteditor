@@ -67,7 +67,7 @@
 #include "codeassist/documentcontentcompletion.h"
 
 #include "codeformatter.h"
-#include "languages/html/htmlhighlighter.h"
+#include "languages/loader.h"
 
 
 #include <QAbstractTextDocumentLayout>
@@ -1109,6 +1109,7 @@ void TextEditorWidgetPrivate::setDocument(const QSharedPointer<TextDocument> &do
 
 TextEditorWidget::~TextEditorWidget()
 {
+    isDestory = true;
     delete d;
     d = nullptr;
 }
@@ -3079,13 +3080,28 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
 
 void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlighting::Definition &definition)
 {
-    //auto highlighter = new Highlighter();
-    //auto highlighter = new QmlJSEditor::QmlJSHighlighter();
-    auto highlighter = new Html::Highlighter;
-    m_document->setSyntaxHighlighter(highlighter);
-
     if (definition.isValid()) {
-        //highlighter->setDefinition(definition);
+        LanguageLoader loader(definition,m_document->document());
+        auto indenter = loader.indenter();
+        if(indenter!=nullptr){
+            m_document->setIndenter(indenter);
+        }
+        auto autoCompleter = loader.autoCompleter();
+        if(autoCompleter!=nullptr){
+            q->setAutoCompleter(autoCompleter);
+            auto provider = m_document->completionAssistProvider();
+            if(provider!=nullptr){
+                provider->setAutoCompleter(autoCompleter);
+            }
+        }
+
+        auto highlighter = loader.hightlighter();
+        if(highlighter!=nullptr){
+            m_document->setSyntaxHighlighter(highlighter);
+        }else{
+            auto highlighter = new Highlighter();
+            highlighter->setDefinition(definition);
+        }
         setupFromDefinition(definition);
     } else {
         q->setCodeFoldingSupported(false);
@@ -6997,16 +7013,15 @@ void TextEditorWidget::showEvent(QShowEvent* e)
     if (d->m_wasNotYetShown) {
         restoreState(state);
         d->m_wasNotYetShown = false;
-    }
-    if(d->m_hightlighted==false){
-        QTimer::singleShot(0,[this]{
-            this->configureGenericHighlighter();
-            //this->setFocus();
-            //this->gotoLine(10);
 
+        QTimer::singleShot(0,[this]{
+            if(isDestory){
+                return ;
+            }
+            configureGenericHighlighter();
         });
-        d->m_hightlighted = true;
     }
+
 
 }
 
@@ -7919,11 +7934,10 @@ QString TextEditorWidget::textAt(int from, int to) const
 
 void TextEditorWidget::configureGenericHighlighter()
 {
+
     Highlighter::Definitions definitions = Highlighter::definitionsForDocument(textDocument());
     d->configureGenericHighlighter(definitions.isEmpty() ? Highlighter::Definition() : definitions.first());
     d->updateSyntaxInfoBar(definitions, textDocument()->filePath().fileName());
-
-
 }
 
 

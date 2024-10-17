@@ -149,6 +149,29 @@ bool AutoCompleter::isNextBlockIndented(const QTextBlock &currentBlock) const
 
     return false;
 }
+
+
+QList<Code::Token> AutoCompleter::tokenizeBlock(const QTextBlock& block){
+    Q_UNUSED(block);
+    return {};
+}
+
+bool AutoCompleter::isInStringLiteral(const QTextBlock& block,int pos){
+    if(pos<0 || pos >= block.length()){
+        return false;
+    }
+    auto tokens = this->tokenizeBlock(block);
+    for(auto tk:tokens){
+        qDebug()<<tk.offset<<tk.length<<pos;
+        if(tk.offset<=pos && pos <(tk.offset+tk.length)){
+            if(tk.kind==Code::Token::String){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void AutoCompleter::languageState(int state,TextDocument* textDocument){
     if(m_lang==-1){
         //init provider

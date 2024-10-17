@@ -36,10 +36,6 @@ public:
     virtual void invalidateCache(QTextDocument *document);
 };
 
-CodeFormatter* createCodeFormatter(TextDocument* textDoc,const QString& style,const QString& name);
-Indenter* createCodeIndenter(QTextDocument* doc,const QString& style,const QString& name);
-
-
 
 
 

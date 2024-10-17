@@ -7,7 +7,7 @@
 
 
 namespace TextEditor {
-
+class AutoCompleter;
 class TEXTEDITOR_EXPORT CompletionAssistProvider : public IAssistProvider
 {
     Q_OBJECT
@@ -20,6 +20,10 @@ public:
     virtual int activationCharSequenceLength() const;
     virtual bool isActivationCharSequence(const QString &sequence) const;
     virtual bool isContinuationChar(const QChar &c) const;
+
+    inline void setAutoCompleter(AutoCompleter* autoCompleter){m_autoCompleter = autoCompleter;}
+protected:
+    AutoCompleter* m_autoCompleter;
 };
 
 } // TextEditor
