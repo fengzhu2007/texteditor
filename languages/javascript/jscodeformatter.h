@@ -50,7 +50,8 @@ public:
 
     void initState();
 
-
+    virtual QList<Code::Token> tokenize(const QTextBlock& block) override;
+    virtual QList<Code::Token> tokenize(const QString& text) override;
 
 public: // must be public to make Q_GADGET introspection work
     enum StateType {

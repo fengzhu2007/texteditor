@@ -109,10 +109,11 @@ int PythonIndenter::getIndentDiff(const QString &previousLine,
 
     Scanner sc(previousLine.constData(), previousLine.length());
     forever {
-        Internal::FormatToken tk = sc.read();
-        if (tk.format() == Internal::Format_Keyword && jumpKeywords.contains(sc.value(tk)))
+        //Internal::FormatToken tk = sc.read();
+        auto tk = sc.read();
+        if (tk.kind == Token::Keyword && jumpKeywords.contains(sc.value(tk)))
             return -tabSettings.m_indentSize;
-        if (tk.format() != Internal::Format_Whitespace)
+        if (tk.kind != Token::Whitespace)
             break;
     }
     return 0;

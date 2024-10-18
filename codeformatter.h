@@ -2,6 +2,7 @@
 #define CODEFORMATTER_H
 
 #include "texteditor_global.h"
+#include "languages/token.h"
 
 #include <QTextDocument>
 
@@ -34,6 +35,11 @@ public:
     virtual void setTabSize(int tabSize);
 
     virtual void invalidateCache(QTextDocument *document);
+
+    virtual QList<Code::Token> tokenize(const QTextBlock& block);
+    virtual QList<Code::Token> tokenize(const QString& text);
+
+    virtual bool isInStringORCommentLiteral(const QTextBlock& block,int pos);
 };
 
 

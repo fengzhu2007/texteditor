@@ -156,7 +156,12 @@ QList<Code::Token> AutoCompleter::tokenizeBlock(const QTextBlock& block){
     return {};
 }
 
-bool AutoCompleter::isInStringLiteral(const QTextBlock& block,int pos){
+QList<Code::Token> AutoCompleter::tokenizeText(const QString& text){
+    Q_UNUSED(text);
+    return {};
+}
+
+bool AutoCompleter::isInStringORCommentLiteral(const QTextBlock& block,int pos){
     if(pos<0 || pos >= block.length()){
         return false;
     }
@@ -164,7 +169,7 @@ bool AutoCompleter::isInStringLiteral(const QTextBlock& block,int pos){
     for(auto tk:tokens){
         qDebug()<<tk.offset<<tk.length<<pos;
         if(tk.offset<=pos && pos <(tk.offset+tk.length)){
-            if(tk.kind==Code::Token::String){
+            if(tk.kind==Code::Token::String || tk.kind==Code::Token::Comment){
                 return true;
             }
         }

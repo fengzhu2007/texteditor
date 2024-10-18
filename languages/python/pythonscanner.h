@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pythonformattoken.h"
-
+//#include "pythonformattoken.h"
+#include "languages/token.h"
 #include <QString>
 
 namespace Python {
-using namespace  Internal;
+using namespace Code;
 /**
  * @brief The Scanner class - scans source code for highlighting only
  */
@@ -28,23 +28,23 @@ public:
 
     void setState(int state);
     int state() const;
-    FormatToken read();
-    QString value(const FormatToken& tk) const;
+    Token read();
+    QString value(const Token& tk) const;
 
 private:
-    FormatToken onDefaultState();
+    Token onDefaultState();
 
     void checkEscapeSequence(QChar quoteChar);
-    FormatToken readStringLiteral(QChar quoteChar);
-    FormatToken readMultiLineStringLiteral(QChar quoteChar);
-    FormatToken readIdentifier();
-    FormatToken readNumber();
-    FormatToken readFloatNumber();
-    FormatToken readComment();
-    FormatToken readDoxygenComment();
-    FormatToken readWhiteSpace();
-    FormatToken readOperator();
-    FormatToken readBrace(bool isOpening);
+    Token readStringLiteral(QChar quoteChar);
+    Token readMultiLineStringLiteral(QChar quoteChar);
+    Token readIdentifier();
+    Token readNumber();
+    Token readFloatNumber();
+    Token readComment();
+    Token readDoxygenComment();
+    Token readWhiteSpace();
+    Token readOperator();
+    Token readBrace(bool isOpening);
 
     void clearState();
     void saveState(State state, QChar savedData);

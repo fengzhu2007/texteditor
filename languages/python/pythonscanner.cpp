@@ -22,11 +22,11 @@ int Scanner::state() const
     return m_state;
 }
 
-FormatToken Scanner::read()
+Token Scanner::read()
 {
     setAnchor();
     if (isEnd())
-        return FormatToken();
+        return Token(-1,-1,Token::TokenEnd);
 
     State state;
     QChar saved;
@@ -41,19 +41,19 @@ FormatToken Scanner::read()
     }
 }
 
-QString Scanner::value(const FormatToken &tk) const
+QString Scanner::value(const Token &tk) const
 {
-    return QString(m_text + tk.begin(), tk.length());
+    return QString(m_text + tk.offset, tk.length);
 }
 
-FormatToken Scanner::onDefaultState()
+Token Scanner::onDefaultState()
 {
     QChar first = peek();
     move();
 
     if (first == '\\' && peek() == '\n') {
         move();
-        return FormatToken(Format_Whitespace, anchor(), 2);
+        return Token(anchor(), 2,Token::Whitespace);
     }
 
     if (first == '.' && peek().isDigit())
@@ -102,7 +102,7 @@ void Scanner::checkEscapeSequence(QChar quoteChar)
 /**
   reads single-line string literal, surrounded by ' or " quotes
   */
-FormatToken Scanner::readStringLiteral(QChar quoteChar)
+Token Scanner::readStringLiteral(QChar quoteChar)
 {
     QChar ch = peek();
     if (ch == quoteChar && peek(1) == quoteChar) {
@@ -118,13 +118,13 @@ FormatToken Scanner::readStringLiteral(QChar quoteChar)
     if (ch == quoteChar)
         clearState();
     move();
-    return FormatToken(Format_String, anchor(), length());
+    return Token(anchor(), length(),Token::String);
 }
 
 /**
   reads multi-line string literal, surrounded by ''' or """ sequences
   */
-FormatToken Scanner::readMultiLineStringLiteral(QChar quoteChar)
+Token Scanner::readMultiLineStringLiteral(QChar quoteChar)
 {
     for (;;) {
         QChar ch = peek();
@@ -139,14 +139,13 @@ FormatToken Scanner::readMultiLineStringLiteral(QChar quoteChar)
         }
         move();
     }
-
-    return FormatToken(Format_String, anchor(), length());
+    return Token(anchor(), length(),Token::String);
 }
 
 /**
   reads identifier and classifies it
   */
-FormatToken Scanner::readIdentifier()
+Token Scanner::readIdentifier()
 {
     static const QSet<QString> keywords = {
         "and", "as", "assert", "break", "class", "continue", "def", "del", "elif",
@@ -194,17 +193,17 @@ FormatToken Scanner::readIdentifier()
     }
 
     const QString v = QString(m_text + m_markedPosition, length());
-    Format tkFormat = Format_Identifier;
+    Token::Kind kind = Token::Identifier;
     if (v == "self")
-        tkFormat = Format_ClassField;
+        kind = Token::ClassField;
     else if (builtins.contains(v))
-        tkFormat = Format_Type;
+        kind = Token::Type;
     else if (magics.contains(v))
-        tkFormat = Format_MagicAttr;
+        kind = Token::MagicAttr;
     else if (keywords.contains(v))
-        tkFormat = Format_Keyword;
+        kind = Token::Keyword;
 
-    return FormatToken(tkFormat, anchor(), length());
+    return Token(anchor(), length(),kind);
 }
 
 inline static bool isHexDigit(QChar ch)
@@ -229,7 +228,7 @@ inline static bool isValidIntegerSuffix(QChar ch)
     return ch == 'l' || ch == 'L';
 }
 
-FormatToken Scanner::readNumber()
+Token Scanner::readNumber()
 {
     if (!isEnd()) {
         QChar ch = peek();
@@ -251,10 +250,10 @@ FormatToken Scanner::readNumber()
         if (isValidIntegerSuffix(peek()))
             move();
     }
-    return FormatToken(Format_Number, anchor(), length());
+    return Token(anchor(), length(),Token::Number);
 }
 
-FormatToken Scanner::readFloatNumber()
+Token Scanner::readFloatNumber()
 {
     enum
     {
@@ -300,49 +299,49 @@ FormatToken Scanner::readFloatNumber()
             || (ch == 'j' || ch =='J'))
         move();
 
-    return FormatToken(Format_Number, anchor(), length());
+    return Token(anchor(), length(),Token::Number);
 }
 
 /**
   reads single-line python comment, started with "#"
   */
-FormatToken Scanner::readComment()
+Token Scanner::readComment()
 {
     QChar ch = peek();
     while (ch != '\n' && !ch.isNull()) {
         move();
         ch = peek();
     }
-    return FormatToken(Format_Comment, anchor(), length());
+    return Token(anchor(), length(),Token::Comment);
 }
 
 /**
   reads single-line python doxygen comment, started with "##"
   */
-FormatToken Scanner::readDoxygenComment()
+Token Scanner::readDoxygenComment()
 {
     QChar ch = peek();
     while (ch != '\n' && !ch.isNull()) {
         move();
         ch = peek();
     }
-    return FormatToken(Format_Doxygen, anchor(), length());
+    return Token(anchor(), length(),Token::Doxygen);
 }
 
 /**
   reads whitespace
   */
-FormatToken Scanner::readWhiteSpace()
+Token Scanner::readWhiteSpace()
 {
     while (peek().isSpace())
         move();
-    return FormatToken(Format_Whitespace, anchor(), length());
+    return Token(anchor(), length(),Token::Whitespace);
 }
 
 /**
   reads punctuation symbols, excluding some special
   */
-FormatToken Scanner::readOperator()
+Token Scanner::readOperator()
 {
     static const QString EXCLUDED_CHARS = "\'\"_#([{}])";
     QChar ch = peek();
@@ -350,13 +349,13 @@ FormatToken Scanner::readOperator()
         move();
         ch = peek();
     }
-    return FormatToken(Format_Operator, anchor(), length());
+    return Token(anchor(), length(),Token::Operator);
 }
 
-FormatToken Scanner::readBrace(bool isOpening)
+Token Scanner::readBrace(bool isOpening)
 {
-    Format format = isOpening ? Format_LParen : Format_RParen;
-    return FormatToken(format, anchor(), length());
+    Token::Kind kind = isOpening ? Token::LeftParenthesis : Token::RightParenthesis;
+    return Token(anchor(), length(),kind);
 }
 
 void Scanner::clearState()

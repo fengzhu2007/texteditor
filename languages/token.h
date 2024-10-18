@@ -83,6 +83,7 @@ public:
         RegExp,
 
 
+
         //html token type
         InnerText,//18
         TagStart,//div
@@ -97,6 +98,7 @@ public:
         //php
         PhpLeftBracket,//<?
         PhpRightBracket,//?>
+        StringBracket,//<<<
         TQouteTag,
 
         //css
@@ -105,6 +107,17 @@ public:
         CssOther,
         Invalid,
 
+
+        Whitespace,
+
+        //python
+        Type,
+        ClassField,
+        MagicAttr,
+        ImportedModule,
+
+
+        Doxygen,
 
 
         TokenEnd
@@ -130,6 +143,7 @@ public:
         return int(t1.lang) - int(t2.lang);
     }
 
+    bool isEndOfBlock() { return offset == -1; }
 
 public:
     int offset = 0;

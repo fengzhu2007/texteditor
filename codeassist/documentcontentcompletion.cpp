@@ -13,7 +13,7 @@
 #include "../texteditorsettings.h"
 
 #include "textdocumentlayout.h"
-#include "autocompleter.h"
+#include "codeformatter.h"
 #include "languages/token.h"
 
 #include "utils/algorithm.h"
@@ -109,12 +109,13 @@ QStringList Keywords::argsForFunction(const QString &function) const
 class DocumentContentCompletionProcessor final : public IAssistProcessor
 {
 public:
-    DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,AutoCompleter* autoCompleter);
+    DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,CodeFormatter* codeFormatter);
     ~DocumentContentCompletionProcessor() final;
     QList<AssistProposalItemInterface *> generateProposalList(const QStringList &words, const QIcon &icon);
     IAssistProposal *perform(const AssistInterface *interface) override;
     bool running() final { return m_watcher.isRunning(); }
     void cancel() final;
+    inline CodeFormatter* codeFormatter(){return m_codeFormatter;}
 
 private:
     QString m_snippetGroup;
@@ -126,7 +127,7 @@ private:
     QIcon m_variantIcon;
     QIcon m_constantIcon;
     QIcon m_fieldIcon;
-    AutoCompleter* m_autoCompleter;
+    CodeFormatter* m_codeFormatter;
 };
 
 
@@ -136,7 +137,7 @@ DocumentContentCompletionProvider::DocumentContentCompletionProvider(const QStri
     : m_snippetGroup(snippetGroup)
 {
     d = new DocumentContentCompletionProviderPrivate;
-    m_autoCompleter = nullptr;
+    m_codeFormatter = nullptr;
 
 }
 DocumentContentCompletionProvider::~DocumentContentCompletionProvider(){
@@ -151,7 +152,7 @@ IAssistProvider::RunType DocumentContentCompletionProvider::runType() const
 IAssistProcessor *DocumentContentCompletionProvider::createProcessor(const AssistInterface *) const
 {
     //qDebug()<<"DocumentContentCompletionProvider::createProcessor";
-    return new DocumentContentCompletionProcessor(m_snippetGroup,d->keywords,m_autoCompleter);
+    return new DocumentContentCompletionProcessor(m_snippetGroup,d->keywords,m_codeFormatter);
 }
 
 
@@ -174,8 +175,8 @@ void DocumentContentCompletionProvider::setOtherList(const QStringList& words){
 
 
 
-DocumentContentCompletionProcessor::DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,TextEditor::AutoCompleter* autoCompleter)
-    : m_snippetGroup(snippetGroupId),m_keywords(keywords),m_autoCompleter(autoCompleter)
+DocumentContentCompletionProcessor::DocumentContentCompletionProcessor(const QString &snippetGroupId,const Keywords& keywords,TextEditor::CodeFormatter* codeFormatter)
+    : m_snippetGroup(snippetGroupId),m_keywords(keywords),m_codeFormatter(codeFormatter)
 {
     m_keywordIcon = QIcon(":/resource/icons/IntelliSenseKeyword_16x.svg");
     m_classIcon = QIcon(":/resource/icons/Class_16x.svg");
@@ -201,29 +202,30 @@ QList<AssistProposalItemInterface *> DocumentContentCompletionProcessor::generat
     });
 }
 
-static void createProposal(QFutureInterface<QStringList> &future, const QString &text,
+static void createProposal(QFutureInterface<QStringList> &future,CodeFormatter* codeFormatter, const QString &text,
                            const QString &wordUnderCursor,const Keywords& keywords)
 {
-    const QRegularExpression wordRE("([\\p{L}_][\\p{L}0-9_]{2,})");
-
     QSet<QString> words;
-    QRegularExpressionMatchIterator it = wordRE.globalMatch(text);
-    int wordUnderCursorFound = 0;
-    while (it.hasNext()) {
-        if (future.isCanceled())
-            return;
-        QRegularExpressionMatch match = it.next();
-        const QString &word = match.captured();
-        if (word == wordUnderCursor) {
-            // Only add the word under cursor if it
-            // already appears elsewhere in the text
-            if (++wordUnderCursorFound < 2)
-                continue;
-        }
+    if(codeFormatter!=nullptr){
+        QList<Code::Token> tokens = codeFormatter->tokenize(text);
+        int wordUnderCursorFound = 0;
+        for(auto tk:tokens){
+            if(tk.kind == Code::Token::Keyword || tk.kind==Code::Token::Identifier){
+                const QString word = text.mid(tk.offset,tk.length);
+                if (word == wordUnderCursor) {
+                    // Only add the word under cursor if it
+                    // already appears elsewhere in the text
+                    if (++wordUnderCursorFound < 2)
+                        continue;
+                }
 
-        if (!words.contains(word) && !keywords.contains(word))
-            words.insert(word);
+                if (!words.contains(word) && !keywords.contains(word))
+                    words.insert(word);
+            }
+        }
     }
+
+
 
     future.reportResult(Utils::toList(words));
 }
@@ -256,12 +258,9 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
     QTextCursor startPositionCursor(interface->textDocument());
     startPositionCursor.setPosition(pos);
     QTextBlock block = startPositionCursor.block();
-    //int lexerState = TextDocumentLayout::lexerState(block);
 
-    if(m_autoCompleter!=nullptr){
-        //const int startPos =
-        //auto tokens = m_autoCompleter->tokenizeBlock(block);
-        if(m_autoCompleter->isInStringLiteral(block,pos - block.position())){
+    if(m_codeFormatter!=nullptr){
+        if(m_codeFormatter->isInStringORCommentLiteral(block,pos - block.position())){
             return nullptr;
         }
     }
@@ -276,12 +275,16 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
 
 
-    m_watcher.setFuture(Utils::runAsync(&createProposal, text, wordUnderCursor,this->m_keywords));
+    m_watcher.setFuture(Utils::runAsync(&createProposal,m_codeFormatter, text, wordUnderCursor,this->m_keywords));
     QObject::connect(&m_watcher, &QFutureWatcher<QStringList>::resultReadyAt,
                      &m_watcher, [this, pos](int index ){
 
         /*const TextEditor::SnippetAssistCollector snippetCollector(m_snippetGroup, QIcon(":/texteditor/images/snippet.png"));
         QList<AssistProposalItemInterface *> items = snippetCollector.collect();*/
+
+
+
+
         QList<AssistProposalItemInterface *> items;
         for (const QString &word : m_watcher.resultAt(index)) {
             auto item = new AssistProposalItem();

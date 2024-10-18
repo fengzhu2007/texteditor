@@ -304,9 +304,14 @@ namespace Php {
                 } break;
 
             case expression_continuation:
-                leave();
-                continue;
-
+                if(kind==Code::Token::StringBracket){
+                    qDebug()<<"1111111111111111111111111";
+                    break;
+                }else{
+                    qDebug()<<"00000000000000000000000";
+                    leave();
+                    continue;
+                }
             case expression_maybe_continuation:
                 switch (kind) {
                 case Question:
@@ -686,7 +691,7 @@ namespace Php {
             pHtmlFormatter->m_currentState.push(s);
             pHtmlFormatter->m_newStates.push(s);
             //Token tok = pHtmlFormatter->currentToken();
-            //qDebug() << "php enter state 1" << stateToString(newState)<<pHtmlFormatter->m_currentLine.mid(pHtmlFormatter->m_currentToken.begin(),pHtmlFormatter->m_currentToken.length)<<"indent:"<<pHtmlFormatter->m_indentDepth<<"size:"<<pHtmlFormatter->m_currentState.size();
+            qDebug() << "php enter state 1" << stateToString(newState)<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
         }else{
             int savedIndentDepth = m_indentDepth;
             onEnter(newState, &m_indentDepth, &savedIndentDepth);
@@ -720,7 +725,7 @@ namespace Php {
             poppedState = pHtmlFormatter->m_currentState.pop();
             topState = pHtmlFormatter->m_currentState.top().type;
             pHtmlFormatter->m_indentDepth = poppedState.savedIndentDepth;
-            //qDebug() << "php left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth;
+            qDebug() << "php left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
         }else{
 
             if (m_currentState.size()<=1)
@@ -864,7 +869,9 @@ namespace Php {
         case Echo:
         case Code::Token::Number:
         case Code::Token::String:
+        case Code::Token::StringBracket:
         case Code::Token::LeftParenthesis:
+        case Code::Token::TQouteTag:
             enter(expression);
             // look at the token again
             m_tokenIndex -= 1;

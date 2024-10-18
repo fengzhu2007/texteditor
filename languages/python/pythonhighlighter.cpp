@@ -18,11 +18,11 @@
 #include "textdocumentlayout.h"
 #include "texteditorconstants.h"
 #include <utils/qtcassert.h>
+#include <QDebug>
 
 
 namespace Python {
 
-using namespace Internal;
 
 /**
  * @class PythonEditor::Internal::PythonHighlighter
@@ -42,26 +42,26 @@ using namespace Internal;
  * @endcode
  */
 
-static TextEditor::TextStyle styleForFormat(int format)
+static TextEditor::TextStyle styleForFormat(int kind)
 {
     using namespace TextEditor;
-    const auto f = Internal::Format(format);
+    const auto f = Token::Kind(kind);
     switch (f) {
-    case Internal::Format_Number: return C_NUMBER;
-    case Internal::Format_String: return C_STRING;
-    case Internal::Format_Keyword: return C_KEYWORD;
-    case Internal::Format_Type: return C_TYPE;
-    case Internal::Format_ClassField: return C_FIELD;
-    case Internal::Format_MagicAttr: return C_JS_SCOPE_VAR;
-    case Internal::Format_Operator: return C_OPERATOR;
-    case Internal::Format_Comment: return C_COMMENT;
-    case Internal::Format_Doxygen: return C_DOXYGEN_COMMENT;
-    case Internal::Format_Identifier: return C_TEXT;
-    case Internal::Format_Whitespace: return C_VISUAL_WHITESPACE;
-    case Internal::Format_ImportedModule: return C_STRING;
-    case Internal::Format_LParen: return C_OPERATOR;
-    case Internal::Format_RParen: return C_OPERATOR;
-    case Internal::Format_FormatsAmount:
+    case Token::Number: return C_NUMBER;
+    case Token::String: return C_STRING;
+    case Token::Keyword: return C_KEYWORD;
+    case Token::Type: return C_TYPE;
+    case Token::ClassField: return C_FIELD;
+    case Token::MagicAttr: return C_JS_SCOPE_VAR;
+    case Token::Operator: return C_OPERATOR;
+    case Token::Comment: return C_COMMENT;
+    case Token::Doxygen: return C_DOXYGEN_COMMENT;
+    case Token::Identifier: return C_TEXT;
+    case Token::Whitespace: return C_VISUAL_WHITESPACE;
+    case Token::ImportedModule: return C_STRING;
+    case Token::LeftParenthesis: return C_OPERATOR;
+    case Token::RightParenthesis: return C_OPERATOR;
+    case Token::TokenEnd:
         QTC_CHECK(false); // should never get here
         return C_TEXT;
     }
@@ -71,7 +71,9 @@ static TextEditor::TextStyle styleForFormat(int format)
 
 Highlighter::Highlighter()
 {
-    setTextFormatCategories(Internal::Format_FormatsAmount, styleForFormat);
+    //(Token::EndOfFile, styleForFormat);
+    //setTextFormatCategories(C_LAST_STYLE_SENTINEL, [](int i) { return TextStyle(i); });
+    setDefaultTextFormatCategories();
 }
 
 /**
@@ -145,30 +147,32 @@ int Highlighter::highlightLine(const QString &text, int initialState)
         }
     }
 
-    Internal::FormatToken tk;
+    //Token tk;
+    Token tk(-1,-1,Token::TokenEnd);
     TextEditor::Parentheses parentheses;
     bool hasOnlyWhitespace = true;
     while (!(tk = scanner.read()).isEndOfBlock()) {
-        Internal::Format format = tk.format();
-        if (format == Internal::Format_Keyword && isImportKeyword(scanner.value(tk)) && hasOnlyWhitespace) {
-            setFormat(tk.begin(), tk.length(), formatForCategory(format));
+        //Internal::Format format = tk.format();
+        Token::Kind kind = tk.kind;
+        if (kind == Token::Keyword && isImportKeyword(scanner.value(tk)) && hasOnlyWhitespace) {
+
+            setFormat(tk.offset, tk.length, formatForCategory(styleForFormat(kind)));
+
             highlightImport(scanner);
-        } else if (format == Internal::Format_Comment
-                   || format == Internal::Format_String
-                   || format == Internal::Format_Doxygen) {
-            setFormatWithSpaces(text, tk.begin(), tk.length(), formatForCategory(format));
+        } else if (kind == Token::Comment || kind == Token::String || kind == Token::Doxygen) {
+            setFormatWithSpaces(text, tk.offset, tk.length, formatForCategory(styleForFormat(kind)));
         } else {
-            if (format == Format_LParen) {
+            if (kind == Token::LeftParenthesis) {
                 parentheses.append(TextEditor::Parenthesis(TextEditor::Parenthesis::Opened,
                                                            text.at(tk.begin()), tk.begin()));
-            } else if (format == Format_RParen) {
+            } else if (kind == Token::RightParenthesis) {
                 parentheses.append(TextEditor::Parenthesis(TextEditor::Parenthesis::Closed,
                                                            text.at(tk.begin()), tk.begin()));
             }
-            setFormat(tk.begin(), tk.length(), formatForCategory(format));
+            setFormat(tk.offset, tk.length, formatForCategory(styleForFormat(kind)));
         }
 
-        if (format != Format_Whitespace)
+        if (kind != Token::Whitespace)
             hasOnlyWhitespace = false;
     }
     TextEditor::TextDocumentLayout::setParentheses(currentBlock(), parentheses);
@@ -180,12 +184,14 @@ int Highlighter::highlightLine(const QString &text, int initialState)
  */
 void Highlighter::highlightImport(Scanner &scanner)
 {
-    FormatToken tk;
+    Token tk(-1,-1,Token::TokenEnd);
     while (!(tk = scanner.read()).isEndOfBlock()) {
-        Format format = tk.format();
-        if (tk.format() == Format_Identifier)
-            format = Format_ImportedModule;
-        setFormat(tk.begin(), tk.length(), formatForCategory(format));
+        //Format format = tk.format();
+        Token::Kind kind = tk.kind;
+        //qDebug()<<"offset:"<<tk.offset<<tk.length;
+        if (tk.kind == Token::Identifier)
+            kind = Token::ImportedModule;
+        setFormat(tk.offset, tk.length, formatForCategory(styleForFormat(kind)));
     }
 }
 

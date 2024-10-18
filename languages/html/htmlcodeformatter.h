@@ -47,10 +47,13 @@ public:
     virtual void invalidateCache(QTextDocument *document) override;
 
 
+    virtual QList<Code::Token> tokenize(const QTextBlock& block) override;
+    virtual QList<Code::Token> tokenize(const QString& text) override;
 
 public: // must be public to make Q_GADGET introspection work
     enum StateType {
         invalid = 0,
+        top_html,
         html,
         open_tag,
         close_tag,
@@ -165,8 +168,10 @@ protected:
     void saveLexerState(QTextBlock *block, int state) const ;
     int loadLexerState(const QTextBlock &block) const ;
 
-    void saveTQouteTag(QTextBlock *block,const QByteArray& tag) const ;
-    QByteArray loadTQouteTag(const QTextBlock &block) const ;
+    void saveExpectedString(QTextBlock *block,const QByteArray& tag) const ;
+    QByteArray loadExpectedString(const QTextBlock &block) const ;
+
+
 
 
     friend class Php::CodeFormatter;

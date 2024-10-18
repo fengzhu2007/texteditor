@@ -61,6 +61,7 @@ void Highlighter::highlightBlock(const QString &text)
             break;
 
         case Token::String:
+        case Token::StringBracket:
             setFormat(token.offset, token.length, formatForCategory(C_STRING));
             break;
         case Token::Comment:

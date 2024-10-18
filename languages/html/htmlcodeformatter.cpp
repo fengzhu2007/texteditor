@@ -73,7 +73,7 @@ bool isAutoClose(QStringView tag){
 
         //qCDebug(formatterLog) << "Starting to look at " << block.text() << block.blockNumber() + 1;
 
-        //Scanner scanner;
+        Scanner scanner;
         //qDebug()<<"token size:"<<m_tokens.size();
         //scanner.dump(block.text(),m_tokens);
 
@@ -135,9 +135,17 @@ bool isAutoClose(QStringView tag){
                 }
             }
             switch (m_currentState.top().type) {
+            case top_html:
+                if(kind == Token::TagLeftBracket && m_currentToken.length == 1){
+                    //<
+                    enter(html);
+                    enter(open_tag);
+                }
+                break;
             case html:
                 if(kind == Token::TagLeftBracket && m_currentToken.length == 1){
                     //<
+                    enter(html);
                     enter(open_tag);
                 }else if(kind == Token::TagLeftBracket && m_currentToken.length == 2){
                     //</
@@ -152,23 +160,27 @@ bool isAutoClose(QStringView tag){
             case open_tag:
                 if(kind == Token::TagStart){
                     const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
+
                     if(isAutoClose(tok)){
                         //turnInto(html);
                         leave();//leave open_tag
+                        //break;
                     }
                 }else if(kind == Token::TagRightBracket){
-                    const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
+                    /*const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
                     if(tok.length() == 2 && tok.startsWith(QLatin1String("/>"))){
                         //close tag
                         leave();//leave open_tag
                     }else{
                         turnInto(html);//begin new html
-                    }
+                    }*/
+                    leave();//leave open_tag
                 }
                 break;
             case close_tag:
                 if(kind == Token::TagRightBracket){
                     leave();//leave tag_inner
+
                 }
                 break;
             case Php::CodeFormatter::topmost_intro_php:
@@ -326,7 +338,7 @@ bool isAutoClose(QStringView tag){
             Token t = m_tokens.at(m_tokenIndex+1);
             tag += m_currentLine.mid(t.begin(),t.length);
         }
-        //qDebug() << "html enter state" << stateToString(newState)<<tag<<"indent:"<<m_indentDepth <<"size:"<<m_currentState.size();
+        qDebug() << "html enter state" << stateToString(newState)<<tag<<"indent:"<<m_indentDepth <<currentTokenText()<<"size:"<<m_currentState.size();
 
         if(newState == Javascript::CodeFormatter::topmost_intro_js){
             enter(Javascript::CodeFormatter::top_js);
@@ -352,7 +364,7 @@ bool isAutoClose(QStringView tag){
 
         int topState = m_currentState.top().type;
 
-        //qDebug() << "html left state" << stateToString(poppedState.type) << ", now in state" << stateToString(topState) <<"indent:"<<m_indentDepth<<"size:"<<m_currentState.size();
+        qDebug() << "html left state" << stateToString(poppedState.type) << ", now in state" << stateToString(topState) <<"indent:"<<m_indentDepth<<currentTokenText()<<"size:"<<m_currentState.size();
 
         // if statement is done, may need to leave recursively
         if (statementDone) {
@@ -481,7 +493,7 @@ bool isAutoClose(QStringView tag){
     {
         static QStack<State> initialState;
         if (initialState.isEmpty())
-            initialState.push(State(html, 0));
+            initialState.push(State(top_html, 0));
         return initialState;
     }
 
@@ -491,7 +503,7 @@ bool isAutoClose(QStringView tag){
         int startState = loadLexerState(previous);
         QByteArray startTQouteTag;
         if((startState&Php::Scanner::MultiLineStringTQuote) == Php::Scanner::MultiLineStringTQuote){
-            startTQouteTag = loadTQouteTag(previous);
+            startTQouteTag = loadExpectedString(previous);
             Php::Scanner::setCurrentTQouteTag(startTQouteTag);
         }
         if (block.blockNumber() == 0){
@@ -518,7 +530,7 @@ bool isAutoClose(QStringView tag){
             if(startTQouteTag.isEmpty()){
                 startTQouteTag = Php::Scanner::currentTQouteTag().toLatin1();
             }
-            saveTQouteTag(&saveableBlock,startTQouteTag);
+            saveExpectedString(&saveableBlock,startTQouteTag);
         }
         return lexerState;
     }
@@ -558,17 +570,29 @@ bool isAutoClose(QStringView tag){
         switch (newState) {
         case html: {
             // special case for things like "gradient: Gradient {"
-            if (parentState.type == invalid)
+            /*if (parentState.type == invalid)
                 *savedIndentDepth = state(1).savedIndentDepth;
 
             if (firstToken)
                 *savedIndentDepth = tokenPosition;
 
-            if(parentState.type == invalid && firstToken){
+            *indentDepth = *savedIndentDepth;*/
+            //qDebug()<<"parent:"<<stateToString(parentState.type);
+            if(parentState.type==html){
+                if(firstToken){
+                    *savedIndentDepth += m_indentSize;
+                }
+            }else if(parentState.type==top_html){
+                if(firstToken)
+                    *savedIndentDepth = 0;
+            }
+            *indentDepth = *savedIndentDepth;
+
+            /*if(parentState.type == invalid && firstToken){
                 *indentDepth = 0;
             }else{
                 *indentDepth = *savedIndentDepth + m_indentSize;
-            }
+            }*/
             break;
         }
         case comment_content:
@@ -662,15 +686,36 @@ bool isAutoClose(QStringView tag){
 
 
     //save php <<< string tag
-    void CodeFormatter::saveTQouteTag(QTextBlock *block,const QByteArray& tag) const {
+    void CodeFormatter::saveExpectedString(QTextBlock *block,const QByteArray& tag) const {
         TextDocumentLayout::setExpectedRawStringSuffix(*block, tag);
     }
 
     //load php <<< string tag
-    QByteArray CodeFormatter::loadTQouteTag(const QTextBlock &block) const {
+    QByteArray CodeFormatter::loadExpectedString(const QTextBlock &block) const {
         return TextDocumentLayout::expectedRawStringSuffix(block);
     }
 
+
+    QList<Code::Token> CodeFormatter::tokenize(const QTextBlock& block){
+        const QTextBlock previous = block.previous();
+        int startState = TextEditor::TextDocumentLayout::lexerState(previous);
+        Q_ASSERT(startState != -1);
+        Scanner tokenize;
+        tokenize.setScanComments(true);
+
+        QString text = block.text();
+        text.append(QLatin1Char('\n'));
+        int from = 0;
+        return tokenize(from,text, startState);
+    }
+
+    QList<Code::Token> CodeFormatter::tokenize(const QString& text){
+        Scanner tokenize;
+        tokenize.setScanComments(true);
+        int from = 0;
+        int startState = 0;
+        return tokenize(from,text, startState);
+    }
 
 
 }

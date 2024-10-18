@@ -702,4 +702,25 @@ int CodeFormatter::loadLexerState(const QTextBlock &block) const
     return TextDocumentLayout::lexerState(block);
 }
 
+QList<Code::Token> CodeFormatter::tokenize(const QTextBlock& block){
+    const QTextBlock previous = block.previous();
+    int startState = TextEditor::TextDocumentLayout::lexerState(previous);
+    Q_ASSERT(startState != -1);
+    Scanner tokenize;
+    tokenize.setScanComments(true);
+
+    QString text = block.text();
+    text.append(QLatin1Char('\n'));
+    int from = 0;
+    return tokenize(from,text, startState);
+}
+
+QList<Code::Token> CodeFormatter::tokenize(const QString& text){
+    Scanner tokenize;
+    tokenize.setScanComments(true);
+    int from = 0;
+    int startState = 0;
+    return tokenize(from,text, startState);
+}
+
 } // namespace css

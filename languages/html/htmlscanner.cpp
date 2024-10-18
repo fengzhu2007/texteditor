@@ -71,37 +71,39 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
         if (index + 1 < text.length())
             la = text.at(index + 1);
 
-        if(isMarkState(_state,MultiLineStringDQuote)){
-            const int ss = index;
-            while(index < text.length()){
-                QChar ch = text.at(index);
-                if(ch==QLatin1Char('"') && (index==0 || text.at(index-1)!=QLatin1Char('\\'))){
-                    unSetMarkState(&_state,MultiLineStringDQuote);
-                    tokens.append(Token(ss, index - ss + 1, Token::String));
-                    break;
-                }else if(ch==QLatin1Char('\xd')){
-                    tokens.append(Token(ss, index - ss, Token::String));
-                    break;
-                }
-                ++index;
-            }
-            ++index;
+        if(isMarkState(_state,MultiLinePhp)){
+            auto phpTokens = this->phpScanner(index,text,_state);
+            tokens << phpTokens;
             continue;
-        }else if(isMarkState(_state,MultiLineStringSQuote)){
-            const int ss = index;
-            while(index < text.length()){
-                QChar ch = text.at(index);
-                if(ch==QLatin1Char('\'') && (index==0 || text.at(index-1)!=QLatin1Char('\\'))){
-                    unSetMarkState(&_state,MultiLineStringSQuote);
-                    tokens.append(Token(ss, index - ss + 1, Token::String));
+        }else if(isMarkState(_state,MultiLineCss)){
+            auto cssTokens = this->cssScanner(index,text,_state);
+            tokens << cssTokens;
+            continue;
+        }else if(isMarkState(_state,MultiLineJavascript)){
+            auto jsTokens = this->jsScanner(index,text,_state);
+            tokens << jsTokens;
+            continue;
+        }else if(isMarkState(_state,MultiLineStringDQuote) || isMarkState(_state,MultiLineStringSQuote)){
+
+            const QChar quote = ((_state & MultiLineStringDQuote)==MultiLineStringDQuote ? QLatin1Char('"') : QLatin1Char('\''));
+            qDebug()<<"1111111111111:"<<quote;
+            const int start = index;
+            while (index < text.length()) {
+                const QChar ch = text.at(index);
+                if (ch == quote){
                     break;
-                }else if(ch==QLatin1Char('\xd')){
-                    tokens.append(Token(ss, index - ss, Token::String));
-                    break;
-                }
-                ++index;
+                }else if (index + 1 < text.length() && ch == QLatin1Char('\\'))
+                    index += 2;
+                else
+                    ++index;
             }
-            ++index;
+            if (index < text.length()) {
+                ++index;
+                unSetMarkState(&_state, MultiLineStringDQuote|MultiLineStringSQuote);
+            }
+            if (start < index)
+                tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Html));
+
             continue;
         }else if(isMarkState(_state,MultiLineComment)){
             const int ss = index;
@@ -150,24 +152,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 ch = text.at(++index);
             }
             continue;
-        }else if(isMarkState(_state,MultiLinePhp)){
-            //qDebug()<<"php index:"<<index << isMarkState(_state,MultiLineElement);
-            auto phpTokens = this->phpScanner(index,text,_state);
-            //_state
-            //this->phpScanner.state()
-            //setMarkState(&_state,this->phpScanner.state());
-            tokens << phpTokens;
-            //qDebug()<<"php index:"<<index << isMarkState(_state,MultiLineElement);
-            continue;
-        }else if(isMarkState(_state,MultiLineCss)){
-            //qDebug()<<"scanner:"<<text<<_state;
-            auto cssTokens = this->cssScanner(index,text,_state);
-            tokens << cssTokens;
-            continue;
-        }else if(isMarkState(_state,MultiLineJavascript)){
-            auto jsTokens = this->jsScanner(index,text,_state);
-            tokens << jsTokens;
-            continue;
         }
 
 
@@ -188,7 +172,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 if(maybyText() && start>-1 && index > start){
                     tokens.append(Token(start, index - start, Token::InnerText));
                 }
-
                 tokens.append(Token(index++, 1, Token::TagLeftBracket));
                 //find tag name
                 const int ss = index;
@@ -246,9 +229,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
 
                         if(maybyText() && start>-1 && index > start){
                             tokens.append(Token(start, index - start, Token::InnerText));
-                            //if(isMarkState(_state,MultiLineText)){
-                            //    unSetMarkState(&_state,MultiLineText);
-                            //}
                         }
 
                         //add token
@@ -278,6 +258,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 }
                 setMarkState(&_state,MultiLinePhp);
                 break;
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             break;
@@ -295,6 +277,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                     start = -1;
                     break;
                 }
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             break;
@@ -311,6 +295,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                     unSetMarkState(&_state,MultiLineCss);
                     setMarkState(&_state,MultiLineCss);
                 }
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             break;
@@ -347,41 +333,45 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 }else{
                     setMarkState(&_state,MultiLineAttrValue);
                 }
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             bk0:
             break;
+        case '\'':
         case '"':
             if(isMarkState(_state,MultiLineElement)){
-                setMarkState(&_state,MultiLineStringDQuote);
-                const int ss = index;
+
+                const QChar quote = ch;
+                const int start = index;
                 ++index;
-                while(index<text.length()){
-                    QChar ch = text.at(index);
-                    if(ch== QLatin1Char('"') && index>1 && text.at(index - 1) != QLatin1Char('\\')){
-                        tokens.append(Code::Token(ss, index - ss + 1, Code::Token::String,Code::Token::Html));
-                        unSetMarkState(&_state,MultiLineStringDQuote);
+                while (index < text.length()) {
+                    const QChar ch = text.at(index);
+
+                    if (ch == quote)
                         break;
-                    }
-                    ++index;
+                    else if (index + 1 < text.length() && ch == QLatin1Char('\\'))
+                        index += 2;
+                    else
+                        ++index;
                 }
-            }
-            ++index;
-            break;
-        case '\'':
-            if(isMarkState(_state,MultiLineElement)){
-                setMarkState(&_state,MultiLineStringSQuote);
-                const int ss = index;
-                ++index;
-                while(index<text.length()){
-                    QChar ch = text.at(index);
-                    if(ch== QLatin1Char('\'') && index>1 && text.at(index - 1) != QLatin1Char('\\')){
-                        tokens.append(Code::Token(ss, index - ss + 1, Code::Token::String,Code::Token::Html));
-                        unSetMarkState(&_state,MultiLineStringSQuote);
-                        break;
-                    }
+
+                if (index < text.length()) {
                     ++index;
+                    // good one
+                } else {
+
+                    if (quote.unicode() == '"')
+                        setMarkState(&_state, MultiLineStringDQuote);
+                    else
+                        setMarkState(&_state, MultiLineStringSQuote);
                 }
+
+                tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Html));
+                break;
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             break;
@@ -389,6 +379,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
             if(la == QLatin1Char('>')){
                 tokens.append(Code::Token(index, 2, Code::Token::PhpRightBracket,Code::Token::Html));
                 index += 1;
+            }else{
+                tokens.append(Token(index, 1, Token::InnerText));
             }
             ++index;
             break;
@@ -429,14 +421,26 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 break;
             }else{
                 //inner html
-                if(start==-1 && ch.isSpace()==false){
+                /*if(start==-1 && ch.isSpace()==false){
                     start = index;
+                }*/
+                const int start = index;
+                //find <
+                while(index<text.length()){
+                    const QChar ch = text.at(index);
+                    if(ch==QLatin1Char('<')){
+                        break;
+                    }
+                    ++index;
                 }
-                if(ch==QLatin1Char('\xd') && start>-1 && index > start){
-
+                if(start<index){
                     tokens.append(Token(start, index - start, Token::InnerText));
                 }
-                ++index;
+                /*if(ch==QLatin1Char('\xd') && start>-1 && index > start){
+
+                    tokens.append(Token(start, index - start, Token::InnerText));
+                }*/
+                //++index;
             }
             break;
         }

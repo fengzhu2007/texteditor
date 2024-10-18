@@ -15,7 +15,7 @@ static int blockStartState(const QTextBlock &block)
     if (state == -1)
         return 0;
     else
-        return state & 0xff;
+        return state /*& 0xff*/;
 }
 
 static Code::Token tokenUnderCursor(const QTextCursor &cursor)

@@ -218,6 +218,7 @@ protected:
     void dump() const;
     QString stateToString(int type) const;
 
+
 private:
     void recalculateStateAfter(const QTextBlock &block);
     inline void setTokens(const QList<Token>& tokens){

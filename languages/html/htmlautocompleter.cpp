@@ -20,7 +20,7 @@ static int blockStartState(const QTextBlock &block)
     if (state == -1)
         return 0;
     else
-        return state & 0xff;
+        return state ;
 }
 
 static Token tokenUnderCursor(const QTextCursor &cursor)
@@ -222,7 +222,6 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
 
     const QTextBlock block = cursor.block();
     const int state =  TextEditor::TextDocumentLayout::lexerState(block);
-    //qDebug()<<"auto state:"<<state;
     if(!isInHtml(state)){
         return QString();
     }
@@ -315,18 +314,7 @@ void AutoCompleter::languageState(int state,TextEditor::TextDocument* textDocume
     }
 }
 
-QList<Code::Token> AutoCompleter::tokenizeBlock(const QTextBlock& block){
-    const QTextBlock previous = block.previous();
-    int startState = TextEditor::TextDocumentLayout::lexerState(previous);
-    Q_ASSERT(startState != -1);
-    Scanner tokenize;
-    tokenize.setScanComments(true);
 
-    QString text = block.text();
-    text.append(QLatin1Char('\n'));
-    int from = 0;
-    return tokenize(from,text, startState);
-}
 
 /*bool AutoCompleter::isInStringLiteral(const QTextBlock& block,int pos){
     auto tokens = this->tokenizeBlock(block);

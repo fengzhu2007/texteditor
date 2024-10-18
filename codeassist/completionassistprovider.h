@@ -8,6 +8,7 @@
 
 namespace TextEditor {
 class AutoCompleter;
+class CodeFormatter;
 class TEXTEDITOR_EXPORT CompletionAssistProvider : public IAssistProvider
 {
     Q_OBJECT
@@ -21,9 +22,9 @@ public:
     virtual bool isActivationCharSequence(const QString &sequence) const;
     virtual bool isContinuationChar(const QChar &c) const;
 
-    inline void setAutoCompleter(AutoCompleter* autoCompleter){m_autoCompleter = autoCompleter;}
+    inline void setCodeFormatter(CodeFormatter* codeFormatter){m_codeFormatter=codeFormatter;}
 protected:
-    AutoCompleter* m_autoCompleter;
+    CodeFormatter* m_codeFormatter;
 };
 
 } // TextEditor

@@ -3089,9 +3089,14 @@ void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlight
         auto autoCompleter = loader.autoCompleter();
         if(autoCompleter!=nullptr){
             q->setAutoCompleter(autoCompleter);
+
+        }
+        auto codeFormatter = loader.codeFormatter();
+        if(codeFormatter!=nullptr){
+            m_document->setFormatter(codeFormatter);
             auto provider = m_document->completionAssistProvider();
             if(provider!=nullptr){
-                provider->setAutoCompleter(autoCompleter);
+                provider->setCodeFormatter(codeFormatter);
             }
         }
 

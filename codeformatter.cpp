@@ -37,7 +37,30 @@ void CodeFormatter::invalidateCache(QTextDocument *document){
 
 }
 
+QList<Code::Token> CodeFormatter::tokenize(const QTextBlock& block){
+    Q_UNUSED(block);
+    return {};
+}
 
+QList<Code::Token> CodeFormatter::tokenize(const QString& text){
+    Q_UNUSED(text);
+    return {};
+}
+
+bool CodeFormatter::isInStringORCommentLiteral(const QTextBlock& block,int pos){
+    if(pos<0 || pos >= block.length()){
+        return false;
+    }
+    auto tokens = this->tokenize(block);
+    for(auto tk:tokens){
+        if(tk.offset<=pos && pos <(tk.offset+tk.length)){
+            if(tk.kind==Code::Token::String || tk.kind==Code::Token::Comment){
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 }

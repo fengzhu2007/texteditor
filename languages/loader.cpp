@@ -2,14 +2,17 @@
 #include "languages/html/htmlhighlighter.h"
 #include "languages/html/htmlindenter.h"
 #include "languages/html/htmlautocompleter.h"
+#include "languages/html/htmlcodeformatter.h"
 
 #include "languages/css/csshighlighter.h"
 #include "languages/css/cssindenter.h"
 #include "languages/css/cssautocompleter.h"
+#include "languages/css/csscodeformatter.h"
 
 #include "languages/javascript/jshighlighter.h"
 #include "languages/javascript/jsindenter.h"
 #include "languages/javascript/jsautocompleter.h"
+#include "languages/javascript/jscodeformatter.h"
 
 #include "languages/python/pythonhighlighter.h"
 #include "languages/python/pythonindenter.h"
@@ -19,25 +22,29 @@
 namespace TextEditor{
 
 LanguageLoader::LanguageLoader(const KSyntaxHighlighting::Definition &definition,QTextDocument* doc)
-    :m_hightlighter(nullptr),m_indenter(nullptr),m_autoCompleter(nullptr){
+    :m_hightlighter(nullptr),m_indenter(nullptr),m_autoCompleter(nullptr),m_codeFormatter(nullptr){
 
     const QString name = definition.name();
     if(name==QLatin1String("PHP/PHP") || name == QLatin1String("HTML")){
         m_hightlighter = new Html::Highlighter();
         m_indenter = Html::createIndenter(doc);
         m_autoCompleter = new Html::AutoCompleter();
+        m_codeFormatter = new Html::CodeFormatter;
     }else if(name==QLatin1String("CSS")){
         m_hightlighter = new Css::Highlighter();
         m_indenter = Css::createIndenter(doc);
         m_autoCompleter = new Css::AutoCompleter();
+        m_codeFormatter = new Css::CodeFormatter;
     }else if(name==QLatin1String("JavaScript")){
         m_hightlighter = new Javascript::Highlighter();
         m_indenter = Javascript::createIndenter(doc);
         m_autoCompleter = new Javascript::AutoCompleter();
+        m_codeFormatter = new Javascript::CodeFormatter;
     }else if(name==QLatin1String("JavaScript React (JSX)")){
         m_hightlighter = new Javascript::Highlighter();
         m_indenter = Javascript::createIndenter(doc);
         m_autoCompleter = new Javascript::AutoCompleter();
+        m_codeFormatter = new Javascript::CodeFormatter;
     }else if(name== QLatin1String("Python")){
         m_hightlighter = new Python::Highlighter();
         m_indenter = Python::createIndenter(doc);
@@ -46,17 +53,6 @@ LanguageLoader::LanguageLoader(const KSyntaxHighlighting::Definition &definition
 
 }
 
-SyntaxHighlighter* LanguageLoader::hightlighter(){
-    return m_hightlighter;
-}
 
-
-Indenter* LanguageLoader::indenter(){
-    return m_indenter;
-}
-
-AutoCompleter* LanguageLoader::autoCompleter(){
-    return m_autoCompleter;
-}
 
 }

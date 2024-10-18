@@ -30,8 +30,6 @@ public:
 
     virtual void languageState(int state,TextEditor::TextDocument* textDocument) override;
 
-    virtual QList<Code::Token> tokenizeBlock(const QTextBlock& block) override;
-    //virtual bool isInStringLiteral(const QTextBlock& block,int pos) override;
 };
 
 } // namespace Html

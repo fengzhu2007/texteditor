@@ -78,11 +78,11 @@ public:
     bool isNextBlockIndented(const QTextBlock &currentBlock) const;
 
     virtual QList<Code::Token> tokenizeBlock(const QTextBlock& block);
-    virtual bool isInStringLiteral(const QTextBlock& block,int pos);
+    virtual QList<Code::Token> tokenizeText(const QString& text);
+    virtual bool isInStringORCommentLiteral(const QTextBlock& block,int pos);
+
 
     virtual void languageState(int state,TextDocument* textDocument);
-
-
 
     void initProvider(const Highlighter::Definition& def,DocumentContentCompletionProvider* provider);
 

@@ -28,6 +28,7 @@ public:
 
 
         PHPTQouteStart = MultiLineComment << 11,
+        PHPTQouteEnd = MultiLineComment << 12,
 
         //RegexpMayFollow = 8, // flag that may be combined with the above
 
