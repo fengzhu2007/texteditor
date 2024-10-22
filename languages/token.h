@@ -86,6 +86,7 @@ public:
 
         //html token type
         InnerText,//18
+        TagDefine,//DOCTYPE
         TagStart,//div
         TagEnd,//div
         TagLeftBracket,// <,</
@@ -93,7 +94,8 @@ public:
         CommentTagStart,//<!--
         CommentTagEnd,//-->
         AttrName,//xxxx
-        AttrValue,
+        AttrValue,//
+        UnComplate,
 
         //php
         PhpLeftBracket,//<?

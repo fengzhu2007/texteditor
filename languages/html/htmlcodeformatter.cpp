@@ -111,7 +111,9 @@ bool isAutoClose(QStringView tag){
 
             if(m_currentToken.length == 1 && kind==Token::TagRightBracket){
                 //enter js
+
                 if((lexerState & Scanner::MultiLineJavascript)== Scanner::MultiLineJavascript){
+                    //qDebug()<<"js enter size:"<<m_currentState.size();
                     turnInto(Javascript::CodeFormatter::topmost_intro_js);
                     m_tokenIndex += 1;
                     continue;
@@ -151,36 +153,39 @@ bool isAutoClose(QStringView tag){
                     //</
                     const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
                     if (tok == QLatin1String("</")){
-                        turnInto(close_tag);
+                        enter(close_tag);
                     }
                 }else if(kind == Token::CommentTagStart){
+                    //<!
                     enter(comment_content);
                 }
                 break;
             case open_tag:
-                if(kind == Token::TagStart){
-                    const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
-
-                    if(isAutoClose(tok)){
-                        //turnInto(html);
-                        leave();//leave open_tag
-                        //break;
+                if(kind == Token::TagRightBracket){
+                    if(m_currentToken.length==1){
+                        //>
+                        leave();
+                    }else if(m_currentToken.length==2){
+                        //  />
+                        leave(true);//leave open_tag and html
                     }
-                }else if(kind == Token::TagRightBracket){
-                    /*const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
-                    if(tok.length() == 2 && tok.startsWith(QLatin1String("/>"))){
-                        //close tag
-                        leave();//leave open_tag
-                    }else{
-                        turnInto(html);//begin new html
-                    }*/
-                    leave();//leave open_tag
+                }else if( Token::TagStart){
+                    //auto_tag
+                    const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
+                    if(isAutoClose(tok)){
+                        enter(auto_tag);
+                    }
+                }
+                break;
+            case auto_tag:
+                if(kind == Token::TagRightBracket){
+                    leave();//leave auto_tag
+                    leave(true);//leave  open_tag and html
                 }
                 break;
             case close_tag:
                 if(kind == Token::TagRightBracket){
-                    leave();//leave tag_inner
-
+                    leave(true);//leave close_tag and html
                 }
                 break;
             case Php::CodeFormatter::topmost_intro_php:
@@ -212,7 +217,9 @@ bool isAutoClose(QStringView tag){
 
     int CodeFormatter::indentFor(const QTextBlock &block)
     {
+        //qDebug()<<"11111:"<<m_indentDepth<<block.text();
         restoreCurrentState(block.previous());
+        //qDebug()<<"22222:"<<m_indentDepth<<block.text();
         correctIndentation(block);
         return m_indentDepth;
     }
@@ -338,7 +345,7 @@ bool isAutoClose(QStringView tag){
             Token t = m_tokens.at(m_tokenIndex+1);
             tag += m_currentLine.mid(t.begin(),t.length);
         }
-        qDebug() << "html enter state" << stateToString(newState)<<tag<<"indent:"<<m_indentDepth <<currentTokenText()<<"size:"<<m_currentState.size();
+        //qDebug() << "html enter state" << stateToString(newState)<<tag<<"indent:"<<m_indentDepth <<currentTokenText()<<"size:"<<m_currentState.size();
 
         if(newState == Javascript::CodeFormatter::topmost_intro_js){
             enter(Javascript::CodeFormatter::top_js);
@@ -360,16 +367,23 @@ bool isAutoClose(QStringView tag){
 
         // restore indent depth
         State poppedState = m_currentState.pop();
-        m_indentDepth = poppedState.savedIndentDepth;
+        if(poppedState.type==comment_content || poppedState.type==topmost_intro_js || poppedState.type==top_css){
+            m_indentDepth = m_currentState.top().savedIndentDepth;
+        }else{
+            m_indentDepth = poppedState.savedIndentDepth;
+        }
+
 
         int topState = m_currentState.top().type;
 
-        qDebug() << "html left state" << stateToString(poppedState.type) << ", now in state" << stateToString(topState) <<"indent:"<<m_indentDepth<<currentTokenText()<<"size:"<<m_currentState.size();
+        //qDebug() << "html left state" << stateToString(poppedState.type) << ", now in state" << stateToString(topState) <<"indent:"<<m_indentDepth<<currentTokenText()<<"size:"<<m_currentState.size();
 
         // if statement is done, may need to leave recursively
         if (statementDone) {
             if (topState == topmost_intro_php) {
                 leave(true);
+            }else if(topState==html){
+                leave();
             }
         }
     }
@@ -394,6 +408,7 @@ bool isAutoClose(QStringView tag){
                 break;
             }
         }
+        leave();//leave "script" html
     }
 
     void CodeFormatter::leaveCSS(){
@@ -405,6 +420,7 @@ bool isAutoClose(QStringView tag){
                 break;
             }
         }
+        leave();//leave "style" html
     }
 
     void CodeFormatter::correctIndentation(const QTextBlock &block)
@@ -568,35 +584,21 @@ bool isAutoClose(QStringView tag){
         const bool lastToken = (tokenIndex() == tokenCount() - 1);
 
         switch (newState) {
-        case html: {
-            // special case for things like "gradient: Gradient {"
-            /*if (parentState.type == invalid)
-                *savedIndentDepth = state(1).savedIndentDepth;
-
-            if (firstToken)
-                *savedIndentDepth = tokenPosition;
-
-            *indentDepth = *savedIndentDepth;*/
-            //qDebug()<<"parent:"<<stateToString(parentState.type);
-            if(parentState.type==html){
-                if(firstToken){
-                    *savedIndentDepth += m_indentSize;
-                }
-            }else if(parentState.type==top_html){
-                if(firstToken)
-                    *savedIndentDepth = 0;
+        case html:
+            if(firstToken){
+                *savedIndentDepth = *indentDepth;
+                *indentDepth += m_indentSize;
             }
-            *indentDepth = *savedIndentDepth;
-
-            /*if(parentState.type == invalid && firstToken){
-                *indentDepth = 0;
-            }else{
-                *indentDepth = *savedIndentDepth + m_indentSize;
-            }*/
             break;
-        }
+        case close_tag:
+            if(firstToken){
+                *indentDepth = *savedIndentDepth - m_indentSize;
+                *savedIndentDepth = *indentDepth;
+            }
+            break;
         case comment_content:
             *indentDepth = tokenPosition;
+            *savedIndentDepth = *indentDepth;
 
             break;
         }
@@ -634,6 +636,9 @@ bool isAutoClose(QStringView tag){
             case Token::TagLeftBracket:
                 if(tok.length==2){
                     *indentDepth = topState.savedIndentDepth;
+                    if((topState.type >= top_js &&  topState.type < topmost_intro_css) || topState.type >= top_css){
+                        *indentDepth -= m_indentSize;
+                    }
                 }
                 break;
             }

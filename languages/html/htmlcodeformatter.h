@@ -57,6 +57,7 @@ public: // must be public to make Q_GADGET introspection work
         html,
         open_tag,
         close_tag,
+        auto_tag,
 
 
 

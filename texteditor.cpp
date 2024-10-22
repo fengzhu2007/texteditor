@@ -3105,6 +3105,7 @@ void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlight
             m_document->setSyntaxHighlighter(highlighter);
         }else{
             auto highlighter = new Highlighter();
+            m_document->setSyntaxHighlighter(highlighter);
             highlighter->setDefinition(definition);
         }
         setupFromDefinition(definition);

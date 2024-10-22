@@ -118,7 +118,7 @@ static QString findNearlyTagName(const QTextBlock& bk){
     return QString();
 }
 
-static QString findMatchedTagName(const QTextBlock& bk){
+static QString findMatchedTagName(const QTextBlock& bk,int last){
     QTextBlock block = bk;
     Scanner tokenize;
     QString tag;
@@ -129,19 +129,22 @@ static QString findMatchedTagName(const QTextBlock& bk){
         int index = 0;
         const QList<Token> tokens = tokenize(index,blockText, blockState);
         for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
-            if(it->kind==Token::TagStart || it->kind == Token::TagEnd){
-                tag = blockText.mid(it->begin(),it->length);
-                if(!Html::isAutoClose(QStringView(tag))){
-                    if(it->kind==Token::TagEnd){
-                        status -= 1;
-                    }else{
-                        status += 1;
-                        if(status>=1){
-                            return tag;
+            if(last==-1 || ((it->offset + it->length) < last)){
+                if(it->kind==Token::TagStart || it->kind == Token::TagEnd){
+                    tag = blockText.mid(it->begin(),it->length);
+                    if(!Html::isAutoClose(QStringView(tag))){
+                        if(it->kind==Token::TagEnd){
+                            status -= 1;
+                        }else{
+                            status += 1;
+                            if(status>=1){
+                                return tag;
+                            }
                         }
                     }
                 }
             }
+            last = -1;
         }
         block = block.previous();
     }
@@ -245,12 +248,26 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
         }
     }
     case '/':{
-        const QString tag = findMatchedTagName(cursor.block());
-        if(!tag.isEmpty()){
-            *adjustPos+=(tag.length()+1);
-            return QString(tag+">");
+        //qDebug()<<"cursor:"<<cursor.columnNumber();
+
+        //return {};
+        int before = cursor.columnNumber() - 1;
+        if(before>-1 && block.text().at(before)==QChar('<')){
+            const QString tag = findMatchedTagName(cursor.block(),cursor.columnNumber());
+            if(!tag.isEmpty()){
+                *adjustPos+=(tag.length()+1);
+                return QString(tag+">");
+            }
+            return tag;
+        }else{
+            if((state & Html::Scanner::MultiLineElement) == Html::Scanner::MultiLineElement){
+                *adjustPos+=1;
+                return QString(">");
+            }else{
+                return {};
+            }
         }
-        return tag;
+
     }
     default:
         break;

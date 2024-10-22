@@ -722,6 +722,8 @@ void CodeFormatter::leave(bool statementDone)
         topState = pHtmlFormatter->m_currentState.top().type;
         pHtmlFormatter->m_indentDepth = poppedState.savedIndentDepth;
         //qDebug() << "js left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth;
+
+
     }else{
 
         if (m_currentState.size()<=1)

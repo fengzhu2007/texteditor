@@ -42,6 +42,7 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::PhpRightBracket:
         case Token::Selector:
         case Token::AtRules:
+        case Token::TagDefine:
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
              break;
 
@@ -106,6 +107,7 @@ void Highlighter::highlightBlock(const QString &text)
 
             break;
         case Token::Delimiter:
+        case Token::Equal:
             setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
             break;
 

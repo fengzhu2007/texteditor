@@ -310,7 +310,7 @@ void CodeFormatter::enter(int newState)
         Code::State s(newState, savedIndentDepth);
         m_currentState.push(s);
         m_newStates.push(s);
-        qDebug() << "css enter state 2" << stateToString(newState)<<m_currentLine.mid(m_currentToken.begin(),m_currentToken.length)<<"indent:"<<m_indentDepth<<"size:"<<m_currentState.size();
+        //qDebug() << "css enter state 2" << stateToString(newState)<<m_currentLine.mid(m_currentToken.begin(),m_currentToken.length)<<"indent:"<<m_indentDepth<<"size:"<<m_currentState.size();
 
     }
 
@@ -344,7 +344,7 @@ void CodeFormatter::leave(bool statementDone)
         poppedState = m_currentState.pop();
         topState = m_currentState.top().type;
         m_indentDepth = poppedState.savedIndentDepth;
-        qDebug() << "css left state2" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<m_currentState.size()<<"indent:"<<m_indentDepth;
+        //qDebug() << "css left state2" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<m_currentState.size()<<"indent:"<<m_indentDepth;
     }
 
     if(statementDone){

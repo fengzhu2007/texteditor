@@ -40,12 +40,12 @@ LanguageLoader::LanguageLoader(const KSyntaxHighlighting::Definition &definition
         m_indenter = Javascript::createIndenter(doc);
         m_autoCompleter = new Javascript::AutoCompleter();
         m_codeFormatter = new Javascript::CodeFormatter;
-    }else if(name==QLatin1String("JavaScript React (JSX)")){
+    }/*else if(name==QLatin1String("JavaScript React (JSX)")){
         m_hightlighter = new Javascript::Highlighter();
         m_indenter = Javascript::createIndenter(doc);
         m_autoCompleter = new Javascript::AutoCompleter();
         m_codeFormatter = new Javascript::CodeFormatter;
-    }else if(name== QLatin1String("Python")){
+    }*/else if(name== QLatin1String("Python")){
         m_hightlighter = new Python::Highlighter();
         m_indenter = Python::createIndenter(doc);
         //m_autoCompleter = new Python::AutoCompleter();

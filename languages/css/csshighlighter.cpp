@@ -33,7 +33,7 @@ void Highlighter::highlightBlock(const QString &text)
     int from = 0;
     int state = onBlockStart();
     const QList<Token> tokens = m_scanner(from,text, state);
-    Html::Scanner::dump(text,tokens);
+    //Html::Scanner::dump(text,tokens);
     int index = 0;
     while (index < tokens.size()) {
         const Token &token = tokens.at(index);
@@ -45,7 +45,6 @@ void Highlighter::highlightBlock(const QString &text)
             case Token::AttrName:
                 setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
                 break;
-
             case Token::String:
         case Token::AttrValue:
                 setFormat(token.offset, token.length, formatForCategory(C_STRING));
