@@ -305,10 +305,8 @@ namespace Php {
 
             case expression_continuation:
                 if(kind==Code::Token::StringBracket){
-                    qDebug()<<"1111111111111111111111111";
                     break;
                 }else{
-                    qDebug()<<"00000000000000000000000";
                     leave();
                     continue;
                 }
@@ -691,7 +689,7 @@ namespace Php {
             pHtmlFormatter->m_currentState.push(s);
             pHtmlFormatter->m_newStates.push(s);
             //Token tok = pHtmlFormatter->currentToken();
-            qDebug() << "php enter state 1" << stateToString(newState)<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
+            //qDebug() << "php enter state 1" << stateToString(newState)<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
         }else{
             int savedIndentDepth = m_indentDepth;
             onEnter(newState, &m_indentDepth, &savedIndentDepth);
@@ -725,7 +723,7 @@ namespace Php {
             poppedState = pHtmlFormatter->m_currentState.pop();
             topState = pHtmlFormatter->m_currentState.top().type;
             pHtmlFormatter->m_indentDepth = poppedState.savedIndentDepth;
-            qDebug() << "php left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
+            //qDebug() << "php left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
         }else{
 
             if (m_currentState.size()<=1)
