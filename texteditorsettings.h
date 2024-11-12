@@ -76,6 +76,7 @@ public:
     static Utils::Id languageId(const QString &mimeType);
     static int increaseFontZoom(int step);
     static void resetFontZoom();
+    static int setZoom(int zoom);
 
 signals:
     void fontSettingsChanged(const TextEditor::FontSettings &);

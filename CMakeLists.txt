@@ -12,10 +12,24 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
 
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+set(BUILD_BINARY OFF CACHE BOOL "Build shared libraries" FORCE)
+add_subdirectory(uchardet)
+
+
+
+
+include_directories(SYSTEM "./uchardet/src")
+
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DQ_DEBUG)
 endif()
+
+
+
+
+
 
 
 message("dirss :${AUTOGEN_BUILD_DIR}")
@@ -243,7 +257,7 @@ add_library(texteditor SHARED
 
 )
 
-target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core uchardet)
 
 target_compile_definitions(texteditor PRIVATE TEXTEDITOR_LIBRARY)
 

@@ -58,6 +58,8 @@ public:
 
     static QByteArray decodingErrorSample(const QByteArray &data);
 
+    static QString detectEncoding(const QByteArray& data);
+
     LineTerminationMode lineTerminationMode = NativeLineTerminator;
     bool hasUtf8Bom = false;
     const QTextCodec *codec = nullptr;

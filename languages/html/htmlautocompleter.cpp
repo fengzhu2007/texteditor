@@ -302,6 +302,55 @@ QString AutoCompleter::insertParagraphSeparator(const QTextCursor &cursor) const
     return QLatin1String("}");
 }
 
+int AutoCompleter::paragraphSeparatorAboutToBeInserted(QTextCursor &cursor){
+    QTextDocument *doc = cursor.document();
+    int position = cursor.position();
+    if (doc->characterAt(position - 1) != QLatin1Char('{')){
+        return TextEditor::AutoCompleter::paragraphSeparatorAboutToBeInserted(cursor);
+    }
+    if (doc->characterAt(position - 1) != QLatin1Char('>'))
+        return 0;
+
+    if (!contextAllowsAutoBrackets(cursor))
+        return 0;
+
+    // verify that we indeed do have an extra opening brace in the document
+    QTextBlock block = cursor.block();
+    const int blockState = blockStartState(block.previous());
+    const QString blockText = block.text();
+    int index = 0;
+    Scanner tokenize;
+    const QList<Token> tokens = tokenize(index,blockText, blockState);
+    Token tk;
+    for(int i=0;i<tokens.length();i++){
+        tk = tokens.at(i);
+        if(tk.offset+tk.length>=position){
+            break;
+        }
+    }
+    if(tk.length==1 && tk.lang==Token::Html){
+        cursor.insertBlock();
+        cursor.insertText("");
+        cursor.setPosition(position);
+        return 1;
+    }
+
+
+    //qDebug()<<"33333333333333333";
+
+
+
+
+    /*const QString &textToInsert = insertParagraphSeparator(cursor);
+    int pos = cursor.position();
+    cursor.insertBlock();
+    cursor.insertText(textToInsert);
+    cursor.setPosition(pos);*/
+
+
+    return 0;
+}
+
 void AutoCompleter::languageState(int state,TextEditor::TextDocument* textDocument){
     int lang = 0;
     QString mineType;

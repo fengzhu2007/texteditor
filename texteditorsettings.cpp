@@ -549,7 +549,7 @@ static void setFontZoom(int zoom)
 int TextEditorSettings::increaseFontZoom(int step)
 {
     const int previousZoom = d->m_fontSettings.fontZoom();
-    const int newZoom = qMax(10, previousZoom + step);
+    const int newZoom = qMin(qMax(20, previousZoom + step),400);//min 20 max 400
     if (newZoom != previousZoom)
         setFontZoom(newZoom);
     return newZoom;
@@ -558,6 +558,12 @@ int TextEditorSettings::increaseFontZoom(int step)
 void TextEditorSettings::resetFontZoom()
 {
     setFontZoom(100);
+}
+
+int TextEditorSettings::setZoom(int zoom){
+    zoom = qMin(qMax(20, zoom),400);//min 20 max 400
+    setFontZoom(zoom);
+    return zoom;
 }
 
 } // TextEditor

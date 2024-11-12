@@ -2203,7 +2203,6 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
                 if (!previousIndentationString.isEmpty())
                     cursor.insertText(previousIndentationString);
             }
-
             if (extraBlocks > 0) {
                 const int cursorPosition = cursor.position();
                 QTextCursor ensureVisible = cursor;
