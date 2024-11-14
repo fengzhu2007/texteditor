@@ -6,7 +6,7 @@
 #include "fileutils.h"
 #include "qtcassert.h"
 
-#include <uchardet.h>
+#include "uchardet/uchardet.h"
 
 #include <QDebug>
 #include <QTextCodec>
@@ -63,25 +63,20 @@ TextFileFormat TextFileFormat::detect(const QByteArray &data)
     const int bytesRead = data.size();
     const auto buf = reinterpret_cast<const unsigned char *>(data.constData());
     // code taken from qtextstream
-    /*if (bytesRead >= 4 && ((buf[0] == 0xff && buf[1] == 0xfe && buf[2] == 0 && buf[3] == 0)
-                           || (buf[0] == 0 && buf[1] == 0 && buf[2] == 0xfe && buf[3] == 0xff))) {
+    if (bytesRead >= 4 && ((buf[0] == 0xff && buf[1] == 0xfe && buf[2] == 0 && buf[3] == 0) || (buf[0] == 0 && buf[1] == 0 && buf[2] == 0xfe && buf[3] == 0xff))) {
         result.codec = QTextCodec::codecForName("UTF-32");
-    } else if (bytesRead >= 2 && ((buf[0] == 0xff && buf[1] == 0xfe)
-                                  || (buf[0] == 0xfe && buf[1] == 0xff))) {
+    } else if (bytesRead >= 2 && ((buf[0] == 0xff && buf[1] == 0xfe) || (buf[0] == 0xfe && buf[1] == 0xff))) {
         result.codec = QTextCodec::codecForName("UTF-16");
-    } else if (bytesRead >= 3 && ((buf[0] == 0xef && buf[1] == 0xbb) && buf[2] == 0xbf)) {
-        result.codec = QTextCodec::codecForName("UTF-8");
-        result.hasUtf8Bom = true;
     }else{
-
-    }*/
-    const QString charset = TextFileFormat::detectEncoding(data);
-    if(!charset.isEmpty()){
-        result.codec = QTextCodec::codecForName(charset.toStdString().c_str());
-        if(charset==QLatin1String("UTF-8") && bytesRead >= 3 && ((buf[0] == 0xef && buf[1] == 0xbb) && buf[2] == 0xbf)){
-            result.hasUtf8Bom = true;
+        const QString charset = TextFileFormat::detectEncoding(data);
+        if(!charset.isEmpty()){
+            result.codec = QTextCodec::codecForName(charset.toStdString().c_str());
+            if(charset==QLatin1String("UTF-8") && bytesRead >= 3 && ((buf[0] == 0xef && buf[1] == 0xbb) && buf[2] == 0xbf)){
+                result.hasUtf8Bom = true;
+            }
         }
     }
+
     // end code taken from qtextstream
     const int newLinePos = data.indexOf('\n');
     if (newLinePos == -1)
@@ -326,29 +321,17 @@ bool TextFileFormat::writeFile(const FilePath &filePath, QString plainText, QStr
 
 
 QString TextFileFormat::detectEncoding(const QByteArray& data){
-    uchardet_t ud = uchardet_new();
-    int retval = uchardet_handle_data(ud, data.constData(), data.length());
+    uchardet_t ud = ::uchardet_new();
+
+    int retval = ::uchardet_handle_data(ud, data.constData(), data.length());
     if (retval != 0){
         return {};
     }
-    uchardet_data_end(ud);
-    /*size_t candidates = uchardet_get_n_candidates(ud);
-    for (int i = 0; i < candidates; i++)
-    {
-        qDebug()<<uchardet_get_encoding(ud, i)<<uchardet_get_language(ud, i) <<uchardet_get_confidence(ud, i);
-    }*/
-
-    QString charset = QString::fromUtf8(uchardet_get_encoding(ud, 0));
-    //QString charset = QString::fromUtf8(uchardet_get_charset(ud));
-    //qDebug()<<"charset"<<charset;
-    //QString lang = QString::fromUtf8(uchardet_get_language(ud, 0));
-    //qDebug()<<"lang:"<<lang;
-    uchardet_reset(ud);
-    if(charset==QLatin1String("ASCII")){
-        charset = "UTF-8";
-    }
-    if(charset!="UTF-8" && charset!="UTF-16" && charset!="UTF-32"){
-        charset = "System";
+    ::uchardet_data_end(ud);
+    QString charset = QString::fromUtf8(::uchardet_get_charset(ud));
+    ::uchardet_reset(ud);
+    if(charset.isEmpty()){
+        charset = QLatin1String("System");
     }
     return charset;
 }

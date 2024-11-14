@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 project(texteditor)
 
@@ -12,14 +12,14 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
 
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(BUILD_BINARY OFF CACHE BOOL "Build shared libraries" FORCE)
-add_subdirectory(uchardet)
+#set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+#set(BUILD_BINARY OFF CACHE BOOL "Build shared libraries" FORCE)
+#add_subdirectory(uchardet)
 
 
 
 
-include_directories(SYSTEM "./uchardet/src")
+include_directories(SYSTEM "uchardet/src")
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -30,9 +30,6 @@ endif()
 
 
 
-
-
-message("dirss :${AUTOGEN_BUILD_DIR}")
 set(RESOURCES
 
 )
@@ -219,6 +216,38 @@ add_library(texteditor SHARED
     codestyleselectorwidget.h codestyleselectorwidget.cpp
     javaindenter.h javaindenter.cpp
     resource.qrc
+
+    uchardet/CharDistribution.h uchardet/CharDistribution.cpp
+    uchardet/JpCntx.h uchardet/JpCntx.cpp
+    uchardet/LangBulgarianModel.cpp
+    uchardet/LangCyrillicModel.cpp
+    uchardet/LangGreekModel.cpp
+    uchardet/LangHebrewModel.cpp
+    uchardet/LangHungarianModel.cpp
+    uchardet/LangThaiModel.cpp
+    uchardet/nsBig5Prober.h uchardet/nsBig5Prober.cpp
+    uchardet/nsCharSetProber.h uchardet/nsCharSetProber.cpp
+    uchardet/nsEscCharsetProber.h uchardet/nsEscCharsetProber.cpp
+    uchardet/nsEscSM.cpp
+    uchardet/nsEUCJPProber.h uchardet/nsEUCJPProber.cpp
+    uchardet/nsEUCKRProber.h uchardet/nsEUCKRProber.cpp
+    uchardet/nsEUCTWProber.h uchardet/nsEUCTWProber.cpp
+    uchardet/nsGB2312Prober.h uchardet/nsGB2312Prober.cpp
+    uchardet/nsHebrewProber.h uchardet/nsHebrewProber.cpp
+    uchardet/nsLatin1Prober.h uchardet/nsLatin1Prober.cpp
+    uchardet/nsMBCSGroupProber.h uchardet/nsMBCSGroupProber.cpp
+    uchardet/nsMBCSSM.cpp
+    uchardet/nsSBCharSetProber.h uchardet/nsSBCharSetProber.cpp
+    uchardet/nsSBCSGroupProber.h uchardet/nsSBCSGroupProber.cpp
+    uchardet/nsSJISProber.h uchardet/nsSJISProber.cpp
+    uchardet/nsUniversalDetector.h uchardet/nsUniversalDetector.cpp
+    uchardet/nsUTF8Prober.h uchardet/nsUTF8Prober.cpp
+    uchardet/uchardet.h uchardet/uchardet.cpp
+    uchardet/nsCodingStateMachine.h
+    uchardet/nscore.h
+    uchardet/nsPkgInt.h
+    uchardet/prmem.h
+
     languages/python/pythonhighlighter.cpp languages/python/pythonhighlighter.h languages/python/pythonindenter.cpp languages/python/pythonindenter.h languages/python/pythonscanner.cpp languages/python/pythonscanner.h languages/python/pythonformattoken.h
     languages/cstyle/cstyleindenter.h languages/cstyle/cstyleindenter.cpp
     languages/cstyle/cstyleqtcodeformatter.h languages/cstyle/cstyleqtcodeformatter.cpp
@@ -252,12 +281,9 @@ add_library(texteditor SHARED
 
 
 
-
-
-
 )
-
-target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core uchardet)
+#uchardet
+target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
 
 target_compile_definitions(texteditor PRIVATE TEXTEDITOR_LIBRARY)
 

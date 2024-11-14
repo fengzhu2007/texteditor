@@ -4657,7 +4657,7 @@ int TextEditorWidget::extraAreaWidth(int *markWidthPtr) const
     if (markWidthPtr)
         *markWidthPtr = markWidth;
 
-    space += 4;
+    space += 10;
 
     if (d->m_codeFoldingVisible) {
         if (TextEditorSettings::fontSettings().relativeLineSpacing() == 100)
@@ -7069,7 +7069,6 @@ void TextEditorWidget::applyFontSettings()
     const QTextCharFormat textFormat = fs.toTextCharFormat(C_TEXT);
     const QTextCharFormat lineNumberFormat = fs.toTextCharFormat(C_LINE_NUMBER);
     QFont font(textFormat.font());
-
     if (font != this->font()) {
         setFont(font);
         d->updateTabStops(); // update tab stops, they depend on the font
@@ -7089,7 +7088,6 @@ void TextEditorWidget::applyFontSettings()
         d->m_extraArea->setPalette(ep);
         d->slotUpdateExtraAreaWidth();   // Adjust to new font width
     }
-
     d->updateHighlights();
 }
 

@@ -630,6 +630,11 @@ static QString defaultFontFamily()
 
     if (Utils::HostOsInfo::isAnyUnixHost())
         return QLatin1String("Monospace");
+
+    const QString courierNew("Courier New");
+    if (dataBase.hasFamily(courierNew))
+        return courierNew;
+
     return QLatin1String("Courier");
 }
 
