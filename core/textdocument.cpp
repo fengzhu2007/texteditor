@@ -39,7 +39,8 @@ public:
 BaseTextDocument::BaseTextDocument(QObject *parent) :
     IDocument(parent), d(new Internal::TextDocumentPrivate)
 {
-    setCodec(QTextCodec::codecForLocale());
+    //setCodec(QTextCodec::codecForLocale());
+    setCodec(QTextCodec::codecForName("UTF-8"));
     setLineTerminationMode(Utils::TextFileFormat::LineTerminationMode::NativeLineTerminator);
 }
 

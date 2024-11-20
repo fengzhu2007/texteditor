@@ -2749,22 +2749,7 @@ bool TextEditorWidget::event(QEvent *e)
     switch (e->type()) {
     case QEvent::ShortcutOverride: {
          auto ke = static_cast<QKeyEvent *>(e);
-         if(ke->modifiers()==Qt::ControlModifier){
-            int key = ke->key();
-            if(key==Qt::Key_A){
-                this->selectAll();
-            }else if(key==Qt::Key_C){
-                this->copy();
-            }else if(key==Qt::Key_X){
-                this->cut();
-            }else if(key==Qt::Key_V){
-                this->paste();
-            }else if(key==Qt::Key_Y){
-                this->redo();
-            }else if(key==Qt::Key_Z){
-                this->undo();
-            }
-         }else{
+
             if (ke->key() == Qt::Key_Escape
                 && (d->m_snippetOverlay->isVisible() || multiTextCursor().hasMultipleCursors())) {
                 e->accept();
@@ -2778,7 +2763,7 @@ bool TextEditorWidget::event(QEvent *e)
                                && (ke->key() < Qt::Key_Escape));
                 d->m_maybeFakeTooltipEvent = false;
             }
-         }
+
         return true;
     }
     case QEvent::ApplicationPaletteChange: {
