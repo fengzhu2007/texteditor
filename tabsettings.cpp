@@ -31,6 +31,8 @@ TabSettings::TabSettings(TabSettings::TabPolicy tabPolicy,
     , m_continuationAlignBehavior(continuationAlignBehavior)
 {
 
+
+    //qDebug()<<"TabSettings";
 }
 
 void TabSettings::toSettings(const QString &category, QSettings *s) const

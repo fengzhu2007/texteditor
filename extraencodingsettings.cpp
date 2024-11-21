@@ -15,7 +15,7 @@ static const char kUtf8BomBehaviorKey[] = "Utf8BomBehavior";
 
 using namespace TextEditor;
 
-ExtraEncodingSettings::ExtraEncodingSettings() : m_utf8BomSetting(OnlyKeep)
+ExtraEncodingSettings::ExtraEncodingSettings() : m_utf8BomSetting(OnlyKeep),m_defaultCharset(QLatin1String("UTF-8"))
 {}
 
 ExtraEncodingSettings::~ExtraEncodingSettings() = default;

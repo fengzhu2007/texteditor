@@ -41,6 +41,7 @@ public:
         AlwaysDelete = 2
     };
     Utf8BomSetting m_utf8BomSetting;
+    QString m_defaultCharset;
 };
 
 } // TextEditor
