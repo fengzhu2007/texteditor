@@ -140,6 +140,8 @@ public:
     Utils::FilePath colorSchemeFileName() const;
     void setColorSchemeFileName(const Utils::FilePath &filePath);
     bool loadColorScheme(const Utils::FilePath &filePath, const FormatDescriptions &descriptions);
+    bool loadColorScheme(const QString& name,const FormatDescriptions &descriptions);
+    bool loadColorScheme(const QString& name);
     bool saveColorScheme(const Utils::FilePath &filePath);
 
     const ColorScheme &colorScheme() const;
@@ -151,6 +153,10 @@ public:
     static int defaultFontSize();
 
     static Utils::FilePath defaultSchemeFileName(const QString &fileName = {});
+
+    static QList<QPair<QString,QString>> schemeMap();
+
+    static FormatDescriptions initialFormats();
 
     friend bool operator==(const FontSettings &f1, const FontSettings &f2) { return f1.equals(f2); }
     friend bool operator!=(const FontSettings &f1, const FontSettings &f2) { return !f1.equals(f2); }

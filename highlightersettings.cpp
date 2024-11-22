@@ -65,7 +65,7 @@ FilePath findFallbackDefinitionsLocation()
 
 
     const FilePath dir = Core::ICore::resourcePath("generic-highlighter");
-    qDebug()<<"findFallbackDefinitionsLocation:"<<dir;
+    //qDebug()<<"findFallbackDefinitionsLocation:"<<dir;
     if (dir.exists() && !dir.dirEntries({{"*.xml"}}).isEmpty())
         return dir;
 

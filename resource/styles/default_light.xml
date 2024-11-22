@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<style-scheme version="1.0" name="Default Classic">
+<style-scheme version="1.0" name="Default">
   <style name="Text" background="#ffffff"/>
   <style name="Link" foreground="#0000ff"/>
   <style name="Selection"  background="#DBDBDC"/>
