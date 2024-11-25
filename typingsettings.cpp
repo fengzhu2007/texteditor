@@ -35,6 +35,31 @@ void TypingSettings::fromSettings(const QString &category, QSettings *s)
     Utils::fromSettings(QLatin1String(groupPostfix), category, s, this);
 }
 
+QJsonObject TypingSettings::toJson(){
+
+    return {
+            {autoIndentKey,m_autoIndent},
+            {tabKeyBehaviorKey,m_tabKeyBehavior},
+            {smartBackspaceBehaviorKey,m_smartBackspaceBehavior},
+            {preferSingleLineCommentsKey,m_preferSingleLineComments},
+            };
+}
+
+void TypingSettings::fromJson(const QJsonObject& data){
+    if(data.contains(autoIndentKey)){
+        m_autoIndent = data.find(autoIndentKey)->toBool(true);
+    }
+    if(data.contains(tabKeyBehaviorKey)){
+        m_tabKeyBehavior = static_cast<TabKeyBehavior>(data.find(tabKeyBehaviorKey)->toInt(TabNeverIndents));
+    }
+    if(data.contains(smartBackspaceBehaviorKey)){
+        m_smartBackspaceBehavior = static_cast<SmartBackspaceBehavior>(data.find(smartBackspaceBehaviorKey)->toInt(BackspaceNeverIndents));
+    }
+    if(data.contains(preferSingleLineCommentsKey)){
+        m_preferSingleLineComments = data.find(preferSingleLineCommentsKey)->toBool(false);
+    }
+}
+
 QVariantMap TypingSettings::toMap() const
 {
     return {

@@ -6,6 +6,7 @@
 #include "texteditor_global.h"
 
 #include <QVariantMap>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -21,6 +22,9 @@ public:
 
     void toSettings(const QString &category, QSettings *s) const;
     void fromSettings(const QString &category, QSettings *s);
+
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
 
     QVariantMap toMap() const;
     void fromMap(const QVariantMap &map);
@@ -40,8 +44,20 @@ public:
         OnlyKeep = 1,
         AlwaysDelete = 2
     };
+    enum LineEnding {
+        LF,
+        CRLF,
+#ifdef Q_OS_WIN
+        System=CRLF,
+#else
+        System=LF,
+#endif
+        Keep
+    };
+
     Utf8BomSetting m_utf8BomSetting;
     QString m_defaultCharset;
+    LineEnding m_lineEnding;
 };
 
 } // TextEditor

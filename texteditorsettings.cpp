@@ -139,6 +139,46 @@ const CommentsSettings &TextEditorSettings::commentsSettings()
     return d->m_commentsSettings;
 }
 
+void TextEditorSettings::setFontSettings(const FontSettings& settings){
+    d->m_fontSettings = settings;
+}
+
+void TextEditorSettings::setTypingSettings(const TypingSettings& settings){
+    d->m_typeSettings = settings;
+}
+
+void TextEditorSettings::setStorageSettings(const StorageSettings& settings){
+    d->m_storageSettings = settings;
+}
+
+void TextEditorSettings::setBehaviorSettings(const BehaviorSettings& settings){
+    d->m_behaviorSettings = settings;
+}
+
+void TextEditorSettings::setMarginSettings(const MarginSettings& settings){
+    d->m_marginSettings = settings;
+}
+
+void TextEditorSettings::setDisplaySettings(const DisplaySettings& settings){
+    d->m_displaySettings = settings;
+}
+
+void TextEditorSettings::setCompletionSettings(const CompletionSettings& settings){
+    d->m_completionSettings = settings;
+}
+
+void TextEditorSettings::setHighlighterSettings(const HighlighterSettings& settings){
+    d->m_highlighterSettings = settings;
+}
+
+void TextEditorSettings::setExtraEncodingSettings(const ExtraEncodingSettings& settings){
+    d->m_extraEncodingSettings = settings;
+}
+
+void TextEditorSettings::setCommentSettings(const CommentsSettings& settings){
+    d->m_commentsSettings = settings;
+}
+
 void TextEditorSettings::registerCodeStyleFactory(ICodeStylePreferencesFactory *factory)
 {
     d->m_languageToFactory.insert(factory->languageId(), factory);
@@ -239,6 +279,63 @@ int TextEditorSettings::setZoom(int zoom){
     zoom = qMin(qMax(20, zoom),400);//min 20 max 400
     setFontZoom(zoom);
     return zoom;
+}
+
+QJsonObject TextEditorSettings::toJson(){
+
+    return {
+        {"font",d->m_fontSettings.toJson()},
+        {"typing",d->m_typeSettings.toJson()},
+        {"storage",d->m_storageSettings.toJson()},
+        {"behavior",d->m_behaviorSettings.toJson()},
+        {"margin",d->m_marginSettings.toJson()},
+        {"display",d->m_displaySettings.toJson()},
+        {"completion",d->m_completionSettings.toJson()},
+        {"highlighter",d->m_highlighterSettings.toJson()},
+        {"extraEncoding",d->m_extraEncodingSettings.toJson()},
+        {"comments",d->m_commentsSettings.toJson()},
+        {"tab",TabSettings().toJson()},
+    };
+
+}
+void TextEditorSettings::fromJson(const QJsonObject& data){
+    if(data.contains("font")){
+        d->m_fontSettings.fromJson(data.find("font")->toObject());
+    }
+    if(data.contains("typing")){
+        d->m_typeSettings.fromJson(data.find("typing")->toObject());
+    }
+    if(data.contains("storage")){
+        d->m_storageSettings.fromJson(data.find("storage")->toObject());
+    }
+    if(data.contains("behavior")){
+        d->m_behaviorSettings.fromJson(data.find("behavior")->toObject());
+    }
+    if(data.contains("margin")){
+        d->m_marginSettings.fromJson(data.find("margin")->toObject());
+    }
+    if(data.contains("display")){
+        d->m_displaySettings.fromJson(data.find("display")->toObject());
+    }
+    if(data.contains("completion")){
+        d->m_completionSettings.fromJson(data.find("completion")->toObject());
+    }
+    if(data.contains("highlighter")){
+        d->m_highlighterSettings.fromJson(data.find("highlighter")->toObject());
+    }
+    if(data.contains("extraEncoding")){
+        d->m_extraEncodingSettings.fromJson(data.find("extraEncoding")->toObject());
+    }
+    if(data.contains("comments")){
+        d->m_commentsSettings.fromJson(data.find("comments")->toObject());
+    }
+    if(data.contains("tab")){
+        TabSettings::initGlobal(data.find("tab")->toObject());
+    }
+}
+
+QString TextEditorSettings::name(){
+    return QLatin1String("texteditor");
 }
 
 } // TextEditor

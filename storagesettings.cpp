@@ -42,6 +42,16 @@ void StorageSettings::fromSettings(const QString &category, QSettings *s)
     //Utils::fromSettings(QLatin1String(groupPostfix), category, s, this);
 }
 
+
+QJsonObject StorageSettings::toJson(){
+
+    return {};
+}
+
+void StorageSettings::fromJson(const QJsonObject& data){
+
+}
+
 QVariantMap StorageSettings::toMap() const
 {
     return {

@@ -109,6 +109,15 @@ void HighlighterSettings::fromSettings(const QString &category, QSettings *s)
     s->endGroup();
 }
 
+QJsonObject HighlighterSettings::toJson(){
+
+    return {};
+}
+
+void HighlighterSettings::fromJson(const QJsonObject& data){
+
+}
+
 void HighlighterSettings::setIgnoredFilesPatterns(const QString &patterns)
 {
     setExpressionsFromList(patterns.split(',', Qt::SkipEmptyParts));

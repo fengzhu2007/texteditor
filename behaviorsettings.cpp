@@ -41,6 +41,44 @@ void BehaviorSettings::fromSettings(const QString &category, QSettings *s)
     Utils::fromSettings(QLatin1String(groupPostfix), category, s, this);
 }
 
+QJsonObject BehaviorSettings::toJson(){
+
+    return {
+        {mouseHidingKey,m_mouseHiding},
+        {mouseNavigationKey,m_mouseNavigation},
+        {scrollWheelZoomingKey,m_scrollWheelZooming},
+        {constrainTooltips,m_constrainHoverTooltips},
+        {camelCaseNavigationKey,m_camelCaseNavigation},
+        {keyboardTooltips,m_keyboardTooltips},
+        {smartSelectionChanging,m_smartSelectionChanging},
+    };
+}
+
+void BehaviorSettings::fromJson(const QJsonObject& data){
+    if(data.contains(mouseHidingKey)){
+        m_mouseHiding = data.find(mouseHidingKey)->toBool();
+    }
+    if(data.contains(mouseNavigationKey)){
+        m_mouseNavigation = data.find(mouseNavigationKey)->toBool();
+    }
+    if(data.contains(scrollWheelZoomingKey)){
+        m_scrollWheelZooming = data.find(scrollWheelZoomingKey)->toBool();
+    }
+
+    if(data.contains(constrainTooltips)){
+        m_constrainHoverTooltips = data.find(constrainTooltips)->toBool();
+    }
+    if(data.contains(camelCaseNavigationKey)){
+        m_camelCaseNavigation = data.find(camelCaseNavigationKey)->toBool();
+    }
+    if(data.contains(keyboardTooltips)){
+        m_keyboardTooltips = data.find(keyboardTooltips)->toBool();
+    }
+    if(data.contains(smartSelectionChanging)){
+        m_smartSelectionChanging = data.find(smartSelectionChanging)->toBool();
+    }
+}
+
 QVariantMap BehaviorSettings::toMap() const
 {
     return {

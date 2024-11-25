@@ -12,10 +12,11 @@
 // Keep this for compatibility reasons.
 static const char kGroupPostfix[] = "EditorManager";
 static const char kUtf8BomBehaviorKey[] = "Utf8BomBehavior";
+static const char kDefaultCharset[] = "DefaultCharset";
 
 using namespace TextEditor;
 
-ExtraEncodingSettings::ExtraEncodingSettings() : m_utf8BomSetting(OnlyKeep),m_defaultCharset(QLatin1String("UTF-8"))
+ExtraEncodingSettings::ExtraEncodingSettings() : m_utf8BomSetting(OnlyKeep),m_defaultCharset(QLatin1String("UTF-8")),m_lineEnding(System)
 {}
 
 ExtraEncodingSettings::~ExtraEncodingSettings() = default;
@@ -34,6 +35,26 @@ void ExtraEncodingSettings::fromSettings(const QString &category, QSettings *s)
     *this = ExtraEncodingSettings();
     Utils::fromSettings(QLatin1String(kGroupPostfix), QString(), s, this);
 }
+
+
+QJsonObject ExtraEncodingSettings::toJson(){
+
+    return {
+            {kUtf8BomBehaviorKey,m_utf8BomSetting},
+            {kDefaultCharset,m_defaultCharset},
+    };
+}
+
+void ExtraEncodingSettings::fromJson(const QJsonObject& data){
+    if(data.contains(kUtf8BomBehaviorKey)){
+        m_utf8BomSetting = static_cast<Utf8BomSetting>(data.find(kUtf8BomBehaviorKey)->toInt(OnlyKeep));
+    }
+    if(data.contains(kDefaultCharset)){
+        m_defaultCharset = data.find(kDefaultCharset)->toString();
+    }
+}
+
+
 
 QVariantMap ExtraEncodingSettings::toMap() const
 {

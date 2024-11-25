@@ -14,12 +14,29 @@
 
 static const char spacesForTabsKey[] = "SpacesForTabs";
 static const char autoSpacesForTabsKey[] = "AutoSpacesForTabs";
+static const char tabPolicy[] = "TabPolicy";
 static const char tabSizeKey[] = "TabSize";
 static const char indentSizeKey[] = "IndentSize";
+static const char alignBehaviorKey[] = "AlignBehavior";
 static const char groupPostfix[] = "TabSettings";
 static const char paddingModeKey[] = "PaddingMode";
 
 namespace TextEditor {
+
+
+
+
+TabSettings::TabPolicy TabSettings::g_tabPolicy = TabsOnlyTabPolicy;
+int TabSettings::g_tabSize = 4;
+int TabSettings::g_indentSize = 4;
+TabSettings::ContinuationAlignBehavior TabSettings::g_continuationAlignBehavior = ContinuationAlignWithSpaces;
+
+TabSettings::TabSettings(){
+    m_tabPolicy = g_tabPolicy;
+    m_tabSize = g_tabSize;
+    m_indentSize = g_indentSize;
+    m_continuationAlignBehavior = g_continuationAlignBehavior;
+}
 
 TabSettings::TabSettings(TabSettings::TabPolicy tabPolicy,
                          int tabSize,
@@ -31,8 +48,28 @@ TabSettings::TabSettings(TabSettings::TabPolicy tabPolicy,
     , m_continuationAlignBehavior(continuationAlignBehavior)
 {
 
+}
 
-    //qDebug()<<"TabSettings";
+void TabSettings::initGlobal(const QJsonObject& data){
+    if(data.contains(tabPolicy)){
+        g_tabPolicy = static_cast<TabPolicy>(data.find(tabPolicy)->toInt(TabsOnlyTabPolicy));
+    }
+    if(data.contains(tabSizeKey)){
+        g_tabSize = data.find(tabSizeKey)->toInt(4);
+    }
+    if(data.contains(indentSizeKey)){
+        g_indentSize = data.find(indentSizeKey)->toInt(4);
+    }
+    if(data.contains(alignBehaviorKey)){
+        g_continuationAlignBehavior =static_cast<ContinuationAlignBehavior>(data.find(alignBehaviorKey)->toInt(ContinuationAlignWithSpaces));
+    }
+}
+
+void TabSettings::initGlobal(const TabSettings& setting){
+    g_tabPolicy = setting.m_tabPolicy;
+    g_tabSize = setting.m_tabSize;
+    g_indentSize = setting.m_indentSize;
+    g_continuationAlignBehavior = setting.m_continuationAlignBehavior;
 }
 
 void TabSettings::toSettings(const QString &category, QSettings *s) const
@@ -45,6 +82,32 @@ void TabSettings::fromSettings(const QString &category, QSettings *s)
     *this = TabSettings(); // Assign defaults
     Utils::fromSettings(QLatin1String(groupPostfix), category, s, this);
 }
+
+
+QJsonObject TabSettings::toJson(){
+    return {
+            {tabPolicy,m_tabPolicy},
+            {tabSizeKey,m_tabSize},
+            {indentSizeKey,m_indentSize},
+            {alignBehaviorKey,m_continuationAlignBehavior},
+        };
+}
+
+void TabSettings::fromJson(const QJsonObject& data){
+    if(data.contains(tabPolicy)){
+        m_tabPolicy = static_cast<TabPolicy>(data.find(tabPolicy)->toInt(TabsOnlyTabPolicy));
+    }
+    if(data.contains(tabSizeKey)){
+        m_tabSize = data.find(tabSizeKey)->toInt(4);
+    }
+    if(data.contains(indentSizeKey)){
+        m_indentSize = data.find(indentSizeKey)->toInt(4);
+    }
+    if(data.contains(alignBehaviorKey)){
+        g_continuationAlignBehavior =static_cast<ContinuationAlignBehavior>(data.find(alignBehaviorKey)->toInt(ContinuationAlignWithSpaces));
+    }
+}
+
 
 QVariantMap TabSettings::toMap() const
 {

@@ -40,6 +40,27 @@ void CommentsSettings::fromSettings(QSettings *s)
     s->endGroup();
 }
 
+QJsonObject CommentsSettings::toJson(){
+
+    return {
+            {kEnableDoxygenBlocks,m_enableDoxygen},
+            {kGenerateBrief,m_generateBrief},
+            {kAddLeadingAsterisks,m_leadingAsterisks},
+    };
+}
+
+void CommentsSettings::fromJson(const QJsonObject& data){
+    if(data.contains(kEnableDoxygenBlocks)){
+        m_enableDoxygen = data.find(kEnableDoxygenBlocks)->toBool();
+    }
+    if(data.contains(kGenerateBrief)){
+        m_generateBrief = data.find(kGenerateBrief)->toBool();
+    }
+    if(data.contains(kAddLeadingAsterisks)){
+        m_leadingAsterisks = data.find(kAddLeadingAsterisks)->toBool();
+    }
+}
+
 bool CommentsSettings::equals(const CommentsSettings &other) const
 {
     return m_enableDoxygen == other.m_enableDoxygen

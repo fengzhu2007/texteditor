@@ -58,7 +58,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
         m_tokenIndex = 0;
         m_newStates.clear();
 
-        //qDebug() << "2Starting to look at " << block.text() << block.blockNumber() + 1;
+
 
         recalculateStateAfter(block,lexerState,m_currentLine,&m_tokenIndex);
     }

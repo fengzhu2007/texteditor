@@ -93,6 +93,98 @@ void DisplaySettings::fromSettings(QSettings *s)
     s->endGroup();
 }
 
+QJsonObject DisplaySettings::toJson(){
+
+    return {
+            {displayLineNumbersKey,m_displayLineNumbers},
+            {textWrappingKey,m_textWrapping},
+            {visualizeWhitespaceKey,m_visualizeWhitespace},
+            {visualizeIndentKey,m_visualizeIndent},
+            {displayFoldingMarkersKey,m_displayFoldingMarkers},
+            {highlightCurrentLineKey,m_highlightCurrentLine},
+            {highlightBlocksKey,m_highlightBlocks},
+            {animateMatchingParenthesesKey,m_animateMatchingParentheses},
+            {highlightMatchingParenthesesKey,m_highlightMatchingParentheses},
+            {markTextChangesKey,m_markTextChanges},
+            {autoFoldFirstCommentKey,m_autoFoldFirstComment},
+            {centerCursorOnScrollKey,m_centerCursorOnScroll},
+            {openLinksInNextSplitKey,m_openLinksInNextSplit},
+            {displayFileEncodingKey,m_displayFileEncoding},
+            {scrollBarHighlightsKey,m_scrollBarHighlights},
+            {animateNavigationWithinFileKey,m_animateNavigationWithinFile},
+            {animateWithinFileTimeMaxKey,m_animateWithinFileTimeMax},
+            {displayAnnotationsKey,m_displayAnnotations},
+            {annotationAlignmentKey,static_cast<int>(m_annotationAlignment)},
+            {minimalAnnotationContentKey,m_minimalAnnotationContent}
+
+    };
+}
+
+void DisplaySettings::fromJson(const QJsonObject& data){
+    if(data.contains(displayLineNumbersKey)){
+        m_displayLineNumbers = data.find(displayLineNumbersKey)->toBool();
+    }
+    if(data.contains(textWrappingKey)){
+        m_textWrapping = data.find(textWrappingKey)->toBool();
+    }
+    if(data.contains(visualizeWhitespaceKey)){
+        m_visualizeWhitespace = data.find(visualizeWhitespaceKey)->toBool();
+    }
+    if(data.contains(visualizeIndentKey)){
+        m_visualizeIndent = data.find(visualizeIndentKey)->toBool();
+    }
+    if(data.contains(displayFoldingMarkersKey)){
+        m_displayFoldingMarkers = data.find(displayFoldingMarkersKey)->toBool();
+    }
+    if(data.contains(highlightCurrentLineKey)){
+        m_highlightCurrentLine = data.find(highlightCurrentLineKey)->toBool();
+    }
+    if(data.contains(highlightBlocksKey)){
+        m_highlightBlocks = data.find(highlightBlocksKey)->toBool();
+    }
+    if(data.contains(animateMatchingParenthesesKey)){
+        m_animateMatchingParentheses = data.find(animateMatchingParenthesesKey)->toBool();
+    }
+    if(data.contains(highlightMatchingParenthesesKey)){
+        m_highlightMatchingParentheses = data.find(highlightMatchingParenthesesKey)->toBool();
+    }
+    if(data.contains(markTextChangesKey)){
+        m_markTextChanges = data.find(markTextChangesKey)->toBool();
+    }
+    if(data.contains(autoFoldFirstCommentKey)){
+        m_autoFoldFirstComment = data.find(autoFoldFirstCommentKey)->toBool();
+    }
+    if(data.contains(centerCursorOnScrollKey)){
+        m_centerCursorOnScroll = data.find(centerCursorOnScrollKey)->toBool();
+    }
+    if(data.contains(openLinksInNextSplitKey)){
+        m_openLinksInNextSplit = data.find(openLinksInNextSplitKey)->toBool();
+    }
+    if(data.contains(displayFileEncodingKey)){
+        m_displayFileEncoding = data.find(displayFileEncodingKey)->toBool();
+    }
+    if(data.contains(scrollBarHighlightsKey)){
+        m_scrollBarHighlights = data.find(scrollBarHighlightsKey)->toBool();
+    }
+    if(data.contains(animateNavigationWithinFileKey)){
+        m_animateNavigationWithinFile = data.find(animateNavigationWithinFileKey)->toBool();
+    }
+    if(data.contains(animateWithinFileTimeMaxKey)){
+        m_animateWithinFileTimeMax = data.find(animateWithinFileTimeMaxKey)->toInt();
+    }
+    if(data.contains(displayAnnotationsKey)){
+        m_displayAnnotations = data.find(displayAnnotationsKey)->toBool();
+    }
+    if(data.contains(annotationAlignmentKey)){
+        m_annotationAlignment = static_cast<TextEditor::AnnotationAlignment>(data.find(annotationAlignmentKey)->toInt());
+    }
+    if(data.contains(minimalAnnotationContentKey)){
+        m_minimalAnnotationContent = data.find(minimalAnnotationContentKey)->toBool();
+    }
+}
+
+
+
 bool DisplaySettings::equals(const DisplaySettings &ds) const
 {
     return m_displayLineNumbers == ds.m_displayLineNumbers

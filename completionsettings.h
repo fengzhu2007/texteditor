@@ -4,6 +4,7 @@
 #pragma once
 
 #include "texteditor_global.h"
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -31,6 +32,8 @@ class TEXTEDITOR_EXPORT CompletionSettings
 public:
     void toSettings(QSettings *s) const;
     void fromSettings(QSettings *s);
+    QJsonObject toJson() const;
+    void fromJson(const QJsonObject& data);
 
     bool equals(const CompletionSettings &bs) const;
 

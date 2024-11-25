@@ -260,6 +260,42 @@ bool FontSettings::fromSettings(const FormatDescriptions &descriptions, const QS
     return true;
 }
 
+
+QJsonObject FontSettings::toJson(){
+    return {
+        {fontFamilyKey,m_family},
+        {fontSizeKey,m_fontSize},
+        {fontZoomKey,m_fontZoom},
+        {lineSpacingKey,m_lineSpacing},
+        {antialiasKey,m_antialias},
+        {schemeFileNamesKey,m_schemeFileName.toString()},
+    };
+}
+
+void FontSettings::fromJson(const QJsonObject& data){
+    if(data.contains(fontFamilyKey)){
+        m_family = data.find(fontFamilyKey)->toString();
+    }
+    if(data.contains(fontSizeKey)){
+        m_fontSize = data.find(fontSizeKey)->toInt(10);
+    }
+    if(data.contains(fontZoomKey)){
+        m_fontZoom = data.find(fontZoomKey)->toInt(100);
+    }
+    if(data.contains(lineSpacingKey)){
+        m_lineSpacing = data.find(lineSpacingKey)->toInt(100);
+    }
+    if(data.contains(antialiasKey)){
+        m_antialias = data.find(antialiasKey)->toBool(true);
+    }
+    if(data.contains(schemeFileNamesKey)){
+        const FilePath scheme = FilePath::fromString(data.find(schemeFileNamesKey)->toString());
+        clearCaches();
+        loadColorScheme(scheme, initialFormats());
+    }
+    qDebug()<<"m_family"<<m_family;
+}
+
 bool FontSettings::equals(const FontSettings &f) const
 {
     return m_family == f.m_family

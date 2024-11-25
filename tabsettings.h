@@ -6,6 +6,7 @@
 #include "texteditor_global.h"
 
 #include <QTextBlock>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -32,12 +33,16 @@ public:
         ContinuationAlignWithIndent = 2
     };
 
-    TabSettings() = default;
-    TabSettings(TabPolicy tabPolicy, int tabSize,
-                int indentSize, ContinuationAlignBehavior continuationAlignBehavior);
+    TabSettings();
+    TabSettings(TabPolicy tabPolicy, int tabSize,int indentSize, ContinuationAlignBehavior continuationAlignBehavior);
+
+    static void initGlobal(const QJsonObject& data);
+    static void initGlobal(const TabSettings& setting);
 
     void toSettings(const QString &category, QSettings *s) const;
     void fromSettings(const QString &category, QSettings *s);
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
 
     QVariantMap toMap() const;
     void fromMap(const QVariantMap &map);
@@ -69,12 +74,20 @@ public:
     static int trailingWhitespaces(const QString &text);
     static void removeTrailingWhitespace(QTextCursor cursor, QTextBlock &block);
 
+
     TabPolicy m_tabPolicy = TabsOnlyTabPolicy;
     int m_tabSize = 4;
     int m_indentSize = 4;
     ContinuationAlignBehavior m_continuationAlignBehavior = ContinuationAlignWithSpaces;
 
     bool equals(const TabSettings &ts) const;
+
+
+    static TabPolicy g_tabPolicy;
+    static int g_tabSize;
+    static int g_indentSize;
+    static ContinuationAlignBehavior g_continuationAlignBehavior;
+
 };
 
 } // namespace TextEditor

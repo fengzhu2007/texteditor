@@ -38,6 +38,7 @@ public:
         // nested templates in the int after the flags for the multiline
         // comments and strings.
         TemplateExpression = MultiLineComment << 20,
+
         TemplateExpressionOpenBracesMask0 = MultiLineComment << 21,
         TemplateExpressionOpenBracesMask1 = MultiLineComment << 22,
         TemplateExpressionOpenBracesMask2 = MultiLineComment << 23,

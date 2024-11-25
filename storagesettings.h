@@ -6,6 +6,7 @@
 #include "texteditor_global.h"
 
 #include <QVariantMap>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -20,6 +21,8 @@ public:
 
     void toSettings(const QString &category, QSettings *s) const;
     void fromSettings(const QString &category, QSettings *s);
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
 
     QVariantMap toMap() const;
     void fromMap(const QVariantMap &map);

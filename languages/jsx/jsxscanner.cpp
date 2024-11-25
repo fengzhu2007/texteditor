@@ -1,5 +1,4 @@
 #include "jsxscanner.h"
-#include "languages/html/htmlscanner.h"
 #include <QDebug>
 #include <algorithm>
 

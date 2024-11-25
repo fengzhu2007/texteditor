@@ -87,6 +87,78 @@ void CompletionSettings::fromSettings(QSettings *s)
     s->endGroup();
 }
 
+QJsonObject CompletionSettings::toJson() const{
+    return {
+        {caseSensitivityKey,(int)m_caseSensitivity},
+        {completionTriggerKey,(int)m_completionTrigger},
+        {automaticProposalTimeoutKey,m_automaticProposalTimeoutInMs},
+        {characterThresholdKey,m_characterThreshold},
+        {autoInsertBracesKey,m_autoInsertBrackets},
+        {surroundingAutoBracketsKey,m_surroundingAutoBrackets},
+        {autoInsertQuotesKey,m_autoInsertQuotes},
+        {surroundingAutoQuotesKey,m_surroundingAutoQuotes},
+        {partiallyCompleteKey,m_partiallyComplete},
+        {spaceAfterFunctionNameKey,m_spaceAfterFunctionName},
+        {autoSplitStringsKey,m_autoSplitStrings},
+        {animateAutoCompleteKey,m_animateAutoComplete},
+        {highlightAutoCompleteKey,m_highlightAutoComplete},
+        {skipAutoCompleteKey,m_skipAutoCompletedText},
+        {autoRemoveKey,m_autoRemove},
+        {overwriteClosingCharsKey,m_overwriteClosingChars},
+    };
+}
+
+void CompletionSettings::fromJson(const QJsonObject& data){
+    if(data.contains(caseSensitivityKey)){
+        m_caseSensitivity = (CaseSensitivity)data.find(caseSensitivityKey)->toInt();
+    }
+    if(data.contains(completionTriggerKey)){
+        m_completionTrigger = (CompletionTrigger)data.find(completionTriggerKey)->toInt();
+    }
+    if(data.contains(automaticProposalTimeoutKey)){
+        m_automaticProposalTimeoutInMs = data.find(automaticProposalTimeoutKey)->toInt();
+    }
+    if(data.contains(characterThresholdKey)){
+        m_characterThreshold = data.find(characterThresholdKey)->toInt();
+    }
+    if(data.contains(autoInsertBracesKey)){
+        m_autoInsertBrackets = data.find(autoInsertBracesKey)->toBool();
+    }
+    if(data.contains(surroundingAutoBracketsKey)){
+        m_surroundingAutoBrackets = data.find(surroundingAutoBracketsKey)->toBool();
+    }
+    if(data.contains(autoInsertQuotesKey)){
+        m_autoInsertQuotes = data.find(autoInsertQuotesKey)->toBool();
+    }
+    if(data.contains(surroundingAutoQuotesKey)){
+        m_surroundingAutoQuotes = data.find(surroundingAutoQuotesKey)->toBool();
+    }
+    if(data.contains(partiallyCompleteKey)){
+        m_partiallyComplete = data.find(partiallyCompleteKey)->toBool();
+    }
+    if(data.contains(spaceAfterFunctionNameKey)){
+        m_spaceAfterFunctionName = data.find(spaceAfterFunctionNameKey)->toBool();
+    }
+    if(data.contains(autoSplitStringsKey)){
+        m_autoSplitStrings = data.find(autoSplitStringsKey)->toBool();
+    }
+    if(data.contains(animateAutoCompleteKey)){
+        m_animateAutoComplete = data.find(animateAutoCompleteKey)->toBool();
+    }
+    if(data.contains(highlightAutoCompleteKey)){
+        m_highlightAutoComplete = data.find(highlightAutoCompleteKey)->toBool();
+    }
+    if(data.contains(skipAutoCompleteKey)){
+        m_skipAutoCompletedText = data.find(skipAutoCompleteKey)->toBool();
+    }
+    if(data.contains(autoRemoveKey)){
+        m_autoRemove = data.find(autoRemoveKey)->toBool();
+    }
+    if(data.contains(overwriteClosingCharsKey)){
+        m_overwriteClosingChars = data.find(overwriteClosingCharsKey)->toBool();
+    }
+}
+
 bool CompletionSettings::equals(const CompletionSettings &cs) const
 {
     return m_caseSensitivity                == cs.m_caseSensitivity

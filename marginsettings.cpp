@@ -45,6 +45,16 @@ void MarginSettings::fromSettings(QSettings *s)
     s->endGroup();
 }
 
+QJsonObject MarginSettings::toJson(){
+
+    return {};
+}
+
+void MarginSettings::fromJson(const QJsonObject& data){
+
+}
+
+
 QVariantMap MarginSettings::toMap() const
 {
     return {

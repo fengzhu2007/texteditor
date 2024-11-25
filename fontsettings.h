@@ -15,6 +15,7 @@
 #include <QString>
 #include <QTextCharFormat>
 #include <QVector>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -111,6 +112,8 @@ public:
 
     bool fromSettings(const FormatDescriptions &descriptions,
                       const QSettings *s);
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
 
     QVector<QTextCharFormat> toTextCharFormats(const QVector<TextStyle> &categories) const;
     QTextCharFormat toTextCharFormat(TextStyle category) const;

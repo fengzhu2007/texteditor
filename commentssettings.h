@@ -4,6 +4,7 @@
 #pragma once
 
 #include "texteditor_global.h"
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 class QSettings;
@@ -18,6 +19,8 @@ public:
 
     void toSettings(QSettings *s) const;
     void fromSettings(QSettings *s);
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
 
     bool equals(const CommentsSettings &other) const;
 

@@ -8,6 +8,7 @@
 #include <utils/id.h>
 
 #include <QObject>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 template <typename Key, typename T>
@@ -56,6 +57,17 @@ public:
     static const ExtraEncodingSettings &extraEncodingSettings();
     static const CommentsSettings &commentsSettings();
 
+    void setFontSettings(const FontSettings& settings);
+    void setTypingSettings(const TypingSettings& settings);
+    void setStorageSettings(const StorageSettings& settings);
+    void setBehaviorSettings(const BehaviorSettings& settings);
+    void setMarginSettings(const MarginSettings& settings);
+    void setDisplaySettings(const DisplaySettings& settings);
+    void setCompletionSettings(const CompletionSettings& settings);
+    void setHighlighterSettings(const HighlighterSettings& settings);
+    void setExtraEncodingSettings(const ExtraEncodingSettings& settings);
+    void setCommentSettings(const CommentsSettings& settings);
+
     static ICodeStylePreferencesFactory *codeStyleFactory(Utils::Id languageId);
     static const QMap<Utils::Id, ICodeStylePreferencesFactory *> &codeStyleFactories();
     static void registerCodeStyleFactory(ICodeStylePreferencesFactory *codeStyleFactory);
@@ -77,6 +89,13 @@ public:
     static int increaseFontZoom(int step);
     static void resetFontZoom();
     static int setZoom(int zoom);
+
+    QJsonObject toJson();
+    void fromJson(const QJsonObject& data);
+
+    static QString name();
+
+
 
 signals:
     void fontSettingsChanged(const TextEditor::FontSettings &);

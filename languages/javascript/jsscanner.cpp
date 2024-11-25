@@ -210,12 +210,12 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         const int start = index + startShift;
         while (index < text.length()) {
             const QChar ch = text.at(index);
-
             if (ch == quote)
                 break;
             else if (ch == QLatin1Char('$') && index + 1 < text.length() && text.at(index + 1) == QLatin1Char('{')) {
                 tokens.append(Token(start, index - start, Token::String,Code::Token::Javascript));
                 tokens.append(Token(index, 2, Token::Delimiter,Code::Token::Javascript));
+                //qDebug()<<"token:"<<text.mid(index,2);
                 index += 2;
                 setRegexpMayFollow(&_state, true);
                 setMultiLineState(&_state, Normal);
@@ -224,7 +224,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                     qWarning() << "QQmljs::Dom::Scanner reached maximum nesting of template expressions (4), parsing will fail";
                 } else {
                     //_state |= 1 << (4 + depth * 7);
-                    setExpressionMask(&_state,depth);
+                    setExpressionMask(&_state,depth+1);
                 }
                 return;
             } else if (ch == QLatin1Char('\\') && index + 1 < text.length())
@@ -236,6 +236,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         if (index < text.length()) {
             setMultiLineState(&_state, Normal);
             ++index;
+
             // good one
         } else {
             setMultiLineState(&_state, MultiLineStringBQuote);
@@ -422,13 +423,16 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             setRegexpMayFollow(&_state, true);
             int depth = templateExpressionDepth(_state);
             if (depth > 0) {
-                int shift = braceCounterOffset(depth);
+                //qDebug()<<ch<<"index0"<<index;
+                /*int shift = braceCounterOffset(depth);
                 int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
                 if ((_state & mask) == mask) {
                     qWarning() << "QQmljs::Dom::Scanner reached maximum open braces of template expressions (127), parsing will fail";
                 } else {
                     _state = (_state & ~mask) | (((Scanner::TemplateExpressionOpenBracesMask0 & (_state >> shift)) + 1) << shift);
-                }
+                }*/
+                setExpressionMask(&_state,depth+1);
+
             }
         } break;
 
@@ -436,12 +440,19 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             setRegexpMayFollow(&_state, false);
             int depth = templateExpressionDepth(_state);
             if (depth > 0) {
-                int shift = braceCounterOffset(depth);
+                //qDebug()<<ch<<"index1"<<index;
+                /*int shift = braceCounterOffset(depth);
                 int s = _state;
                 int nBraces = Scanner::TemplateExpressionOpenBracesMask0 & (s >> shift);
                 int mask = Scanner::TemplateExpressionOpenBracesMask0 << shift;
                 _state = (s & ~mask) | ((nBraces - 1) << shift);
                 if (nBraces == 1) {
+                    tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
+                    scanTemplateString();
+                    break;
+                }*/
+                setExpressionMask(&_state,depth-1);
+                if(depth==1){
                     tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
                     scanTemplateString();
                     break;
@@ -568,6 +579,10 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
     result:
     startState = _state;
     from = index;
+
+    //qDebug()<<text;
+    //Html::Scanner().dump(text,tokens);
+
     return tokens;
 }
 

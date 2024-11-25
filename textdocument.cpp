@@ -318,6 +318,7 @@ const StorageSettings &TextDocument::storageSettings() const
 
 void TextDocument::setTabSettings(const TabSettings &newTabSettings)
 {
+
     if (newTabSettings == d->m_tabSettings)
         return;
     d->m_tabSettings = newTabSettings;
