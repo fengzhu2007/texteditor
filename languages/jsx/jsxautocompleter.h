@@ -2,7 +2,7 @@
 
 #include "autocompleter.h"
 #include "texteditor_global.h"
-namespace Javascript {
+namespace Jsx {
 
 class TEXTEDITOR_EXPORT AutoCompleter : public TextEditor::AutoCompleter
 {

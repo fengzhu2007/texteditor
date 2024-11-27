@@ -52,7 +52,6 @@ public:
 #else
         System=LF,
 #endif
-        Keep
     };
 
     Utf8BomSetting m_utf8BomSetting;

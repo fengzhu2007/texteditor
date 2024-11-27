@@ -205,10 +205,6 @@ TextFileFormat::ReadResult readTextFile(const FilePath &filePath, const QTextCod
         *format = TextFileFormat::detect(data);
     }
 
-
-
-    /*if (!format->codec)
-        format->codec = defaultCodec ? defaultCodec : QTextCodec::codecForLocale();*/
     if (!format->codec)
         format->codec = QTextCodec::codecForName("UTF-8");//default utf-8
 

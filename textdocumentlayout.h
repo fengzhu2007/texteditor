@@ -147,6 +147,14 @@ class TEXTEDITOR_EXPORT TextDocumentLayout : public QPlainTextDocumentLayout
     Q_OBJECT
 
 public:
+    enum ExpressBracesMask{
+        TemplateExpressionOpenBracesMask0 = 1 << 21,
+        TemplateExpressionOpenBracesMask1 = 1 << 22,
+        TemplateExpressionOpenBracesMask2 = 1 << 23,
+        TemplateExpressionOpenBracesMask3 = 1 << 24,
+        TemplateExpressionOpenBracesMask4 = 1 << 25,
+    };
+
     TextDocumentLayout(QTextDocument *doc);
     ~TextDocumentLayout() override;
 

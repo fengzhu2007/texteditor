@@ -14,6 +14,11 @@
 #include "languages/javascript/jsautocompleter.h"
 #include "languages/javascript/jscodeformatter.h"
 
+#include "languages/jsx/jsxhighlighter.h"
+#include "languages/jsx/jsxindenter.h"
+#include "languages/jsx/jsxautocompleter.h"
+#include "languages/jsx/jsxcodeformatter.h"
+
 #include "languages/python/pythonhighlighter.h"
 #include "languages/python/pythonindenter.h"
 //#include "languages/python/pythonautocompleter.h"
@@ -25,7 +30,7 @@ LanguageLoader::LanguageLoader(const KSyntaxHighlighting::Definition &definition
     :m_hightlighter(nullptr),m_indenter(nullptr),m_autoCompleter(nullptr),m_codeFormatter(nullptr){
 
     const QString name = definition.name();
-    if(name==QLatin1String("PHP/PHP") || name == QLatin1String("HTML")){
+    if(name==QLatin1String("PHP/PHP") || name == QLatin1String("HTML") || name == QLatin1String("XML")){
         m_hightlighter = new Html::Highlighter();
         m_indenter = Html::createIndenter(doc);
         m_autoCompleter = new Html::AutoCompleter();
@@ -40,12 +45,12 @@ LanguageLoader::LanguageLoader(const KSyntaxHighlighting::Definition &definition
         m_indenter = Javascript::createIndenter(doc);
         m_autoCompleter = new Javascript::AutoCompleter();
         m_codeFormatter = new Javascript::CodeFormatter;
-    }/*else if(name==QLatin1String("JavaScript React (JSX)")){
-        m_hightlighter = new Javascript::Highlighter();
-        m_indenter = Javascript::createIndenter(doc);
-        m_autoCompleter = new Javascript::AutoCompleter();
-        m_codeFormatter = new Javascript::CodeFormatter;
-    }*/else if(name== QLatin1String("Python")){
+    }else if(name==QLatin1String("JavaScript React (JSX)")){
+        m_hightlighter = new Jsx::Highlighter();
+        m_indenter = Jsx::createIndenter(doc);
+        m_autoCompleter = new Jsx::AutoCompleter();
+        m_codeFormatter = new Jsx::CodeFormatter;
+    }else if(name== QLatin1String("Python")){
         m_hightlighter = new Python::Highlighter();
         m_indenter = Python::createIndenter(doc);
         //m_autoCompleter = new Python::AutoCompleter();

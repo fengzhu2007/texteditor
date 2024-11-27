@@ -118,10 +118,14 @@ public:
         MagicAttr,
         ImportedModule,
 
+        XmlLeftBracket,//<?
+        XmlRightBracket,
+        XmlDataLeftTag,
+        XmlDataRightTag,
+        XmlData,
+
 
         Doxygen,
-
-
         TokenEnd
 
     };

@@ -3,6 +3,8 @@
 
 #include "textdocument.h"
 
+#include "texteditorsettings.h"
+#include "extraencodingsettings.h"
 #include <QDebug>
 #include <QTextCodec>
 
@@ -40,8 +42,11 @@ BaseTextDocument::BaseTextDocument(QObject *parent) :
     IDocument(parent), d(new Internal::TextDocumentPrivate)
 {
     //setCodec(QTextCodec::codecForLocale());
-    setCodec(QTextCodec::codecForName("UTF-8"));
-    setLineTerminationMode(Utils::TextFileFormat::LineTerminationMode::NativeLineTerminator);
+    auto setting = TextEditor::TextEditorSettings::instance()->extraEncodingSettings();
+
+    setCodec(QTextCodec::codecForName(setting.m_defaultCharset.toUtf8()));
+    setLineTerminationMode(static_cast<Utils::TextFileFormat::LineTerminationMode>(setting.m_lineEnding));
+    //setLineTerminationMode(Utils::TextFileFormat::LineTerminationMode::NativeLineTerminator);
 }
 
 BaseTextDocument::~BaseTextDocument()

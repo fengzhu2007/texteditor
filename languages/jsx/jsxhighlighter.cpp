@@ -1,7 +1,7 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "jshighlighter.h"
+#include "jsxhighlighter.h"
 
 #include <QSet>
 
@@ -10,7 +10,7 @@
 using namespace TextEditor;
 using namespace Code;
 
-namespace Javascript {
+namespace Jsx {
 
 Highlighter::Highlighter(QTextDocument *parent)
     : SyntaxHighlighter(parent),
@@ -36,6 +36,10 @@ void Highlighter::highlightBlock(const QString &text)
 
         switch (token.kind) {
             case Token::Keyword:
+            case Token::TagStart:
+            case Token::TagEnd:
+            case Token::TagLeftBracket:
+            case Token::TagRightBracket:
                 setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
                 break;
 

@@ -1,11 +1,11 @@
-#include "jsindenter.h"
+#include "jsxindenter.h"
 
-#include "jscodeformatter.h"
+#include "jsxcodeformatter.h"
 #include "tabsettings.h"
 
 #include <QTextDocument>
 #include <QTextBlock>
-namespace Javascript {
+namespace Jsx {
 
 class Indenter final : public TextEditor::TextIndenter
 {

@@ -40,14 +40,17 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::TagEnd:
         case Token::PhpLeftBracket:
         case Token::PhpRightBracket:
+        case Token::XmlLeftBracket:
+        case Token::XmlRightBracket:
         case Token::Selector:
         case Token::AtRules:
         case Token::TagDefine:
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
              break;
-
         case Token::CommentTagStart:
         case Token::CommentTagEnd:
+        case Token::XmlDataLeftTag:
+        case Token::XmlDataRightTag:
              setFormat(token.offset, token.length, formatForCategory(C_COMMENT));
              break;
         case Token::AttrValue:
@@ -66,6 +69,7 @@ void Highlighter::highlightBlock(const QString &text)
             setFormat(token.offset, token.length, formatForCategory(C_STRING));
             break;
         case Token::Comment:
+        case Token::XmlData:
             setFormat(token.offset, token.length, formatForCategory(C_COMMENT));
             break;
 

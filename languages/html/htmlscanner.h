@@ -38,6 +38,9 @@ public:
 
         PHPTQouteStart = MultiLineComment << 11,
 
+        XMLTagStart = MultiLineComment<<13,
+        MultiLineXmlData = MultiLineComment<<14,
+
         TemplateExpressionOpenBracesMask0 = MultiLineComment << 21,
         TemplateExpressionOpenBracesMask1 = MultiLineComment << 22,
         TemplateExpressionOpenBracesMask2 = MultiLineComment << 23,

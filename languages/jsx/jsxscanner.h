@@ -27,6 +27,23 @@ public:
 
         RegexpMayFollow = MultiLineComment<<11, // flag that may be combined with the above
 
+
+        MultiLineElement = MultiLineComment<<4,
+        MultiLineElement1 = MultiLineComment<<5,
+        MultiLineElement2 = MultiLineComment<<6,
+        MultiLineElement3 = MultiLineComment<<7,
+        MultiLineElement4 = MultiLineComment<<8,
+        MultiLineElement5 = MultiLineComment<<9,
+        MultiLineElement6 = MultiLineComment<<10,
+        MultiLineElementMask = MultiLineElement|MultiLineElement1|MultiLineElement2|MultiLineElement3|MultiLineElement4|MultiLineElement5|MultiLineElement6,
+
+        MultiLineAttrValue = MultiLineComment << 11,
+
+        MultiLineObject = MultiLineComment<<12,//{field:name}
+
+        MultiLineInnerText = MultiLineComment<<13,
+
+
         // templates can be nested, which means that the scanner/lexer cannot
         // be a simple state machine anymore, but should have a stack to store
         // the state (the number of open braces in the current template

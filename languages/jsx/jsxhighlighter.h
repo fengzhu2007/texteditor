@@ -5,12 +5,12 @@
 
 #include "texteditor_global.h"
 
-#include "jsscanner.h"
+#include "jsxscanner.h"
 
 #include "textdocumentlayout.h"
 #include "syntaxhighlighter.h"
 
-namespace Javascript {
+namespace Jsx {
 
 
 
@@ -42,7 +42,7 @@ private:
     int m_foldingIndent;
     bool m_inMultilineComment;
 
-    Javascript::Scanner m_scanner;
+    Jsx::Scanner m_scanner;
     TextEditor::Parentheses m_currentBlockParentheses;
 };
 

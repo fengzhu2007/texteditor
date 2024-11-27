@@ -355,10 +355,13 @@ int AutoCompleter::paragraphSeparatorAboutToBeInserted(QTextCursor &cursor)
     // verify that we indeed do have an extra opening brace in the document
     QTextBlock block = cursor.block();
     const QString textFromCusror = block.text().mid(cursor.positionInBlock()).trimmed();
-    int braceDepth = TextDocumentLayout::braceDepth(doc->lastBlock());
-
-    if (braceDepth <= 0 && (textFromCusror.isEmpty() || textFromCusror.at(0) != QLatin1Char('}')))
-        return 0; // braces are all balanced or worse, no need to do anything and separator inserted not between '{' and '}'
+    if(textFromCusror.isEmpty()==false && textFromCusror.at(0) != QLatin1Char('}')){
+         return 0;
+    }
+    //int braceDepth = TextDocumentLayout::braceDepth(doc->lastBlock());
+    //qDebug()<<"braceDepth"<<braceDepth<<textFromCusror;
+    //if (braceDepth <= 0 && (textFromCusror.isEmpty() || textFromCusror.at(0) != QLatin1Char('}')))
+    //    return 0; // braces are all balanced or worse, no need to do anything and separator inserted not between '{' and '}'
 
     // we have an extra brace , let's see if we should close it
 

@@ -293,7 +293,6 @@ void FontSettings::fromJson(const QJsonObject& data){
         clearCaches();
         loadColorScheme(scheme, initialFormats());
     }
-    qDebug()<<"m_family"<<m_family;
 }
 
 bool FontSettings::equals(const FontSettings &f) const

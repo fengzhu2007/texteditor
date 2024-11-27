@@ -94,13 +94,20 @@ static bool isCompleteStringLiteral(QStringView text)
     return false;
 }
 
-static QString findNearlyTagName(const QTextBlock& bk){
+static QString findNearlyTagName(const QTextBlock& bk,int position){
     QTextBlock block = bk;
     Scanner tokenize;
     QString tag;
     while(block.isValid()){
         const int blockState = blockStartState(block);
         const QString blockText = block.text();
+        if(position>0){
+            //find previous
+            QChar ch = blockText.at(position-1);
+            if(ch==QLatin1Char('/') || ch==QLatin1Char('?') || ch==QLatin1Char('-') || ch==QLatin1Char(']')){
+                return tag;
+            }
+        }
         int index = 0;
         const QList<Token> tokens = tokenize(index,blockText, blockState);
         for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
@@ -172,6 +179,7 @@ bool AutoCompleter::contextAllowsElectricCharacters(const QTextCursor &cursor) c
     switch (token.kind) {
     case Token::Comment:
     case Token::String:
+    case Token::XmlData:
         return false;
     default:
         return true;
@@ -232,7 +240,8 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
     case '>':{
         //find tag name
         //not in php css js
-        const QString tag = findNearlyTagName(cursor.block());
+        //qDebug()<<"position:"<<cursor.positionInBlock();
+        const QString tag = findNearlyTagName(cursor.block(),cursor.positionInBlock());
         if(!tag.isEmpty()){
             return QString("</"+tag+">");
         }
@@ -305,50 +314,38 @@ QString AutoCompleter::insertParagraphSeparator(const QTextCursor &cursor) const
 int AutoCompleter::paragraphSeparatorAboutToBeInserted(QTextCursor &cursor){
     QTextDocument *doc = cursor.document();
     int position = cursor.position();
-    if (doc->characterAt(position - 1) != QLatin1Char('{')){
-        return TextEditor::AutoCompleter::paragraphSeparatorAboutToBeInserted(cursor);
-    }
-    if (doc->characterAt(position - 1) != QLatin1Char('>'))
-        return 0;
+    const QChar ch = doc->characterAt(position - 1);
+    if(ch==QLatin1Char('>')){
+        if (!contextAllowsAutoBrackets(cursor))
+            return 0;
 
-    if (!contextAllowsAutoBrackets(cursor))
-        return 0;
+        // verify that we indeed do have an extra opening brace in the document
+        QTextBlock block = cursor.block();
+        const int blockState = blockStartState(block.previous());
+        const QString blockText = block.text();
 
-    // verify that we indeed do have an extra opening brace in the document
-    QTextBlock block = cursor.block();
-    const int blockState = blockStartState(block.previous());
-    const QString blockText = block.text();
-    int index = 0;
-    Scanner tokenize;
-    const QList<Token> tokens = tokenize(index,blockText, blockState);
-    Token tk;
-    for(int i=0;i<tokens.length();i++){
-        tk = tokens.at(i);
-        if(tk.offset+tk.length>=position){
-            break;
+        const QString textFromCusror = block.text().mid(cursor.positionInBlock()).trimmed();
+        if(textFromCusror.isEmpty()==true || textFromCusror.at(0)!=QLatin1Char('<')){
+            return 0;
+        }
+        int index = 0;
+        Scanner tokenize;
+        const QList<Token> tokens = tokenize(index,blockText, blockState);
+        Token tk;
+        for(int i=0;i<tokens.length();i++){
+            tk = tokens.at(i);
+            if(tk.offset+tk.length>=position){
+                break;
+            }
+        }
+        if(tk.length==1 && tk.lang==Token::Html){
+            cursor.insertBlock();
+            cursor.insertText("");
+            cursor.setPosition(position);
+            return 1;
         }
     }
-    if(tk.length==1 && tk.lang==Token::Html){
-        cursor.insertBlock();
-        cursor.insertText("");
-        cursor.setPosition(position);
-        return 1;
-    }
-
-
-    //qDebug()<<"33333333333333333";
-
-
-
-
-    /*const QString &textToInsert = insertParagraphSeparator(cursor);
-    int pos = cursor.position();
-    cursor.insertBlock();
-    cursor.insertText(textToInsert);
-    cursor.setPosition(pos);*/
-
-
-    return 0;
+    return TextEditor::AutoCompleter::paragraphSeparatorAboutToBeInserted(cursor);
 }
 
 void AutoCompleter::languageState(int state,TextEditor::TextDocument* textDocument){

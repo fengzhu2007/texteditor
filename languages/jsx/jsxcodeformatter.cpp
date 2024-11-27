@@ -1,5 +1,4 @@
-#include "jscodeformatter.h"
-#include "languages/html/htmlcodeformatter.h"
+#include "jsxcodeformatter.h"
 #include "tabsettings.h"
 #include <QLoggingCategory>
 #include <QMetaEnum>
@@ -9,23 +8,21 @@
 using namespace TextEditor;
 using namespace Code;
 
-namespace Javascript {
+namespace Jsx {
 
 
-CodeFormatter::CodeFormatter(Html::CodeFormatter* formatter)
+CodeFormatter::CodeFormatter()
     : m_tokenIndex(0)
     , m_indentDepth(0)
     , m_tabSize(4)
     , m_indentSize(4)
-    , pHtmlFormatter(formatter)
 {
 }
 
-CodeFormatter::CodeFormatter(const TabSettings &tabSettings,Html::CodeFormatter* formatter)
+CodeFormatter::CodeFormatter(const TabSettings &tabSettings)
     : m_tokenIndex(0)
     , m_indentDepth(0)
     , m_tabSize(4)
-    , pHtmlFormatter(formatter)
 {
     setTabSize(tabSettings.m_tabSize);
     setIndentSize(tabSettings.m_indentSize);
@@ -44,16 +41,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
 {
     restoreCurrentState(block.previous());
 
-    if(pHtmlFormatter!=nullptr){
 
-        const int lexerState = pHtmlFormatter->tokenizeBlock(block);
-        pHtmlFormatter->m_tokenIndex = 0;
-        pHtmlFormatter->m_newStates.clear();
-
-        //qDebug() << "1Starting to look at " << block.text() << block.blockNumber() + 1;
-
-        recalculateStateAfter(block,lexerState,pHtmlFormatter->m_currentLine,&(pHtmlFormatter->m_tokenIndex));
-    }else{
         const int lexerState = tokenizeBlock(block);
         m_tokenIndex = 0;
         m_newStates.clear();
@@ -61,21 +49,17 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
         //qDebug() << "2Starting to look at " << block.text() << block.blockNumber() + 1;
 
         recalculateStateAfter(block,lexerState,m_currentLine,&m_tokenIndex);
-    }
+
 
 }
 
 
 void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState,const QString& currentLine,int* tokenIndex){
-    //m_tokenIndex = *tokenIndex;
     m_currentLine = currentLine;
-    //Html::Scanner scanner;
-    //scanner.dump(currentLine,m_tokens);
+
     for (; *tokenIndex < m_tokens.size(); ) {
         m_currentToken = tokenAt(*tokenIndex);
-        if(pHtmlFormatter!=nullptr){
-            pHtmlFormatter->m_currentToken = m_currentToken;
-        }
+
 
         //qDebug() << "Token JS:" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1;
 
@@ -87,15 +71,8 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
             continue;
         }
 
-        if(kind == Token::TagLeftBracket && m_currentToken.length==2){
-            //*tokenIndex += 1;
-            //html leave js
-            if(pHtmlFormatter!=nullptr){
-                pHtmlFormatter->leaveJS();
-            }
-            break;
-        }
-        int type = pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentState.top().type:m_currentState.top().type;
+
+        int type = m_currentState.top().type;
         switch (type) {
         case topmost_intro_js:
             switch (kind) {
@@ -497,18 +474,14 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
             break;
 
         default:
-            if(pHtmlFormatter!=nullptr){
-                qWarning() << "js Unhandled state" << pHtmlFormatter->m_currentState.top().type;
-            }else{
-                qWarning() << "js Unhandled state" << m_currentState.top().type;
-            }
+            qWarning() << "js Unhandled state" << m_currentState.top().type;
             break;
         } // end of state switch
 
         ++*tokenIndex;
     }
 
-    int topState = pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentState.top().type:m_currentState.top().type;
+    int topState = m_currentState.top().type;
 
     // if there's no colon on the same line, it's not a label
     if (topState == expression_or_label)
@@ -517,7 +490,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
     else if (topState == breakcontinue_statement)
         leave(true);
 
-    topState = pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentState.top().type:m_currentState.top().type;
+    topState = m_currentState.top().type;
 
     // some states might be continued on the next line
     if (topState == expression
@@ -611,48 +584,31 @@ void CodeFormatter::updateLineStateChange(const QTextBlock &block)
 
 State CodeFormatter::state(int belowTop) const
 {
-    if(pHtmlFormatter!=nullptr){
-        if (belowTop < pHtmlFormatter->m_currentState.size())
-            return pHtmlFormatter->m_currentState.at(pHtmlFormatter->m_currentState.size() - 1 - belowTop);
-        else
-            return State();
-    }else{
+
         if (belowTop < m_currentState.size())
             return m_currentState.at(m_currentState.size() - 1 - belowTop);
         else
             return State();
-    }
+
 }
 
 const QVector<State> &CodeFormatter::newStatesThisLine() const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->newStatesThisLine();
-    }
     return m_newStates;
 }
 
 int CodeFormatter::tokenIndex() const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->m_tokenIndex;
-    }
     return m_tokenIndex;
 }
 
 int CodeFormatter::tokenCount() const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->tokenCount();
-    }
     return m_tokens.size();
 }
 
 const Code::Token &CodeFormatter::currentToken() const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->currentToken();
-    }
     return m_currentToken;
 }
 
@@ -677,27 +633,13 @@ void CodeFormatter::initState(){
 
 void CodeFormatter::enter(int newState)
 {
-    //Token tok = m_tokens.at(m_tokenIndex);
-    //qDebug()<<"enter:"<<this->stateToString(newState)<<m_currentLine.mid(tok.begin(),tok.length);
-    if(pHtmlFormatter!=nullptr){
-        int savedIndentDepth = pHtmlFormatter->m_indentDepth;
-        onEnter(newState, &(pHtmlFormatter->m_indentDepth), &savedIndentDepth);
-        Code::State s(newState, savedIndentDepth);
 
-        pHtmlFormatter->m_currentState.push(s);
-        pHtmlFormatter->m_newStates.push(s);
-        //Token tok = pHtmlFormatter->currentToken();
-        //qDebug() << "js enter state 1" << stateToString(newState)<<pHtmlFormatter->m_currentLine.mid(pHtmlFormatter->m_currentToken.begin(),pHtmlFormatter->m_currentToken.length)<<"indent:"<<pHtmlFormatter->m_indentDepth<<"size:"<<pHtmlFormatter->m_currentState.size();
-    }else{
         int savedIndentDepth = m_indentDepth;
         onEnter(newState, &m_indentDepth, &savedIndentDepth);
         Code::State s(newState, savedIndentDepth);
         m_currentState.push(s);
         m_newStates.push(s);
-        //qDebug() << "js enter state 2" << stateToString(newState)<<m_currentLine.mid(m_currentToken.begin(),m_currentToken.length)<<"indent:"<<m_indentDepth<<"size:"<<m_currentState.size();
 
-    }
-    //dump();
 
     if (newState == bracket_open)
         enter(bracket_element_start);
@@ -712,17 +654,7 @@ void CodeFormatter::leave(bool statementDone)
     //qDebug()<<"enter:"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);;
     int topState;
     State poppedState;
-    if(pHtmlFormatter!=nullptr){
-        if (pHtmlFormatter->m_currentState.size()<=1)
-            return;
-        if (pHtmlFormatter->m_newStates.size() > 0)
-            pHtmlFormatter->m_newStates.pop();
 
-        poppedState = pHtmlFormatter->m_currentState.pop();
-        topState = pHtmlFormatter->m_currentState.top().type;
-        pHtmlFormatter->m_indentDepth = poppedState.savedIndentDepth;
-        //qDebug() << "js left state1" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<pHtmlFormatter->m_currentState.size()<<"indent:"<<pHtmlFormatter->m_indentDepth;
-    }else{
 
         if (m_currentState.size()<=1)
             return;
@@ -732,9 +664,7 @@ void CodeFormatter::leave(bool statementDone)
         poppedState = m_currentState.pop();
         topState = m_currentState.top().type;
         m_indentDepth = poppedState.savedIndentDepth;
-        //qDebug() << "js left state2" << stateToString(poppedState.type) << ", now in state" << stateToString(topState)<<m_indentDepth <<"size:"<<m_currentState.size()<<"indent:"<<m_indentDepth;
-    }
-    // restore indent depth
+
 
 
 
@@ -766,19 +696,12 @@ void CodeFormatter::leave(bool statementDone)
 
 void CodeFormatter::correctIndentation(const QTextBlock &block)
 {
-    if(pHtmlFormatter!=nullptr){
-        pHtmlFormatter->tokenizeBlock(block);
-        Q_ASSERT(pHtmlFormatter->m_currentState.size() >= 1);
-        const int startLexerState = loadLexerState(block.previous());
-        adjustIndent(pHtmlFormatter->m_tokens, startLexerState, &pHtmlFormatter->m_indentDepth);
 
-    }else{
         tokenizeBlock(block);
         Q_ASSERT(m_currentState.size() >= 1);
         const int startLexerState = loadLexerState(block.previous());
         adjustIndent(m_tokens, startLexerState, &m_indentDepth);
 
-    }
 
 }
 
@@ -899,9 +822,7 @@ bool CodeFormatter::isExpressionEndState(int type) const
 
 const Code::Token &CodeFormatter::tokenAt(int idx) const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->tokenAt(idx);
-    }
+
     static const Code::Token empty;
     if (idx < 0 || idx >= m_tokens.size())
         return empty;
@@ -911,9 +832,7 @@ const Code::Token &CodeFormatter::tokenAt(int idx) const
 
 int CodeFormatter::column(int index) const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->column(index);
-    }
+
     int col = 0;
     if (index > m_currentLine.length())
         index = m_currentLine.length();
@@ -931,9 +850,7 @@ int CodeFormatter::column(int index) const
 
 QStringView CodeFormatter::currentTokenText() const
 {
-    if(pHtmlFormatter!=nullptr){
-        return pHtmlFormatter->currentTokenText();
-    }
+
     return QStringView(m_currentLine).mid(m_currentToken.begin(), m_currentToken.length);
 }
 
@@ -950,8 +867,8 @@ void CodeFormatter::saveCurrentState(const QTextBlock &block)
 
     BlockData blockData;
     blockData.m_blockRevision = block.revision();
-    blockData.m_beginState = pHtmlFormatter!=nullptr?pHtmlFormatter->m_beginState:m_beginState;
-    blockData.m_endState = pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentState:m_currentState;
+    blockData.m_beginState =m_beginState;
+    blockData.m_endState = m_currentState;
     blockData.m_indentDepth = m_indentDepth;
 
     QTextBlock saveableBlock(block);
@@ -960,22 +877,15 @@ void CodeFormatter::saveCurrentState(const QTextBlock &block)
 
 void CodeFormatter::restoreCurrentState(const QTextBlock &block)
 {
-    if(pHtmlFormatter!=nullptr){
-        pHtmlFormatter->recalculateStateAfter(block);
-        return ;
-    }
+
     if (block.isValid()) {
         BlockData blockData;
         if (loadBlockData(block, &blockData)) {
             m_indentDepth = blockData.m_indentDepth;
-            if(pHtmlFormatter!=nullptr){
-                pHtmlFormatter->m_currentState = blockData.m_endState;
-                pHtmlFormatter->m_beginState = pHtmlFormatter->m_currentState;
 
-            }else{
                 m_currentState = blockData.m_endState;
                 m_beginState = m_currentState;
-            }
+
 
             return;
         }
@@ -1020,7 +930,7 @@ int CodeFormatter::tokenizeBlock(const QTextBlock &block)
 CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const Code::Token &token) const
 {
     const int kind = token.kind;
-    const QStringView text = QStringView(pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentLine:m_currentLine).mid(token.begin(), token.length);
+    const QStringView text = QStringView(m_currentLine).mid(token.begin(), token.length);
 
     if (kind == Code::Token::Identifier) {
         if (text == QLatin1String("as"))
@@ -1092,7 +1002,7 @@ void CodeFormatter::dump() const
 {
     qDebug() << "js Current token index" << m_tokenIndex;
     qDebug()<< "js Current state:";
-    for (const State &s : pHtmlFormatter->m_currentState) {
+    for (const State &s : m_currentState) {
         qDebug() << stateToString(s.type) << s.savedIndentDepth;
     }
     qDebug() << "js Current indent depth:" << m_indentDepth;

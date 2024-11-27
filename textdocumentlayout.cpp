@@ -415,12 +415,24 @@ int TextDocumentLayout::braceDepthDelta(const QTextBlock &block)
     return 0;
 }
 
+
 int TextDocumentLayout::braceDepth(const QTextBlock &block)
 {
     int state = block.userState();
     if (state == -1)
         return 0;
-    return state >> 8;
+
+    if((state & TextDocumentLayout::TemplateExpressionOpenBracesMask4) == TextDocumentLayout::TemplateExpressionOpenBracesMask4){
+        return 4;
+    }else if((state & TextDocumentLayout::TemplateExpressionOpenBracesMask3) == TextDocumentLayout::TemplateExpressionOpenBracesMask3){
+        return 3;
+    }else if((state & TextDocumentLayout::TemplateExpressionOpenBracesMask2) == TextDocumentLayout::TemplateExpressionOpenBracesMask2){
+        return 2;
+    }else if((state & TextDocumentLayout::TemplateExpressionOpenBracesMask1) == TextDocumentLayout::TemplateExpressionOpenBracesMask1){
+        return 1;
+    }else{
+        return 0;
+    }
 }
 
 void TextDocumentLayout::setBraceDepth(QTextBlock &block, int depth)
@@ -428,8 +440,26 @@ void TextDocumentLayout::setBraceDepth(QTextBlock &block, int depth)
     int state = block.userState();
     if (state == -1)
         state = 0;
-    state = state & 0xff;
-    block.setUserState((depth << 8) | state);
+    if(depth>=4){
+        state |= (TextDocumentLayout::TemplateExpressionOpenBracesMask0 |TextDocumentLayout::TemplateExpressionOpenBracesMask1 | TextDocumentLayout::TemplateExpressionOpenBracesMask2 | TextDocumentLayout::TemplateExpressionOpenBracesMask3 | TextDocumentLayout::TemplateExpressionOpenBracesMask4);
+    }else if(depth == 3){
+        state |= (TextDocumentLayout::TemplateExpressionOpenBracesMask0 |TextDocumentLayout::TemplateExpressionOpenBracesMask1 | TextDocumentLayout::TemplateExpressionOpenBracesMask2 | TextDocumentLayout::TemplateExpressionOpenBracesMask3);
+        state &= ~TextDocumentLayout::TemplateExpressionOpenBracesMask4;
+    }else if(depth == 2){
+        state |= (TextDocumentLayout::TemplateExpressionOpenBracesMask0 |TextDocumentLayout::TemplateExpressionOpenBracesMask1 | TextDocumentLayout::TemplateExpressionOpenBracesMask2);
+        state &= ~(TextDocumentLayout::TemplateExpressionOpenBracesMask3 | TextDocumentLayout::TemplateExpressionOpenBracesMask4);
+    }else if(depth == 1){
+        state |= (TextDocumentLayout::TemplateExpressionOpenBracesMask0 | TextDocumentLayout::TemplateExpressionOpenBracesMask1);
+        state &= ~(TextDocumentLayout::TemplateExpressionOpenBracesMask2 | TextDocumentLayout::TemplateExpressionOpenBracesMask3 | TextDocumentLayout::TemplateExpressionOpenBracesMask4);
+    }else if(depth == 0){
+        state |= (TextDocumentLayout::TemplateExpressionOpenBracesMask0 );
+        state &= ~(TextDocumentLayout::TemplateExpressionOpenBracesMask1 | TextDocumentLayout::TemplateExpressionOpenBracesMask2 | TextDocumentLayout::TemplateExpressionOpenBracesMask3 | TextDocumentLayout::TemplateExpressionOpenBracesMask4);
+    }else{
+        state &= ~(TextDocumentLayout::TemplateExpressionOpenBracesMask0 | TextDocumentLayout::TemplateExpressionOpenBracesMask1 | TextDocumentLayout::TemplateExpressionOpenBracesMask2 | TextDocumentLayout::TemplateExpressionOpenBracesMask3 | TextDocumentLayout::TemplateExpressionOpenBracesMask4);
+    }
+    //state = state & 0xff;
+    //block.setUserState((depth << 8) | state);
+    block.setUserState(state);
 }
 
 void TextDocumentLayout::changeBraceDepth(QTextBlock &block, int delta)

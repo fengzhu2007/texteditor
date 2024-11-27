@@ -1,13 +1,13 @@
-#include "jsautocompleter.h"
+#include "jsxautocompleter.h"
 
-#include "jsscanner.h"
+#include "jsxscanner.h"
 
 #include <QTextDocument>
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QDebug>
 
-using namespace Javascript;
+using namespace Jsx;
 
 static int blockStartState(const QTextBlock &block)
 {

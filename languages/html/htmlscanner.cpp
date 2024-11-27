@@ -107,7 +107,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
         }else if(isMarkState(_state,MultiLineComment)){
             int ss = index;
             //find end comment tag
-            //qDebug()<<"1111111111222222222222"<<text;
             while(index + 2 < text.length()){
                 if(text.at(index) == QLatin1Char('-') && text.at(index+1) == QLatin1Char('-') && text.at(index+2) == QLatin1Char('>')){
 
@@ -127,6 +126,31 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
             if(ss>-1 && index > ss){
                 tokens.append(Token(ss, index - ss, Token::Comment));
 
+            }
+            ++index;
+            continue;
+        }else if(isMarkState(_state,MultiLineXmlData)){
+            int ss = index;
+            //find end cdata tag
+            //]]>
+            while(index + 2 < text.length()){
+                if(text.at(index) == QLatin1Char(']') && text.at(index+1) == QLatin1Char(']') && text.at(index+2) == QLatin1Char('>')){
+
+                    if(index>ss){
+                        tokens.append(Token(ss, index - ss, Token::XmlData));
+                    }
+                    //add comment end tag
+                    tokens.append(Token(index, 3, Token::XmlDataRightTag));
+                    index += 3;
+                    unSetMarkState(&_state,MultiLineXmlData);
+                    ss = -1;
+                    break;
+                    //comment end
+                }
+                ++index;
+            }
+            if(ss>-1 && index > ss){
+                tokens.append(Token(ss, index - ss, Token::XmlData));
             }
             ++index;
             continue;
@@ -244,6 +268,21 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                             ++index;
                         }
                         break;
+                    }else if(index+8<text.size() && text.at(index+1)==QLatin1Char('!')
+                               && text.at(index+2)==QLatin1Char('[')
+                               && text.at(index+3)==QLatin1Char('C')
+                               && text.at(index+4)==QLatin1Char('D')
+                               && text.at(index+5)==QLatin1Char('A')
+                               && text.at(index+6)==QLatin1Char('T')
+                               && text.at(index+7)==QLatin1Char('A')
+                               && text.at(index+8)==QLatin1Char('[')
+
+                               ){
+                        //<![CDATA[
+                        tokens.append(Token(index, 9, Token::XmlDataLeftTag,Token::Html));
+                        setMarkState(&_state,MultiLineXmlData);
+                        index += 9;
+                        break;
                     }
                 }
                 tokens.append(Token(index, 1, Token::InnerText));
@@ -251,7 +290,24 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 if(maybyText() && start>-1 && index > start){
                     tokens.append(Token(start, index - start, Token::InnerText));
                 }
-                setMarkState(&_state,MultiLinePhp);
+                if(index+2 < text.size() && text.at(index+2)==QLatin1Char('x')){
+                    //xml
+                    tokens.append(Token(index, 2, Token::XmlLeftBracket,Code::Token::Html));
+                    index+=2;
+                    //find xml tag
+                    int ss = index;
+                    index+=1;
+                    while(index < text.size()){
+                        if(!text.at(index).isLetter()){
+                            break;
+                        }
+                        index++;
+                    }
+                    tokens.append(Token(ss, index-start, Token::TagDefine,Code::Token::Html));
+                    setMarkState(&_state,XMLTagStart | MultiLineElement);
+                }else{
+                    setMarkState(&_state,MultiLinePhp);
+                }
                 break;
             }else{
                 tokens.append(Token(index, 1, Token::InnerText));
@@ -374,7 +430,12 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
             break;
         case  '?':
             if(la == QLatin1Char('>')){
-                tokens.append(Code::Token(index, 2, Code::Token::PhpRightBracket,Code::Token::Html));
+                if(isMarkState(_state,XMLTagStart)){
+                    tokens.append(Code::Token(index, 2, Code::Token::XmlRightBracket,Code::Token::Html));
+                    unSetMarkState(&_state,XMLTagStart | MultiLineElement);
+                }else{
+                    tokens.append(Code::Token(index, 2, Code::Token::PhpRightBracket,Code::Token::Html));
+                }
                 index += 1;
             }else{
                 tokens.append(Token(index, 1, Token::InnerText));

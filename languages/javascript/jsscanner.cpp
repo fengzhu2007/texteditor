@@ -8,35 +8,48 @@ using namespace Code;
 
 namespace {
 static const QString js_keywords[] = {
+    QLatin1String("async"),
+    QLatin1String("await"),
     QLatin1String("break"),
     QLatin1String("case"),
     QLatin1String("catch"),
     QLatin1String("class"),
     QLatin1String("const"),
+    QLatin1String("constructor"),
     QLatin1String("continue"),
     QLatin1String("debugger"),
     QLatin1String("default"),
     QLatin1String("delete"),
     QLatin1String("do"),
     QLatin1String("else"),
+    QLatin1String("enum"),
+    QLatin1String("export"),
     QLatin1String("extends"),
-    QLatin1String("false"),
     QLatin1String("finally"),
     QLatin1String("for"),
     QLatin1String("function"),
     QLatin1String("if"),
+    QLatin1String("implements"),
+    QLatin1String("import"),
     QLatin1String("in"),
     QLatin1String("instanceof"),
+    QLatin1String("interface"),
     QLatin1String("let"),
     QLatin1String("new"),
+    QLatin1String("null"),
+    QLatin1String("package"),
+    QLatin1String("private"),
+    QLatin1String("protected"),
+    QLatin1String("public"),
     QLatin1String("return"),
+    QLatin1String("static"),
     QLatin1String("super"),
     QLatin1String("switch"),
     QLatin1String("this"),
     QLatin1String("throw"),
-    QLatin1String("true"),
     QLatin1String("try"),
     QLatin1String("typeof"),
+    QLatin1String("undefined"),
     QLatin1String("var"),
     QLatin1String("void"),
     QLatin1String("while"),
@@ -293,10 +306,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         scanTemplateString();
     }
 
-    auto braceCounterOffset = [](int templateDepth) {
-        return FlagsBits + (templateDepth - 1) * BraceCounterBits;
-    };
-
     while (index < text.length()) {
         const QChar ch = text.at(index);
 
@@ -305,12 +314,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             la = text.at(index + 1);
 
         switch (ch.unicode()) {
-        case '#':
-            if (_scanComments)
-                tokens.append(Token(index, text.length() - index, Token::Comment,Code::Token::Javascript));
-            index = text.length();
-            break;
-
         case '/':
             if (la == QLatin1Char('/')) {
                 if (_scanComments)
@@ -432,7 +435,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                     _state = (_state & ~mask) | (((Scanner::TemplateExpressionOpenBracesMask0 & (_state >> shift)) + 1) << shift);
                 }*/
                 setExpressionMask(&_state,depth+1);
-
             }
         } break;
 

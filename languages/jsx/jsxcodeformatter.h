@@ -2,7 +2,7 @@
 
 #include "texteditor_global.h"
 
-#include "jsscanner.h"
+#include "jsxscanner.h"
 #include "codeformatter.h"
 #include "languages/token.h"
 #include "textdocumentlayout.h"
@@ -24,14 +24,14 @@ class EditorCodeFormatter;
 using namespace Code;
 
 
-namespace Javascript {
+namespace Jsx {
 
 class TEXTEDITOR_EXPORT CodeFormatter : public TextEditor::CodeFormatter
 {
     Q_GADGET
 public:
-    CodeFormatter(Html::CodeFormatter* formatter=nullptr);
-    explicit CodeFormatter(const TextEditor::TabSettings &tabSettings,Html::CodeFormatter* formatter=nullptr);
+    CodeFormatter();
+    explicit CodeFormatter(const TextEditor::TabSettings &tabSettings);
     virtual ~CodeFormatter();
 
     // updates all states up until block if necessary
@@ -255,10 +255,6 @@ private:
 
     int m_tabSize;
 
-    Html::CodeFormatter* pHtmlFormatter;
-
-
-
 public:
 
     void setIndentSize(int size);
@@ -276,7 +272,6 @@ protected:
 private:
     int m_indentSize;
 
-    friend class Html::CodeFormatter;
 };
 
 

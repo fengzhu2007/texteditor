@@ -3,7 +3,7 @@
 #include "texteditor_global.h"
 #include "textindenter.h"
 
-namespace Javascript {
+namespace Jsx {
 
 
 TEXTEDITOR_EXPORT TextEditor::TextIndenter *createIndenter(QTextDocument *doc);
