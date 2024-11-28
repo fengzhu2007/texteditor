@@ -37,11 +37,13 @@ public:
         MultiLineElement6 = MultiLineComment<<10,
         MultiLineElementMask = MultiLineElement|MultiLineElement1|MultiLineElement2|MultiLineElement3|MultiLineElement4|MultiLineElement5|MultiLineElement6,
 
-        MultiLineAttrValue = MultiLineComment << 11,
+        ElementStartTag = MultiLineComment<<12,
+        ElementEndTag = MultiLineComment<<13,
 
-        MultiLineObject = MultiLineComment<<12,//{field:name}
+        MultiLineAttrValue = MultiLineComment << 14,
 
-        MultiLineInnerText = MultiLineComment<<13,
+
+        MultiLineInnerText = MultiLineComment<<15,
 
 
         // templates can be nested, which means that the scanner/lexer cannot
@@ -68,7 +70,7 @@ public:
     bool scanComments() const;
     void setScanComments(bool scanComments);
 
-    QList<Code::Token> operator()(int& from,const QString &text, int& startState);
+    QList<Code::Token> operator()(int& from,const QString &text, int startState);
     int state() const;
 
     bool isKeyword(const QString &text) const;

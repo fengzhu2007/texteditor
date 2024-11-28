@@ -85,7 +85,7 @@ public:
 
 
         //html token type
-        InnerText,//18
+        InnerText,//20
         TagDefine,//DOCTYPE
         TagStart,//div
         TagEnd,//div

@@ -273,8 +273,8 @@ int CStyleHighlighter::onBlockStart()
     int state = 0;
     int previousState = previousBlockState();
     if (previousState != -1) {
-        state = previousState & 0xff;
-        m_braceDepth = (previousState >> 8);
+        state = previousState;
+        m_braceDepth = 0;
         m_inMultilineComment = ((state & Scanner::MultiLineMask) == Scanner::MultiLineComment);
     }
     m_foldingIndent = m_braceDepth;
@@ -284,7 +284,7 @@ int CStyleHighlighter::onBlockStart()
 
 void CStyleHighlighter::onBlockEnd(int state)
 {
-    setCurrentBlockState((m_braceDepth << 8) | state);
+    setCurrentBlockState(state);
     TextDocumentLayout::setParentheses(currentBlock(), m_currentBlockParentheses);
     TextDocumentLayout::setFoldingIndent(currentBlock(), m_foldingIndent);
 }

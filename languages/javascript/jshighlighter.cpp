@@ -137,6 +137,21 @@ void Highlighter::highlightBlock(const QString &text)
     onBlockEnd(m_scanner.state());
 }
 
+static inline int expressionDepth(int state)
+{
+    if((state & Scanner::TemplateExpressionOpenBracesMask4) == Scanner::TemplateExpressionOpenBracesMask4){
+        return 4;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask3) == Scanner::TemplateExpressionOpenBracesMask3){
+        return 3;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask2) == Scanner::TemplateExpressionOpenBracesMask2){
+        return 2;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask1) == Scanner::TemplateExpressionOpenBracesMask1){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
 int Highlighter::onBlockStart()
 {
     m_currentBlockParentheses.clear();
@@ -152,18 +167,17 @@ int Highlighter::onBlockStart()
     int state = 0;
     int previousState = previousBlockState();
     if (previousState != -1) {
-        state = previousState & 0xff;
-        m_braceDepth = (previousState >> 8);
-        m_inMultilineComment = ((state & Scanner::MultiLineMask) == Scanner::MultiLineComment);
+        state = previousState /*& 0xffffffff*/;
+        m_braceDepth = expressionDepth(previousState);
+        m_inMultilineComment = ((state & Scanner::MultiLineComment) == Scanner::MultiLineComment);
     }
     m_foldingIndent = m_braceDepth;
-
     return state;
 }
 
 void Highlighter::onBlockEnd(int state)
 {
-    setCurrentBlockState((m_braceDepth << 8) | state);
+    setCurrentBlockState(state);
     TextDocumentLayout::setParentheses(currentBlock(), m_currentBlockParentheses);
     TextDocumentLayout::setFoldingIndent(currentBlock(), m_foldingIndent);
 }

@@ -4,7 +4,7 @@
 #include "jsxhighlighter.h"
 
 #include <QSet>
-
+#include <QDebug>
 #include <utils/qtcassert.h>
 
 using namespace TextEditor;
@@ -46,7 +46,15 @@ void Highlighter::highlightBlock(const QString &text)
             case Token::String:
                 setFormat(token.offset, token.length, formatForCategory(C_STRING));
                 break;
-
+            case Token::AttrValue:
+                setFormat(token.offset, token.length, formatForCategory(C_STRING));
+                break;
+            case Token::AttrName:
+                setFormat(token.offset, token.length, formatForCategory(C_FIELD));
+                 break;
+            case Token::Number:
+                setFormat(token.offset, token.length, formatForCategory(C_NUMBER));
+                break;
             case Token::Comment:
                 if (m_inMultilineComment
                     && QStringView(text).mid(token.end() - 2, 2) == QLatin1String("*/")) {
@@ -67,26 +75,32 @@ void Highlighter::highlightBlock(const QString &text)
 
             case Token::LeftParenthesis:
                 onOpeningParenthesis(QLatin1Char('('), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightParenthesis:
                 onClosingParenthesis(QLatin1Char(')'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::LeftBrace:
                 onOpeningParenthesis(QLatin1Char('{'), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightBrace:
                 onClosingParenthesis(QLatin1Char('}'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::LeftBracket:
                 onOpeningParenthesis(QLatin1Char('['), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightBracket:
                 onClosingParenthesis(QLatin1Char(']'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
             case Token::Delimiter:
                 break;
@@ -130,12 +144,31 @@ void Highlighter::highlightBlock(const QString &text)
 
     setFormat(previousTokenEnd, text.length() - previousTokenEnd, formatForCategory(C_VISUAL_WHITESPACE));
 
+    qDebug()<<"save state"<<m_scanner.state();
     setCurrentBlockState(m_scanner.state());
     onBlockEnd(m_scanner.state());
+
+
 }
 
-int Highlighter::onBlockStart()
+static inline int expressionDepth(int state)
 {
+    if((state & Scanner::TemplateExpressionOpenBracesMask4) == Scanner::TemplateExpressionOpenBracesMask4){
+        return 4;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask3) == Scanner::TemplateExpressionOpenBracesMask3){
+        return 3;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask2) == Scanner::TemplateExpressionOpenBracesMask2){
+        return 2;
+    }else if((state & Scanner::TemplateExpressionOpenBracesMask1) == Scanner::TemplateExpressionOpenBracesMask1){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+
+int Highlighter::onBlockStart()
+{    
     m_currentBlockParentheses.clear();
     m_braceDepth = 0;
     m_foldingIndent = 0;
@@ -149,18 +182,19 @@ int Highlighter::onBlockStart()
     int state = 0;
     int previousState = previousBlockState();
     if (previousState != -1) {
-        state = previousState & 0xff;
-        m_braceDepth = (previousState >> 8);
-        m_inMultilineComment = ((state & Scanner::MultiLineMask) == Scanner::MultiLineComment);
-    }
-    m_foldingIndent = m_braceDepth;
 
+        state = previousState /*& 0xffffffff*/;
+        m_braceDepth = expressionDepth(previousState);
+        m_inMultilineComment = ((state & Scanner::MultiLineComment) == Scanner::MultiLineComment);
+    }
+    qDebug()<<"onBlockStart"<<previousState;
+    m_foldingIndent = m_braceDepth;
     return state;
 }
 
 void Highlighter::onBlockEnd(int state)
 {
-    setCurrentBlockState((m_braceDepth << 8) | state);
+    setCurrentBlockState(state);
     TextDocumentLayout::setParentheses(currentBlock(), m_currentBlockParentheses);
     TextDocumentLayout::setFoldingIndent(currentBlock(), m_foldingIndent);
 }
