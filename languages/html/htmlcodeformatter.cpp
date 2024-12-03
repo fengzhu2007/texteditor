@@ -73,7 +73,7 @@ bool isAutoClose(QStringView tag){
 
         //qCDebug(formatterLog) << "Starting to look at " << block.text() << block.blockNumber() + 1;
 
-        Scanner scanner;
+        //Scanner scanner;
         //qDebug()<<"token size:"<<m_tokens.size();
         //scanner.dump(block.text(),m_tokens);
 

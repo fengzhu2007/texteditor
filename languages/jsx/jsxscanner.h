@@ -70,15 +70,19 @@ public:
     bool scanComments() const;
     void setScanComments(bool scanComments);
 
-    QList<Code::Token> operator()(int& from,const QString &text, int startState);
+    QList<Code::Token> operator()(int& from,const QString &text, int startState,const QStack<int>& stateStack={});
     int state() const;
 
     bool isKeyword(const QString &text) const;
     static QStringList keywords();
 
+    inline QStack<int>& statesStack() {return m_stateStack;}
+
 private:
     int _state;
     bool _scanComments: 1;
+    QStack<int> m_stateStack;
+
 };
 
 } // namespace CStyle

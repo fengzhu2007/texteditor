@@ -689,12 +689,17 @@ void CodeFormatter::enter(int newState)
         //Token tok = pHtmlFormatter->currentToken();
         //qDebug() << "js enter state 1" << stateToString(newState)<<pHtmlFormatter->m_currentLine.mid(pHtmlFormatter->m_currentToken.begin(),pHtmlFormatter->m_currentToken.length)<<"indent:"<<pHtmlFormatter->m_indentDepth<<"size:"<<pHtmlFormatter->m_currentState.size();
     }else{
+        if(m_tokens.size()>m_tokenIndex){
+            Token tok = m_tokens.at(m_tokenIndex);
+            qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+        }
+
         int savedIndentDepth = m_indentDepth;
         onEnter(newState, &m_indentDepth, &savedIndentDepth);
         Code::State s(newState, savedIndentDepth);
         m_currentState.push(s);
         m_newStates.push(s);
-        //qDebug() << "js enter state 2" << stateToString(newState)<<m_currentLine.mid(m_currentToken.begin(),m_currentToken.length)<<"indent:"<<m_indentDepth<<"size:"<<m_currentState.size();
+        qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
 
     }
     //dump();
@@ -1066,7 +1071,7 @@ CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const Code::Token &tok
                 return Catch;
             return Continue;
         case 'd':
-            if (char2 == 'f')
+            if (char3 == 'f')
                 return Default;
             return Do;
         case 't':
@@ -1135,7 +1140,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
         break;
 
     case binding_assignment:
-    case objectliteral_assignment:
+    //case objectliteral_assignment:
         if (lastToken)
             *indentDepth = *savedIndentDepth + 4;
         else
@@ -1146,12 +1151,12 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
         *indentDepth = tokenPosition;
         break;
 
-    case expression_or_label:
-        if (*indentDepth == tokenPosition)
-            *indentDepth += 2*m_indentSize;
-        else
-            *indentDepth = tokenPosition;
-        break;
+    //case expression_or_label:
+        //if (*indentDepth == tokenPosition)
+        //    *indentDepth += m_indentSize;
+        //else
+        //    *indentDepth = tokenPosition;
+    //    break;
 
     case expression:
         if(parentState.type == top_js){
@@ -1160,12 +1165,12 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
             // expression_or_objectdefinition doesn't want the indent
             // expression_or_label already has it
             if (parentState.type != expression_or_objectdefinition && parentState.type != expression_or_label && parentState.type != binding_assignment) {
-                *indentDepth += 2*m_indentSize;
+                //*indentDepth += 2*m_indentSize;
             }
         }
         // expression_or_objectdefinition and expression_or_label have already consumed the first token
         else if (parentState.type != expression_or_objectdefinition && parentState.type != expression_or_label) {
-            *indentDepth = tokenPosition;
+            //*indentDepth = tokenPosition;
         }
         break;
 
@@ -1188,7 +1193,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
             *savedIndentDepth = parentState.savedIndentDepth;
             *indentDepth = *savedIndentDepth + m_indentSize;
         } else if (!lastToken) {
-            *indentDepth = tokenPosition + 1;
+            //*indentDepth = tokenPosition + 1;
         } else {
             *indentDepth = *savedIndentDepth + m_indentSize;
         }
@@ -1202,17 +1207,17 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
     case do_statement_while_paren_open:
     case statement_with_condition_paren_open:
     case function_arglist_open:
-    case paren_open:
-        if (!lastToken)
-            *indentDepth = tokenPosition + 1;
-        else
+    //case paren_open:
+        if (!lastToken){
+            //*indentDepth = tokenPosition + 1;
+        }else
             *indentDepth += m_indentSize;
         break;
 
     case ternary_op:
-        if (!lastToken)
-            *indentDepth = tokenPosition + tk.length + 1;
-        else
+        if (!lastToken){
+            //*indentDepth = tokenPosition + tk.length + 1;
+        }else
             *indentDepth += m_indentSize;
         break;
 

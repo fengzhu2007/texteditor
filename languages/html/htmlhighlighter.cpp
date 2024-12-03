@@ -60,6 +60,9 @@ void Highlighter::highlightBlock(const QString &text)
              setFormat(token.offset, token.length, formatForCategory(C_FIELD));
              break;
             //php js
+        case Token::Number:
+            setFormat(token.offset, token.length, formatForCategory(C_NUMBER));
+            break;
         case Token::Keyword:
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
             break;

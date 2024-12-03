@@ -14,6 +14,7 @@
 
 #include <QTextBlockUserData>
 #include <QPlainTextDocumentLayout>
+#include <QStack>
 
 namespace TextEditor {
 
@@ -113,6 +114,12 @@ public:
     inline int lexerState() const { return m_lexerState; }
     inline void setLexerState(int state) { m_lexerState = state; }
 
+    //inline void enterState(int state){m_states.push(state);}
+    //inline int leaveState(){return m_states.pop();}
+
+    inline void setStateStack(const QStack<int>& states){m_states = states;}
+    inline QStack<int>& stateStack(){return m_states;}
+
     inline void setAdditionalAnnotationHeight(int annotationHeight)
     { m_additionalAnnotationHeight = annotationHeight; }
     inline int additionalAnnotationHeight() const { return m_additionalAnnotationHeight; }
@@ -139,6 +146,7 @@ private:
     CodeFormatterData *m_codeFormatterData;
     KSyntaxHighlighting::State m_syntaxState;
     QByteArray m_expectedRawStringSuffix; // A bit C++-specific, but let's be pragmatic.
+    QStack<int> m_states;
 };
 
 
@@ -173,6 +181,9 @@ public:
     static int foldingIndent(const QTextBlock &block);
     static void setLexerState(const QTextBlock &block, int state);
     static int lexerState(const QTextBlock &block);
+    static void setStateStack(const QTextBlock &block,const QStack<int> stateStack);
+    static QStack<int>* stateStack(const QTextBlock &block);
+
     static void changeFoldingIndent(QTextBlock &block, int delta);
     static bool canFold(const QTextBlock &block);
     static void doFoldOrUnfold(const QTextBlock& block, bool unfold);
@@ -204,6 +215,7 @@ public:
             const_cast<QTextBlock &>(block).setUserData((data = new TextBlockUserData));
         return data;
     }
+
 
     void requestExtraAreaUpdate();
 

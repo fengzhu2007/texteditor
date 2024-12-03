@@ -55,7 +55,7 @@ public:
 public: // must be public to make Q_GADGET introspection work
     enum StateType {
         invalid = 0,
-
+        html=2,
         topmost_intro_js=80,
         top_js, // root for js
         objectdefinition_or_js, // file starts with identifier
@@ -80,9 +80,6 @@ public: // must be public to make Q_GADGET introspection work
 
         enum_start, // after 'enum'
 
-        signal_start, // after 'signal'
-        signal_maybe_arglist, // after identifier
-        signal_arglist_open, // after '('
 
         function_start, // after 'function'
         function_arglist_open, // after '(' starting function argument list
@@ -144,7 +141,14 @@ public: // must be public to make Q_GADGET introspection work
 
         switch_statement, // After 'switch' token
         case_start, // after a 'case' or 'default' token
-        case_cont // after the colon in a case/default
+        case_cont, // after the colon in a case/default
+
+
+        html_element,//<div
+        html_element_inner,
+        html_element_start_tag,
+        html_element_end_tag,
+
     };
     Q_ENUM(StateType)
 

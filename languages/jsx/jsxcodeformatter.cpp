@@ -59,18 +59,12 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
 
     for (; *tokenIndex < m_tokens.size(); ) {
         m_currentToken = tokenAt(*tokenIndex);
-
-
         //qDebug() << "Token JS:" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1;
-
-
-
         const int kind = extendedTokenKind(m_currentToken);
         if (kind == Code::Token::Comment && state().type != multiline_comment_cont && state().type != multiline_comment_start) {
             *tokenIndex += 1;
             continue;
         }
-
 
         int type = m_currentState.top().type;
         switch (type) {
@@ -281,6 +275,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
             case Code::Token::RightParenthesis:  leave(); continue;
             case Code::Token::RightBrace:        leave(true); continue;
             case Code::Token::Semicolon:         leave(true); break;
+            case Code::Token::TagLeftBracket:         enter(html_element); break;
             } break;
 
         case expression_continuation:
@@ -302,6 +297,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
                 break;
             switch (kind) {
             case Code::Token::RightParenthesis:  leave(); break;
+
             } break;
 
         case bracket_open:
@@ -320,6 +316,7 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
             case Code::Token::RightBracket:
             case Code::Token::RightParenthesis:  leave(); continue; // error recovery
             case Code::Token::RightBrace:        leave(true); break;
+            case Code::Token::TagLeftBracket:enter(html_element);break;
             } break;
 
             // pretty much like expression, but ends with , or }
@@ -472,9 +469,49 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
                 turnInto(multiline_comment_cont);
             }
             break;
+        case html_element:
+            if(kind==Code::Token::LeftBrace){
+                enter(expression);
+            }else if(kind==Code::Token::TagRightBracket){
+
+
+            }
+            break;
+        case html_element_start_tag:
+            if(kind==Code::Token::LeftBrace){
+                enter(expression);
+            }else if(kind==Code::Token::TagRightBracket){
+                if(m_currentToken.length==2){
+                    //  />
+                    leave(true);//leave html_element_start tag and html_element
+                }else{
+                    //  >
+                    turnInto(html_element_inner);//leave html_element_start and enter html_element_inner
+                }
+            }
+            break;
+        case html_element_inner:
+            if(kind==Code::Token::LeftBrace){
+                enter(expression);
+            }else if(kind==Code::Token::TagLeftBracket){
+                if(m_currentToken.length==2){
+                    //  </
+                    turnInto(html_element_end_tag);//leave html_element_inner and enter html_element_end_tag
+                }else{
+                    //enter new element
+                    enter(html_element);
+                }
+            }
+            break;
+        case html_element_end_tag:
+            if(kind==Code::Token::TagRightBracket){
+                //   >
+                leave(true);//leave html_element_end tag and html_element
+            }
+            break;
 
         default:
-            qWarning() << "js Unhandled state" << m_currentState.top().type;
+            qWarning() << "jsx Unhandled state" << m_currentState.top().type;
             break;
         } // end of state switch
 
@@ -634,15 +671,23 @@ void CodeFormatter::initState(){
 void CodeFormatter::enter(int newState)
 {
 
-        int savedIndentDepth = m_indentDepth;
-        onEnter(newState, &m_indentDepth, &savedIndentDepth);
-        Code::State s(newState, savedIndentDepth);
-        m_currentState.push(s);
-        m_newStates.push(s);
+    if(m_tokens.size()>m_tokenIndex){
+        Token tok = m_tokens.at(m_tokenIndex);
+        qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+    }
+
+    int savedIndentDepth = m_indentDepth;
+    onEnter(newState, &m_indentDepth, &savedIndentDepth);
+    Code::State s(newState, savedIndentDepth);
+    m_currentState.push(s);
+    m_newStates.push(s);
+    qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
 
 
     if (newState == bracket_open)
         enter(bracket_element_start);
+    else if(newState==html_element)
+        enter(html_element_start_tag);
 
 }
 
@@ -650,24 +695,30 @@ void CodeFormatter::leave(bool statementDone)
 {
 
 
-    //Token tok = m_tokens.at(m_tokenIndex);
-    //qDebug()<<"enter:"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);;
+    if(m_tokens.size()>m_tokenIndex){
+        Token tok = m_tokens.at(m_tokenIndex);
+        qDebug()<<"leave:"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+    }
     int topState;
     State poppedState;
 
 
-        if (m_currentState.size()<=1)
-            return;
-        if (m_newStates.size() > 0)
-            m_newStates.pop();
+    if (m_currentState.size()<=1)
+        return;
+    if (m_newStates.size() > 0)
+        m_newStates.pop();
 
-        poppedState = m_currentState.pop();
-        topState = m_currentState.top().type;
-        m_indentDepth = poppedState.savedIndentDepth;
+    poppedState = m_currentState.pop();
+    topState = m_currentState.top().type;
+    //qDebug()<<"m_current index:"<<m_indentDepth;
+    m_indentDepth = poppedState.savedIndentDepth;
 
-
-
-
+    if(poppedState.type==html_element){
+        m_indentDepth = column(m_tokens.at(0).begin());
+        //const int tokenPosition = column(tk.begin());
+        //m_indentDepth = m_currentState.top().savedIndentDepth;
+        //qDebug()<<"m_indentDepth"<<m_indentDepth;
+    }
 
 
     // if statement is done, may need to leave recursively
@@ -688,8 +739,11 @@ void CodeFormatter::leave(bool statementDone)
             } else {
                 leave(true);
             }
+        }else if(poppedState.type==html_element_start_tag || poppedState.type==html_element_end_tag){
+            leave();//leave html_element
         } else if (!isExpressionEndState(topState)) {
-            leave(true);
+            if(topState!=html_element_start_tag && topState!=html_element_end_tag && topState!=html_element_inner)
+                leave(true);
         }
     }
 }
@@ -697,10 +751,10 @@ void CodeFormatter::leave(bool statementDone)
 void CodeFormatter::correctIndentation(const QTextBlock &block)
 {
 
-        tokenizeBlock(block);
-        Q_ASSERT(m_currentState.size() >= 1);
-        const int startLexerState = loadLexerState(block.previous());
-        adjustIndent(m_tokens, startLexerState, &m_indentDepth);
+    tokenizeBlock(block);
+    Q_ASSERT(m_currentState.size() >= 1);
+    const int startLexerState = loadLexerState(block.previous());
+    adjustIndent(m_tokens, startLexerState, &m_indentDepth);
 
 
 }
@@ -715,6 +769,7 @@ bool CodeFormatter::tryInsideExpression(bool alsoExpression)
     case Code::Token::LeftBrace:         newState = objectliteral_open; break;
     case Function:          newState = function_start; break;
     case Question:          newState = ternary_op; break;
+    case Code::Token::TagLeftBracket: newState = html_element ;break;
     }
 
     if (newState != -1) {
@@ -731,7 +786,6 @@ bool CodeFormatter::tryStatement()
 {
     const int kind = extendedTokenKind(m_currentToken);
 
-    //qDebug()<<"tryStatement:"<<kind<<pHtmlFormatter->m_currentToken.kind<<pHtmlFormatter->m_currentLine.mid(pHtmlFormatter->m_currentToken.begin(),pHtmlFormatter->m_currentToken.length);
     switch (kind) {
     case Code::Token::Semicolon:
         enter(empty_statement);
@@ -765,8 +819,9 @@ bool CodeFormatter::tryStatement()
         enter(substatement);
         return true;
     case Case:
-    case Default:
         enter(case_start);
+        return true;
+    case Default:
         return true;
     case Try:
         enter(try_statement);
@@ -790,6 +845,9 @@ bool CodeFormatter::tryStatement()
         enter(expression);
         // look at the token again
         m_tokenIndex -= 1;
+        return true;
+    case Code::Token::TagLeftBracket:
+        enter(html_element);
         return true;
     }
     return false;
@@ -906,7 +964,12 @@ QStack<State> CodeFormatter::initialState()
 
 int CodeFormatter::tokenizeBlock(const QTextBlock &block)
 {
-    int startState = loadLexerState(block.previous());
+    auto previous = block.previous();
+    int startState = loadLexerState(previous);
+    auto stack = TextDocumentLayout::stateStack(previous);
+
+
+
     if (block.blockNumber() == 0)
         startState = 0;
     Q_ASSERT(startState != -1);
@@ -919,11 +982,15 @@ int CodeFormatter::tokenizeBlock(const QTextBlock &block)
     // newline character at the end
     m_currentLine.append(QLatin1Char('\n'));
     int index = 0;
-    m_tokens = tokenize(index,m_currentLine, startState);
-
+    if(stack!=nullptr){
+        m_tokens = tokenize(index,m_currentLine, startState,*stack);
+    }else{
+        m_tokens = tokenize(index,m_currentLine, startState,{});
+    }
     const int lexerState = tokenize.state();
     QTextBlock saveableBlock(block);
     saveLexerState(&saveableBlock, lexerState);
+    TextDocumentLayout::setStateStack(saveableBlock,tokenize.statesStack());
     return lexerState;
 }
 
@@ -974,7 +1041,7 @@ CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const Code::Token &tok
                 return Catch;
             return Continue;
         case 'd':
-            if (char2 == 'f')
+            if (char3 == 'f')
                 return Default;
             return Do;
         case 't':
@@ -1000,12 +1067,12 @@ CodeFormatter::TokenKind CodeFormatter::extendedTokenKind(const Code::Token &tok
 
 void CodeFormatter::dump() const
 {
-    qDebug() << "js Current token index" << m_tokenIndex;
-    qDebug()<< "js Current state:";
+    qDebug() << "jsx Current token index" << m_tokenIndex;
+    qDebug()<< "jsx Current state:";
     for (const State &s : m_currentState) {
         qDebug() << stateToString(s.type) << s.savedIndentDepth;
     }
-    qDebug() << "js Current indent depth:" << m_indentDepth;
+    qDebug() << "jsx Current indent depth:" << m_indentDepth;
 }
 
 QString CodeFormatter::stateToString(int type) const
@@ -1023,8 +1090,18 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
     const int tokenPosition = column(tk.begin());
     const bool firstToken = (tokenIndex() == 0);
     const bool lastToken = (tokenIndex() == tokenCount() - 1);
-    //qDebug()<<"onEnter:"<<*savedIndentDepth<<*indentDepth << stateToString(newState) << lastToken;
     switch (newState) {
+    case html_element:{
+        if(parentState.type==html_element_inner && firstToken){
+            *savedIndentDepth += m_indentSize;
+            *indentDepth = *savedIndentDepth;
+        }else{
+            *savedIndentDepth = tokenPosition;
+            *indentDepth = *savedIndentDepth + m_indentSize;
+        }
+
+        break;
+    }
     case objectdefinition_open: {
         // special case for things like "gradient: Gradient {"
         if (parentState.type == binding_assignment)
@@ -1043,7 +1120,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
         break;
 
     case binding_assignment:
-    case objectliteral_assignment:
+    //case objectliteral_assignment:
         if (lastToken)
             *indentDepth = *savedIndentDepth + 4;
         else
@@ -1054,26 +1131,24 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
         *indentDepth = tokenPosition;
         break;
 
-    case expression_or_label:
-        if (*indentDepth == tokenPosition)
-            *indentDepth += 2*m_indentSize;
-        else
-            *indentDepth = tokenPosition;
-        break;
+    //case expression_or_label:
+    //    if (*indentDepth == tokenPosition)
+    //        *indentDepth += 2*m_indentSize;
+        //else
+        //    *indentDepth = tokenPosition;
+    //    break;
 
     case expression:
         if(parentState.type == top_js){
 
         }else if (*indentDepth == tokenPosition) {
-            // expression_or_objectdefinition doesn't want the indent
-            // expression_or_label already has it
             if (parentState.type != expression_or_objectdefinition && parentState.type != expression_or_label && parentState.type != binding_assignment) {
-                *indentDepth += 2*m_indentSize;
+                //*indentDepth += m_indentSize;
             }
         }
         // expression_or_objectdefinition and expression_or_label have already consumed the first token
         else if (parentState.type != expression_or_objectdefinition && parentState.type != expression_or_label) {
-            *indentDepth = tokenPosition;
+            //*indentDepth = tokenPosition;
         }
         break;
 
@@ -1096,7 +1171,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
             *savedIndentDepth = parentState.savedIndentDepth;
             *indentDepth = *savedIndentDepth + m_indentSize;
         } else if (!lastToken) {
-            *indentDepth = tokenPosition + 1;
+            //*indentDepth = tokenPosition + 1;
         } else {
             *indentDepth = *savedIndentDepth + m_indentSize;
         }
@@ -1110,17 +1185,17 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
     case do_statement_while_paren_open:
     case statement_with_condition_paren_open:
     case function_arglist_open:
-    case paren_open:
-        if (!lastToken)
-            *indentDepth = tokenPosition + 1;
-        else
+    //case paren_open:
+        if (!lastToken){
+            //*indentDepth = tokenPosition + 1;
+        }else
             *indentDepth += m_indentSize;
         break;
 
     case ternary_op:
-        if (!lastToken)
-            *indentDepth = tokenPosition + tk.length + 1;
-        else
+        if (!lastToken){
+            //*indentDepth = tokenPosition + tk.length + 1;
+        }else
             *indentDepth += m_indentSize;
         break;
 
@@ -1143,16 +1218,18 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
         break;
 
     case objectliteral_open:
-        if (parentState.type == expression
-            || parentState.type == objectliteral_assignment) {
-            // undo the continuation indent of the expression
-            if (state(1).type == expression_or_label)
-                *indentDepth = state(1).savedIndentDepth;
-            else
-                *indentDepth = parentState.savedIndentDepth;
-            *savedIndentDepth = *indentDepth;
+        if(lastToken){
+            if (parentState.type == expression
+                || parentState.type == objectliteral_assignment) {
+                // undo the continuation indent of the expression
+                if (state(1).type == expression_or_label)
+                    *indentDepth = state(1).savedIndentDepth;
+                else
+                    *indentDepth = parentState.savedIndentDepth;
+                *savedIndentDepth = *indentDepth;
+            }
+            *indentDepth += m_indentSize;
         }
-        *indentDepth += m_indentSize;
         break;
 
 
@@ -1235,7 +1312,8 @@ void CodeFormatter::adjustIndent(const QList<Code::Token> &tokens, int startLexe
         return;
     }
     //qDebug()<<"adjustIndent11:"<<*indentDepth;
-    const int kind = extendedTokenKind(tokenAt(0));
+    auto tk = tokenAt(0);
+    const int kind = extendedTokenKind(tk);
     switch (kind) {
     case Code::Token::LeftBrace:
         if (topState.type == substatement || topState.type == binding_assignment || topState.type == case_cont) {
@@ -1322,6 +1400,18 @@ void CodeFormatter::adjustIndent(const QList<Code::Token> &tokens, int startLexe
             }
         }
         break;
+
+    case Token::TagLeftBracket:
+        if(tk.length==2){
+            *indentDepth = topState.savedIndentDepth;
+            *indentDepth -= m_indentSize;
+        }
+        break;
+    case Token::TagRightBracket:
+            *indentDepth = topState.savedIndentDepth;
+            *indentDepth -= m_indentSize;
+        break;
+
     }
 
 

@@ -29,7 +29,16 @@ void Highlighter::highlightBlock(const QString &text)
 {
     int from = 0;
     int state = onBlockStart();
-    const QList<Token> tokens = m_scanner(from,text, state);
+    auto previous = currentBlock().previous();
+    TextBlockUserData *userData = nullptr;
+    QStack<int> stacks;
+    if(previous.isValid()){
+        userData = TextDocumentLayout::userData(previous);
+        stacks = userData->stateStack();
+        //qDebug()<<"previous:"<<stacks;
+    }
+
+    const QList<Token> tokens = m_scanner(from,text, state,stacks);
     int index = 0;
     while (index < tokens.size()) {
         const Token &token = tokens.at(index);
@@ -103,6 +112,8 @@ void Highlighter::highlightBlock(const QString &text)
                 setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
             case Token::Delimiter:
+            case Token::Equal:
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             default:
@@ -144,8 +155,12 @@ void Highlighter::highlightBlock(const QString &text)
 
     setFormat(previousTokenEnd, text.length() - previousTokenEnd, formatForCategory(C_VISUAL_WHITESPACE));
 
-    qDebug()<<"save state"<<m_scanner.state();
     setCurrentBlockState(m_scanner.state());
+    {
+         auto userData = TextDocumentLayout::userData(currentBlock());
+        userData->setStateStack(m_scanner.statesStack());
+         //qDebug()<<"save:"<<m_scanner.statesStack();
+    }
     onBlockEnd(m_scanner.state());
 
 
@@ -177,6 +192,7 @@ int Highlighter::onBlockStart()
         userData->setFoldingIndent(0);
         userData->setFoldingStartIncluded(false);
         userData->setFoldingEndIncluded(false);
+
     }
 
     int state = 0;
@@ -187,7 +203,6 @@ int Highlighter::onBlockStart()
         m_braceDepth = expressionDepth(previousState);
         m_inMultilineComment = ((state & Scanner::MultiLineComment) == Scanner::MultiLineComment);
     }
-    qDebug()<<"onBlockStart"<<previousState;
     m_foldingIndent = m_braceDepth;
     return state;
 }

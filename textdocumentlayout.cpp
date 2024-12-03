@@ -10,6 +10,7 @@
 
 namespace TextEditor {
 
+static QStack<int> g_states;
 CodeFormatterData::~CodeFormatterData() = default;
 
 TextBlockUserData::~TextBlockUserData()
@@ -483,6 +484,20 @@ int TextDocumentLayout::lexerState(const QTextBlock &block)
     if (TextBlockUserData *userData = textUserData(block))
         return userData->lexerState();
     return 0;
+}
+
+void TextDocumentLayout::setStateStack(const QTextBlock &block,const QStack<int> stateStack){
+    TextBlockUserData *userData = textUserData(block);
+    if(userData!=nullptr){
+        userData->setStateStack(stateStack);
+    }
+}
+
+QStack<int>* TextDocumentLayout::stateStack(const QTextBlock &block){
+    //return textUserData(block)->stateStack();
+    if (TextBlockUserData *userData = textUserData(block))
+        return &(userData->stateStack());
+    return nullptr;
 }
 
 void TextDocumentLayout::setFoldingIndent(const QTextBlock &block, int indent)

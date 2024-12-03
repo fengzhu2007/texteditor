@@ -44,6 +44,9 @@ void CStyleHighlighter::highlightBlock(const QString &text)
         const Token &token = tokens.at(index);
 
         switch (token.kind) {
+            case Token::Number:
+                setFormat(token.offset, token.length, formatForCategory(C_NUMBER));
+                break;
             case Token::Keyword:
                 setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
                 break;
@@ -72,63 +75,33 @@ void CStyleHighlighter::highlightBlock(const QString &text)
 
             case Token::LeftParenthesis:
                 onOpeningParenthesis(QLatin1Char('('), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightParenthesis:
                 onClosingParenthesis(QLatin1Char(')'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::LeftBrace:
                 onOpeningParenthesis(QLatin1Char('{'), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightBrace:
                 onClosingParenthesis(QLatin1Char('}'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::LeftBracket:
                 onOpeningParenthesis(QLatin1Char('['), token.offset, index == 0);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
 
             case Token::RightBracket:
                 onClosingParenthesis(QLatin1Char(']'), token.offset, index == tokens.size()-1);
+                setFormat(token.offset, token.length, formatForCategory(C_OPERATOR));
                 break;
-
-            case Token::Identifier: {
-                if (!m_qmlEnabled)
-                    break;
-
-                const QStringView spell = QStringView(text).mid(token.offset, token.length);
-
-                if (maybeQmlKeyword(spell)) {
-                    // check the previous token
-                    if (index == 0 || tokens.at(index - 1).isNot(Token::Dot)) {
-                        if (index + 1 == tokens.size() || tokens.at(index + 1).isNot(Token::Colon)) {
-                            setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
-                            break;
-                        }
-                    }
-                } else if (index > 0 && maybeQmlBuiltinType(spell)) {
-                    const Token &previousToken = tokens.at(index - 1);
-                    if (previousToken.is(Token::Identifier)
-                        && text.at(previousToken.offset) == QLatin1Char('p')
-                        && QStringView(text).mid(previousToken.offset, previousToken.length)
-                               == QLatin1String("property")) {
-                        setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
-                        break;
-                    }
-                } else if (index == 1) {
-                    const Token &previousToken = tokens.at(0);
-                    if (previousToken.is(Token::Identifier)
-                        && text.at(previousToken.offset) == QLatin1Char('e')
-                        && QStringView(text).mid(previousToken.offset, previousToken.length)
-                               == QLatin1String("enum")) {
-                        setFormat(token.offset, token.length, formatForCategory(C_ENUMERATION));
-                        break;
-                    }
-                }
-            }   break;
-
             case Token::Delimiter:
                 break;
 

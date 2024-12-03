@@ -240,6 +240,7 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
     case '>':{
         //find tag name
         //not in php css js
+        qDebug()<<"html text:"<<cursor.block().text();
         //qDebug()<<"position:"<<cursor.positionInBlock();
         const QString tag = findNearlyTagName(cursor.block(),cursor.positionInBlock());
         if(!tag.isEmpty()){

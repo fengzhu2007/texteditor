@@ -27,6 +27,7 @@ public:
                                 bool skipChars,
                                 int *skippedChars) const override;
     QString insertParagraphSeparator(const QTextCursor &tc) const override;
+    virtual int paragraphSeparatorAboutToBeInserted(QTextCursor &cursor) override;
 };
 
 } //

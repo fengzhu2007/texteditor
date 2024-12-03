@@ -134,6 +134,7 @@ void Highlighter::highlightBlock(const QString &text)
     setFormat(previousTokenEnd, text.length() - previousTokenEnd, formatForCategory(C_VISUAL_WHITESPACE));
 
     setCurrentBlockState(m_scanner.state());
+
     onBlockEnd(m_scanner.state());
 }
 

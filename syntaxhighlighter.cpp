@@ -558,6 +558,8 @@ void SyntaxHighlighter::setCurrentBlockState(int newState)
     d->currentBlock.setUserState(newState);
 }
 
+
+
 /*!
     Attaches the given \a data to the current text block.  The
     ownership is passed to the underlying text document, i.e. the

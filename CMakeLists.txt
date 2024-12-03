@@ -282,6 +282,7 @@ add_library(texteditor SHARED
 
 
 
+
 )
 #uchardet
 target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
