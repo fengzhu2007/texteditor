@@ -23,11 +23,26 @@ include_directories(SYSTEM "uchardet/src")
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_definitions(-DQ_DEBUG)
+    #add_definitions(-DQ_DEBUG)
 endif()
 
 
 
+if(APPLE)
+    set(PLATFORM_SOURCES
+        utils/fileutils_mac.h utils/fileutils_mac.mm
+        utils/theme/theme_mac.h utils/theme/theme_mac.mm
+    )
+
+find_library(FOUNDATION_FRAMEWORK Foundation)
+find_library(APPKIT_FRAMEWORK AppKit)
+
+
+
+
+else()
+
+endif()
 
 
 set(RESOURCES
@@ -39,6 +54,7 @@ qt5_add_resources(RESOURCE_ADDED ${RESOURCES})
 
 add_library(texteditor SHARED
     ${RESOURCE_ADDED}
+    ${PLATFORM_SOURCES}
     snippets/snippetparser.h snippets/snippetparser.cpp
     snippets/snippetoverlay.h snippets/snippetoverlay.cpp
     snippets/snippet.h snippets/snippet.cpp
@@ -275,23 +291,25 @@ add_library(texteditor SHARED
     languages/jsx/jsxscanner.h languages/jsx/jsxscanner.cpp
     languages/jsx/jsxautocompleter.cpp languages/jsx/jsxautocompleter.h languages/jsx/jsxcodeformatter.cpp languages/jsx/jsxcodeformatter.h languages/jsx/jsxhighlighter.cpp languages/jsx/jsxhighlighter.h languages/jsx/jsxindenter.cpp languages/jsx/jsxindenter.h
 
-
-
-
-
-
-
-
-
 )
-#uchardet
-target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
+
+if(APPLE)
+    target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core ${FOUNDATION_FRAMEWORK} ${APPKIT_FRAMEWORK})
+
+else()
+    target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
+
+
+endif()
 
 target_compile_definitions(texteditor PRIVATE TEXTEDITOR_LIBRARY)
 
-
+if(WIN32)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy  ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}.dll        ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.dll
     COMMENT "Copying file to binary directory"
 )
+else()
 
+
+endif()
