@@ -26,6 +26,7 @@ static const QString jsx_keywords[] = {
     QLatin1String("enum"),
     QLatin1String("export"),
     QLatin1String("extends"),
+    QLatin1String("false"),
     QLatin1String("finally"),
     QLatin1String("for"),
     QLatin1String("from"),
@@ -50,6 +51,7 @@ static const QString jsx_keywords[] = {
     QLatin1String("switch"),
     QLatin1String("this"),
     QLatin1String("throw"),
+    QLatin1String("true"),
     QLatin1String("try"),
     QLatin1String("typeof"),
     QLatin1String("undefined"),
@@ -122,6 +124,14 @@ static bool isTagName(QChar ch){
     default:
         return ch.isLetterOrNumber();
     }
+}
+
+static bool isTagScope(QChar ch){
+    switch (ch.unicode()) {
+    case '<': case '{':
+        return true;
+    }
+    return false;
 }
 
 static bool isNumberChar(QChar ch)
@@ -413,6 +423,35 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
         setRegexpMayFollow(&_state, false);
     } else if (isMarkState(_state,MultiLineStringBQuote)) {
         scanTemplateString();
+    }else if(isCurrentState(m_stateStack,MultiLineInnerText)){
+        int ss = index;
+
+        while(ss< text.length()){
+            const QChar ch = text.at(ss);
+            if(ch.isSpace()){
+                ss++;
+                index++;
+
+            }else{
+                break;
+            }
+        }
+        int length = 0;
+        while(true){
+            if(index>=text.length()){
+                length = index - ss;
+                break;
+            }else{
+                auto c = text.at(index);
+                if(isTagScope(c)){
+                    length = index - ss;
+                    break;
+                }
+            }
+            ++index;
+        }
+        if(length>0)
+            tokens.append(Token(ss, length, Token::InnerText,Code::Token::Javascript));
     }
 
 
@@ -451,17 +490,13 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 if (_scanComments)
                     tokens.append(Token(start, index - start, Token::Comment,Code::Token::Javascript));
             }else if(la == QLatin1Char('>')){
-                //<div/>
+                //   />
                 tokens.append(Token(index, 2, Token::TagRightBracket,Code::Token::Javascript));
-                //unSetMarkState(&_state,ElementStartTag);
                 index+=2;
                 leaveState(&m_stateStack);//leave ElementStartTag
                 leaveState(&m_stateStack);//leave element
-                /*int depth = elementDepth(_state);
-                setElementMask(&_state,depth-1);
-                if(depth-1==0){
-                    unSetMarkState(&_state,ElementStartTag);
-                }*/
+                //qDebug()<<"line 486"<<m_stateStack;
+
                 setRegexpMayFollow(&_state, true);
             } else if (regexpMayFollow(_state)) {
                 const int end = findRegExpEnd(text, index);
@@ -590,10 +625,10 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
         case '-':
         case '<':
             if(la.isLetter()){
-                if(isMarkState(_state,MultiLineInnerText) && start>-1 && index>start){
+                /*if(isMarkState(_state,MultiLineInnerText) && start>-1 && index>start){
                     tokens.append(Token(start, index - start, Token::InnerText));
                     unSetMarkState(&_state,MultiLineInnerText);
-                }
+                }*/
                 int from = index++;
                 //find tag name
                 int i = index;
@@ -626,9 +661,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                             tokens.append(Token(from, 1, Token::TagLeftBracket));
                             //TAG
                             tokens.append(Token(ss, length, Token::TagStart));
-                            //int depth = elementDepth(_state);
-                            //setElementMask(&_state,depth+1);
-                            //setMarkState(&_state,ElementStartTag);
                             setMarkState(&_state,MultiLineElement);
                             enterState(&m_stateStack,MultiLineElement);//enter element
                             enterState(&m_stateStack,ElementStartTag);//enter element start
@@ -642,24 +674,15 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                         tokens.append(Token(from, 1, Token::TagLeftBracket));
                         //TAG
                         tokens.append(Token(ss, length, Token::TagStart));
-                        //int depth = elementDepth(_state);
-                        //setElementMask(&_state,depth+1);
                         setMarkState(&_state,MultiLineElement);
                         enterState(&m_stateStack,MultiLineElement);//enter element
                         tokens.append(Token(index++, 1, Token::TagRightBracket));
-                        setMarkState(&_state,MultiLineInnerText);
+                        enterState(&m_stateStack,MultiLineInnerText);//enter
                         start = index;
                         setRegexpMayFollow(&_state, false);//end JS expression
                         break;
                     }else if((cc==QLatin1Char('/') && (i+1) < text.length() && text.at(i+1)==QLatin1Char('>'))){
                         //like <div/>
-                        /*leaveState(&m_stateStack);
-                        if(m_stateStack.size()==0){
-                            unSetMarkState(&_state,MultiLineElement);//end html element
-                            setRegexpMayFollow(&_state, true);//end JS expression
-                        }else{
-                            setRegexpMayFollow(&_state, false);
-                        }*/
                         index = i;
                         tokens.append(Token(from, 1, Token::TagLeftBracket));
                         tokens.append(Token(ss, length, Token::TagStart));
@@ -681,17 +704,15 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
 
                 tokens.append(Token(index++, 1, Token::TagLeftBracket));
                 tokens.append(Token(index++, 1, Token::TagRightBracket));
-                //int depth = elementDepth(_state);
-                //setElementMask(&_state,depth-1);
-                //begin inner text
-                setMarkState(&_state,MultiLineInnerText);
-                start = index;//inner start
+
+                enterState(&m_stateStack,MultiLineInnerText);//enter
                 break;
             }else if(la == QLatin1Char('/')){
                 //like  </
                 tokens.append(Token(index, 2, Token::TagLeftBracket,Code::Token::Javascript));
                 index+=2;
-                unSetMarkState(&_state,MultiLineInnerText);
+                //qDebug()<<"line 702:"<<m_stateStack.top();
+                leaveState(&m_stateStack);//leave
                 setMarkState(&_state,ElementEndTag);
                 //find end tag
                 const int from = index;
@@ -755,47 +776,14 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                     //start html inner text
                     unSetMarkState(&_state,MultiLineAttrValue);
                     leaveState(&m_stateStack);//>  end element start tag
-                    setMarkState(&_state,MultiLineInnerText);
+                    enterState(&m_stateStack,MultiLineInnerText);
                     start = index;//text start
                     break;
 
-                }
-                /*if(isMarkState(_state,ElementStartTag) && isMarkState(_state,RegexpMayFollow)==false){
-                    //>
-                    bool isRightBracket = false;
-                    if(tokens.size()>0){
-                        int kind = tokens.last().kind;
-                        if(kind==Code::Token::AttrName || kind==Code::Token::AttrValue ||
-                            kind==Code::Token::RightBrace || kind==Code::Token::String || kind==Code::Token::TagStart ){
-                            // <div>  </div>
-                            isRightBracket = true;
-                        }
-                    }else{
-                        //
-                        isRightBracket = true;
-                    }
-                    if(isRightBracket){
-                        //html element end tag
-                        tokens.append(Token(index++, 1, Token::TagRightBracket));
-                        //start html inner text
-                        setMarkState(&_state,MultiLineInnerText);
-                        unSetMarkState(&_state,ElementStartTag|MultiLineAttrValue);
-                        start = index;//text start
-                        break;
-                    }
-                }*/else if(isMarkState(_state,ElementEndTag) && isCurrentState(m_stateStack,RegexpMayFollow)==false){
+                }else if(isMarkState(_state,ElementEndTag) && isCurrentState(m_stateStack,RegexpMayFollow)==false){
                     tokens.append(Token(index++, 1, Token::TagRightBracket));
                     unSetMarkState(&_state,ElementEndTag);
-                    int depth = elementDepth(_state);
-                    setElementMask(&_state,depth-1);
-                    if(depth>1){
-                        setMarkState(&_state,MultiLineInnerText);
-                        start = index;//text start
-                    }else{
-                        //last html element end inner html
-                        unSetMarkState(&_state,MultiLineInnerText);
-                        start = -1;
-                    }
+                    leaveState(&m_stateStack);//leave element
                     break;
                 }
 
@@ -854,6 +842,25 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 do {
                     ++index;
                 } while (index < text.length() && text.at(index).isSpace());
+            }else if(isCurrentState(m_stateStack,MultiLineInnerText)){
+                const int ss = index;
+                int length = 0;
+                while(true){
+
+                    if(index>=text.length()){
+                        length = index - ss;
+                        break;
+                    }else{
+                        auto c = text.at(index);
+                        if(isTagScope(c)){
+                            length = index - ss;
+                            break;
+                        }
+                    }
+                    ++index;
+                }
+                if(length>0)
+                    tokens.append(Token(ss, length, Token::InnerText,Code::Token::Javascript));
             }else if(isCurrentState(m_stateStack,ElementStartTag)){
                 const int ss = index;
                 //find attrname

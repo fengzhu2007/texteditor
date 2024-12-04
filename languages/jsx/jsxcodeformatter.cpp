@@ -1093,6 +1093,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
     switch (newState) {
     case html_element:{
         if(parentState.type==html_element_inner && firstToken){
+            qDebug()<<"11111111111111"<<*indentDepth<<*savedIndentDepth;
             *savedIndentDepth += m_indentSize;
             *indentDepth = *savedIndentDepth;
         }else{
@@ -1405,6 +1406,7 @@ void CodeFormatter::adjustIndent(const QList<Code::Token> &tokens, int startLexe
         if(tk.length==2){
             *indentDepth = topState.savedIndentDepth;
             *indentDepth -= m_indentSize;
+            qDebug()<<"*indentDepth"<<currentTokenText()<<*indentDepth;
         }
         break;
     case Token::TagRightBracket:

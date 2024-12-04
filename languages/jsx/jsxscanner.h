@@ -70,7 +70,7 @@ public:
     bool scanComments() const;
     void setScanComments(bool scanComments);
 
-    QList<Code::Token> operator()(int& from,const QString &text, int startState,const QStack<int>& stateStack={});
+    QList<Code::Token> operator()(int& from,const QString &text, int startState,const QStack<int>& stateStack);
     int state() const;
 
     bool isKeyword(const QString &text) const;

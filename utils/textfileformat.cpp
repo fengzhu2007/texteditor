@@ -318,16 +318,19 @@ bool TextFileFormat::writeFile(const FilePath &filePath, QString plainText, QStr
 
 QString TextFileFormat::detectEncoding(const QByteArray& data){
     uchardet_t ud = ::uchardet_new();
-
-    int retval = ::uchardet_handle_data(ud, data.constData(), data.length());
+    const int blockSize = 128 * 1024 + 4;
+    int retval = ::uchardet_handle_data(ud, data.constData(), qMin(data.length(),blockSize));
     if (retval != 0){
         return {};
     }
     ::uchardet_data_end(ud);
-    QString charset = QString::fromUtf8(::uchardet_get_charset(ud));
-    ::uchardet_reset(ud);
+    const char* cs = ::uchardet_get_charset(ud);
+    //qDebug()<<"cs"<<cs;
+    QString charset = QString::fromUtf8(cs);
+    ::uchardet_delete(ud);
+    //qDebug()<<"charset"<<charset;
     if(charset.isEmpty()){
-        charset = QLatin1String("System");
+        charset = QLatin1String("UTF-8");
     }
     return charset;
 }
