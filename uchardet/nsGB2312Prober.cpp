@@ -41,6 +41,7 @@
 // 3, certain combination of kana is never used in japanese language
 
 #include "nsGB2312Prober.h"
+#include <QDebug>
 
 void  nsGB18030Prober::Reset(void)
 {
@@ -52,7 +53,7 @@ void  nsGB18030Prober::Reset(void)
 
 nsProbingState nsGB18030Prober::HandleData(const char* aBuf, PRUint32 aLen)
 {
-  nsSMState codingState;
+  PRUint32 codingState;
 
   for (PRUint32 i = 0; i < aLen; i++)
   {
@@ -90,7 +91,6 @@ nsProbingState nsGB18030Prober::HandleData(const char* aBuf, PRUint32 aLen)
 float nsGB18030Prober::GetConfidence(void)
 {
   float distribCf = mDistributionAnalyser.GetConfidence();
-
   return (float)distribCf;
 }
 

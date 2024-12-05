@@ -36,7 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 #include <stdio.h>
 
 #include "nsMBCSGroupProber.h"
@@ -45,13 +44,13 @@
 #if defined(DEBUG_chardet) || defined(DEBUG_jgmyers)
 const char *ProberName[] = 
 {
-  "UTF8",
+  "UTF-8",
   "SJIS",
-  "EUCJP",
+  "EUC-JP",
   "GB18030",
-  "EUCKR",
+  "EUC-KR",
   "Big5",
-  "EUCTW",
+  "EUC-TW",
 };
 
 #endif
@@ -64,17 +63,17 @@ nsMBCSGroupProber::nsMBCSGroupProber(PRUint32 aLanguageFilter)
   mProbers[0] = new nsUTF8Prober();
   if (aLanguageFilter & NS_FILTER_JAPANESE) 
   {
-    mProbers[1] = new nsSJISProber(aLanguageFilter == NS_FILTER_JAPANESE);
-    mProbers[2] = new nsEUCJPProber(aLanguageFilter == NS_FILTER_JAPANESE);
+    mProbers[1] = new nsSJISProber(true);
+    mProbers[2] = new nsEUCJPProber(true);
   }
   if (aLanguageFilter & NS_FILTER_CHINESE_SIMPLIFIED)
-    mProbers[3] = new nsGB18030Prober(aLanguageFilter == NS_FILTER_CHINESE_SIMPLIFIED);
+    mProbers[3] = new nsGB18030Prober(true);
   if (aLanguageFilter & NS_FILTER_KOREAN)
-    mProbers[4] = new nsEUCKRProber(aLanguageFilter == NS_FILTER_KOREAN);
+    mProbers[4] = new nsEUCKRProber(true);
   if (aLanguageFilter & NS_FILTER_CHINESE_TRADITIONAL) 
   {
-    mProbers[5] = new nsBig5Prober(aLanguageFilter == NS_FILTER_CHINESE_TRADITIONAL);
-    mProbers[6] = new nsEUCTWProber(aLanguageFilter == NS_FILTER_CHINESE_TRADITIONAL);
+    mProbers[5] = new nsBig5Prober(true);
+    mProbers[6] = new nsEUCTWProber(true);
   }
   Reset();
 }

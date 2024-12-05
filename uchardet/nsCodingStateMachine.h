@@ -39,31 +39,29 @@
 
 #include "nsPkgInt.h"
 
-typedef enum {
-   eStart = 0,
-   eError = 1,
-   eItsMe = 2 
-} nsSMState;
+/* Apart from these 3 generic states, machine states are specific to
+ * each charset prober.
+ */
+#define eStart 0
+#define eError 1
+#define eItsMe 2
 
 #define GETCLASS(c) GETFROMPCK(((unsigned char)(c)), mModel->classTable)
 
 //state machine model
-struct SMModel
+typedef struct 
 {
   nsPkgInt classTable;
-  PRUint32 classFactor = 0;
+  PRUint32 classFactor;
   nsPkgInt stateTable;
-  const PRUint32* charLenTable = nullptr;
-  const char* name = nullptr;
-  SMModel(){};
-  SMModel(nsPkgInt a,PRUint32 b,nsPkgInt c,const PRUint32* d, const char* e):
-	classTable(a), classFactor(b), stateTable(c), charLenTable(d), name(e){};
-} ;
+  const PRUint32* charLenTable;
+  const char* name;
+} SMModel;
 
 class nsCodingStateMachine {
 public:
   nsCodingStateMachine(const SMModel* sm) : mModel(sm) { mCurrentState = eStart; }
-  nsSMState NextState(char c) {
+  PRUint32 NextState(char c){
     //for each byte we get its class , if it is first byte, we also get byte length
     PRUint32 byteCls = GETCLASS(c);
     if (mCurrentState == eStart)
@@ -72,8 +70,8 @@ public:
       mCurrentCharLen = mModel->charLenTable[byteCls];
     }
     //from byte's class and stateTable, we get its next state
-    mCurrentState=(nsSMState)GETFROMPCK(mCurrentState*(mModel->classFactor)+byteCls,
-                                       mModel->stateTable);
+    mCurrentState = GETFROMPCK(mCurrentState * mModel->classFactor + byteCls,
+                               mModel->stateTable);
     mCurrentBytePos++;
     return mCurrentState;
   }
@@ -82,11 +80,11 @@ public:
   const char * GetCodingStateMachine() {return mModel->name;}
 
 protected:
-  nsSMState mCurrentState = eStart;
-  PRUint32 mCurrentCharLen = 0;
-  PRUint32 mCurrentBytePos = 0;
+  PRUint32 mCurrentState;
+  PRUint32 mCurrentCharLen;
+  PRUint32 mCurrentBytePos;
 
-  const SMModel* mModel = nullptr;
+  const SMModel *mModel;
 };
 
 extern const SMModel UTF8SMModel;
