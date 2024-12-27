@@ -318,9 +318,18 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         switch (ch.unicode()) {
         case '/':
             if (la == QLatin1Char('/')) {
-                if (_scanComments)
-                    tokens.append(Token(index, text.length() - index, Token::Comment,Code::Token::Javascript));
-                index = text.length();
+                int pos = text.indexOf('\n',index);
+                if(pos==-1){
+                    if (_scanComments){
+                        tokens.append(Code::Token(index, text.length() - index, Code::Token::Comment,Code::Token::Php));
+                    }
+                    index = text.length();
+                }else{
+                    if (_scanComments){
+                        tokens.append(Code::Token(index, pos - index, Code::Token::Comment,Code::Token::Php));
+                    }
+                    index = pos;
+                }
             } else if (la == QLatin1Char('*')) {
                 const int start = index;
                 index += 2;

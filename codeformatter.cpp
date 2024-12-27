@@ -62,5 +62,9 @@ bool CodeFormatter::isInStringORCommentLiteral(const QTextBlock& block,int pos){
     return false;
 }
 
+bool CodeFormatter::isIdentifier(QChar chr){
+    return (chr.isLetterOrNumber() || chr == '_');
+}
+
 
 }

@@ -1490,6 +1490,9 @@ QList<Code::Token> CodeFormatter::tokenize(const QString& text){
     return tokenize(from,text, startState);
 }
 
+bool CodeFormatter::isIdentifier(QChar chr){
+    return chr.isLetterOrNumber() || chr == '_' || chr == '$';
+}
 
 
 } // namespace js

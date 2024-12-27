@@ -722,5 +722,8 @@ bool isAutoClose(QStringView tag){
         return tokenize(from,text, startState);
     }
 
+    bool CodeFormatter::isIdentifier(QChar chr){
+        return chr.isLetterOrNumber() || chr == '_' || chr == '$';
+    }
 
 }

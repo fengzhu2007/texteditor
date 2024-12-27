@@ -668,6 +668,10 @@ void CodeFormatter::initState(){
     m_indentDepth = 0;
 }
 
+bool CodeFormatter::isIdentifier(QChar chr){
+    return chr.isLetterOrNumber() || chr == '_' || chr == '$';
+}
+
 void CodeFormatter::enter(int newState)
 {
 

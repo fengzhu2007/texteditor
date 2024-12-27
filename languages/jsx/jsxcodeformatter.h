@@ -50,6 +50,8 @@ public:
 
     void initState();
 
+    virtual bool isIdentifier(QChar chr) override;
+
 
 
 public: // must be public to make Q_GADGET introspection work

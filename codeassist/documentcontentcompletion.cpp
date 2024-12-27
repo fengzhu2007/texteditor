@@ -224,9 +224,7 @@ static void createProposal(QFutureInterface<QStringList> &future,CodeFormatter* 
             }
         }
     }
-
-
-
+    //qDebug()<<"text"<<text;
     future.reportResult(Utils::toList(words));
 }
 
@@ -240,9 +238,16 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
     QChar chr;
     // Skip to the start of a name
-    do {
-        chr = interface->characterAt(--pos);
-    } while (chr.isLetterOrNumber() || chr == '_');
+    if(m_codeFormatter!=nullptr){
+        do{
+            chr = interface->characterAt(--pos);
+        }while (m_codeFormatter->isIdentifier(chr));
+    }else{
+        do {
+            chr = interface->characterAt(--pos);
+        } while (chr.isLetterOrNumber() || chr == '_');
+    }
+
 
     ++pos;
     int length = interface->position() - pos;
@@ -273,7 +278,7 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
 
 
-
+    //qDebug()<<"wordUnderCursor"<<wordUnderCursor;
 
     m_watcher.setFuture(Utils::runAsync(&createProposal,m_codeFormatter, text, wordUnderCursor,this->m_keywords));
     QObject::connect(&m_watcher, &QFutureWatcher<QStringList>::resultReadyAt,
@@ -281,9 +286,6 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
         /*const TextEditor::SnippetAssistCollector snippetCollector(m_snippetGroup, QIcon(":/texteditor/images/snippet.png"));
         QList<AssistProposalItemInterface *> items = snippetCollector.collect();*/
-
-
-
 
         QList<AssistProposalItemInterface *> items;
         for (const QString &word : m_watcher.resultAt(index)) {
