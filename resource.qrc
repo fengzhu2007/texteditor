@@ -372,7 +372,6 @@
         <file>resource/icons/LocalVariable_16x.svg</file>
         <file>resource/icons/Method_16x.svg</file>
         <file>resource/styles/creator-dark.xml</file>
-        <file>resource/styles/default.xml</file>
         <file>resource/styles/grayscale.xml</file>
         <file>resource/styles/inkpot.xml</file>
         <file>resource/styles/intellij.xml</file>

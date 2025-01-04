@@ -56,7 +56,8 @@ public:
     void initFontSetting(){
         //creator-dark.xml
         //m_fontSettings.loadColorScheme(":/resource/styles/default_light.xml",initialFormats());
-        m_fontSettings.loadColorScheme(QLatin1String("Default"));
+        //m_fontSettings.loadColorScheme(QLatin1String("Default"));
+        m_fontSettings.loadColorScheme(QLatin1String("Dark"));
     }
 
 };

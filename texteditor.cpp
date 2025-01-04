@@ -872,8 +872,8 @@ void TextEditorEnvironment::init(){
     Utils::Theme *theme = new Utils::Theme(Core::Constants::DEFAULT_DARK_THEME);
     //:/resource/themes/flat-light.creatortheme
     //:/resource/themes/flat-dark.creatortheme
-    QSettings themeSettings(QString::fromUtf8(":/resource/themes/flat-light.creatortheme"), QSettings::IniFormat);
-    theme->readSettings(themeSettings);
+    //QSettings themeSettings(QString::fromUtf8(":/resource/themes/flat-dark.creatortheme"), QSettings::IniFormat);
+    //theme->readSettings(themeSettings);
 
     Utils::setCreatorTheme(theme);
     //d->settings = new TextEditor::TextEditorSettings();
