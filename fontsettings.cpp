@@ -733,25 +733,30 @@ FilePath FontSettings::defaultSchemeFileName(const QString &fileName)
     return defaultScheme;
 }
 
-QList<QPair<QString,QString>> FontSettings::schemeMap(){
+QList<QPair<QString,QString>> FontSettings::schemeMap(int style){
 
-    return {
-        {"Default",":/resource/styles/default_light.xml"},
-        {"Dark",":/resource/styles/dark.xml"},
-        {"Solarized Light",":/resource/styles/solarized-light.xml"},
-        {"Solarized Dark",":/resource/styles/solarized-dark.xml"},
-        {"Qt Creator Dark",":/resource/styles/creator-dark.xml"},
-        {"Grayscale",":/resource/styles/grayscale.xml"},
-        {"Inkpot",":/resource/styles/inkpot.xml"},
-        {"IntelliJ IDEA",":/resource/styles/intellij.xml"},
-        {"Mabakor",":/resource/styles/mabakor.xml"},
-        {"Modnokai Night Shift v2",":/resource/styles/modnokai_night_shift_v2.xml"},
-
-
-
-
-
-    };
+    if(style==-1){
+        return {
+                {"Default",":/resource/styles/default_light.xml"},
+                {"Dark",":/resource/styles/dark.xml"},
+                {"Solarized Light",":/resource/styles/solarized-light.xml"},
+                {"Solarized Dark",":/resource/styles/solarized-dark.xml"},
+                {"Qt Creator Dark",":/resource/styles/creator-dark.xml"},
+                };
+    }else if(style==0){
+        //light
+        return {
+                {"Default",":/resource/styles/default_light.xml"},
+                {"Solarized Light",":/resource/styles/solarized-light.xml"},
+                };
+    }else{
+        //dark
+        return {
+                {"Dark",":/resource/styles/dark.xml"},
+                {"Solarized Dark",":/resource/styles/solarized-dark.xml"},
+                {"Qt Creator Dark",":/resource/styles/creator-dark.xml"},
+            };
+    }
 }
 
 FormatDescriptions FontSettings::initialFormats(){

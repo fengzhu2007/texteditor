@@ -157,7 +157,7 @@ public:
 
     static Utils::FilePath defaultSchemeFileName(const QString &fileName = {});
 
-    static QList<QPair<QString,QString>> schemeMap();
+    static QList<QPair<QString,QString>> schemeMap(int style=-1);//-1=all 0=light 1=dark
 
     static FormatDescriptions initialFormats();
 

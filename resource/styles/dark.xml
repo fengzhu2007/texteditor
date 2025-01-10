@@ -1,49 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <style-scheme version="1.0" name="Dark">
-  <!--
-  Based on the default vim theme for a dark background, Linux console colors.
-  -->
+  <style name="Text" foreground="#eeeeee" background="#252526"/>
   <style name="AddedLine" foreground="#55ffff"/>
   <style name="RemovedLine" foreground="#ff5555"/>
-  <style name="Comment" foreground="#55ffff"/>
+  <style name="Comment" foreground="#aaaaaaaa" italic="true"/>
   <style name="CurrentLine" background="#232323"/>
-  <style name="CurrentLineNumber" foreground="#aaaaaa" bold="true"/>
+  <style name="CurrentLineNumber" foreground="#bebebe" bold="true"/>
   <style name="DiffFile" foreground="#55ff55"/>
   <style name="DiffLocation" foreground="#ffff55"/>
   <style name="DisabledCode" foreground="#777777" background="#222222"/>
   <style name="VisualWhitespace" foreground="#404040"/>
   <style name="Doxygen.Comment" foreground="#55ffff"/>
   <style name="Doxygen.Tag" foreground="#00a0a0"/>
-  <style name="Field"/>
-  <style name="Function"/>
+  <style name="Field" foreground="#4fb2ad"/>
+  <style name="Function" foreground="#7c9afa"/>
   <style name="Macro"/>
   <style name="Global"/>
-  <style name="Keyword" foreground="#ffff55"/>
+  <style name="Keyword" foreground="#c792ea"/>
   <style name="PrimitiveType" foreground="#ffff55"/>
   <style name="Label" foreground="#ffff55"/>
-  <style name="LineNumber" foreground="#888888" background="#232323"/>
+  <style name="LineNumber" foreground="#9e9e9e" background="#232323"/>
   <style name="Link" foreground="#0055ff"/>
   <style name="Local"/>
   <style name="Parameter"/>
-  <style name="Number" foreground="#ff55ff"/>
+  <style name="Number" foreground="#f5856d"/>
   <style name="Occurrences" background="#363636"/>
   <style name="Occurrences.Rename" foreground="#ffaaaa" background="#553636"/>
   <style name="Punctuation"/>
-  <style name="Operator" foreground="#aaaaaa"/>
+  <style name="Operator" foreground="#749cfc"/>
   <style name="Overloaded Operator"/>
-  <style name="Parentheses" foreground="#ff5555" background="#333333"/>
+  <style name="Parentheses" foreground="#ff5555" background="#555555"/>
   <style name="ParenthesesMismatch" background="#800080"/>
   <style name="AutoComplete" foreground="#a0a0ff" background="#333333"/>
   <style name="Preprocessor" foreground="#5555ff"/>
-  <style name="SearchResult" background="#555500"/>
+  <style name="SearchResult" background="#664d708c"/>
   <style name="SearchResultAlt1" foreground="#aaaaff" background="#363655"/>
   <style name="SearchResultAlt2" foreground="#ffaaaa" background="#553636"/>
   <style name="SearchResultContainingFunction" foreground="#aaaaaa" background="#000000"/>
-  <style name="SearchScope" background="#222200"/>
-  <style name="Selection" foreground="#000000" background="#aaaaaa"/>
-  <style name="Static" foreground="#55ff55" italic="true"/>
-  <style name="String" foreground="#ff55ff"/>
-  <style name="Text" foreground="#aaaaaa" background="#000000"/>
+  <style name="SearchScope" background="#5f7e97"/>
+  <style name="Selection"  background="#4373c2aa"/>
+  <style name="Static" foreground="#E45649" italic="true"/>
+  <style name="String" foreground="#d8c090"/>
   <style name="Type" foreground="#55ff55"/>
   <style name="VirtualMethod" italic="true"/>
   <style name="QmlTypeId" foreground="#55ff55"/>

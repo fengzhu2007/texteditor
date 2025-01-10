@@ -477,16 +477,14 @@ public:
     static void setHelpMenu(QMenu *menu);
 
 protected:
-    Theme(Theme *originTheme, QObject *parent = nullptr);
     ThemePrivate *d;
 
 private:
     friend QTCREATOR_UTILS_EXPORT Theme *creatorTheme();
-    friend QTCREATOR_UTILS_EXPORT Theme *proxyTheme();
     QPair<QColor, QString> readNamedColor(const QString &color) const;
 };
 
 QTCREATOR_UTILS_EXPORT Theme *creatorTheme();
-QTCREATOR_UTILS_EXPORT Theme *proxyTheme();
+
 
 } // namespace Utils

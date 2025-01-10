@@ -13,6 +13,7 @@
 #include <QMetaEnum>
 #include <QPalette>
 #include <QSettings>
+#include <QDebug>
 
 namespace Utils {
 
@@ -31,10 +32,6 @@ Theme *creatorTheme()
     return m_creatorTheme;
 }
 
-Theme *proxyTheme()
-{
-    return new Theme(m_creatorTheme);
-}
 
 void setThemeApplicationPalette()
 {
@@ -81,13 +78,9 @@ Theme::Theme(const QString &id, QObject *parent)
   , d(new ThemePrivate)
 {
     d->id = id;
+    d->colors[TextEditor_SearchResult_ScrollBarColor] = {QColor("#ff00c000"),{"#ff00c000"}};
 }
 
-Theme::Theme(Theme *originTheme, QObject *parent)
-    : QObject(parent)
-    , d(new ThemePrivate(*(originTheme->d)))
-{
-}
 
 Theme::~Theme()
 {
@@ -120,6 +113,7 @@ bool Theme::flag(Theme::Flag f) const
 
 QColor Theme::color(Theme::Color role) const
 {
+    qDebug()<<"role"<<d->colors[role].first<<role;
     return d->colors[role].first;
 }
 
