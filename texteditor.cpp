@@ -3708,7 +3708,6 @@ void TextEditorWidgetPrivate::updateLineAnnotation(const PaintEventData &data,
                                                    QPainter &painter)
 {
     const QList<AnnotationRect> previousRects = m_annotationRects.take(data.block.blockNumber());
-
     if (!m_displaySettings.m_displayAnnotations)
         return;
 
