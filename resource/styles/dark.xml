@@ -30,7 +30,7 @@
   <style name="Operator" foreground="#749cfc"/>
   <style name="Overloaded Operator"/>
   <style name="Parentheses" foreground="#ff5555" background="#555555"/>
-  <style name="ParenthesesMismatch" background="#800080"/>
+  <style name="ParenthesesMismatch" background="#44ff0000"/>
   <style name="AutoComplete" foreground="#a0a0ff" background="#333333"/>
   <style name="Preprocessor" foreground="#5555ff"/>
   <style name="SearchResult" background="#664d708c"/>
@@ -66,4 +66,6 @@
   <style name="LogCommitHash" foreground="#ff0000"/>
   <style name="LogCommitSubject" foreground="#d6cf9a"/>
   <style name="LogDecoration" foreground="#ff00ff"/>
+  <style name="Error" underlineColor="#ff0000" underlineStyle="WaveUnderline"/>
+  <style name="ErrorContext" foreground="#ff0000" />
 </style-scheme>

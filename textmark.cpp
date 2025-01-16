@@ -140,7 +140,8 @@ void TextMark::paintAnnotation(QPainter &painter,
     painter.fillRect(rects.annotationRect, colors.rectColor);
     painter.setPen(colors.textColor);
     paintIcon(&painter, rects.iconRect.toAlignedRect());
-    painter.drawText(rects.textRect, Qt::AlignLeft, rects.text);
+    painter.drawText(rects.textRect, Qt::AlignLeft|Qt::AlignTop, rects.text);
+    //painter.drawStaticText(rects.textRect.topLeft(), rects.text);
     if (rects.fadeOutRect.isValid()) {
         grad = QLinearGradient(rects.fadeOutRect.topLeft() - contentOffset,
                                rects.fadeOutRect.topRight() - contentOffset);
@@ -253,6 +254,7 @@ void TextMark::dragToLine(int lineNumber)
 void TextMark::addToToolTipLayout(QGridLayout *target) const
 {
     auto contentLayout = new QVBoxLayout;
+    contentLayout->setMargin(0);
     addToolTipContent(contentLayout);
     if (contentLayout->count() <= 0)
         return;
@@ -263,7 +265,7 @@ void TextMark::addToToolTipLayout(QGridLayout *target) const
     if (!icon.isNull()) {
         auto iconLabel = new QLabel;
         iconLabel->setPixmap(icon.pixmap(16, 16));
-        target->addWidget(iconLabel, row, 0, Qt::AlignTop | Qt::AlignHCenter);
+        target->addWidget(iconLabel, row, 0, Qt::AlignCenter | Qt::AlignHCenter);
     }
 
     // Middle column: tooltip content
@@ -273,7 +275,7 @@ void TextMark::addToToolTipLayout(QGridLayout *target) const
     QList<QAction *> actions{m_actions.begin(), m_actions.end()};
     if (m_actionsProvider)
         actions = m_actionsProvider();
-    if (m_settingsPage.isValid()) {
+    /*if (m_settingsPage.isValid()) {
         auto settingsAction = new QAction;
         //settingsAction->setIcon(Utils::Icons::SETTINGS_TOOLBAR.icon());
         settingsAction->setToolTip(tr("Show Diagnostic Settings"));
@@ -281,13 +283,14 @@ void TextMark::addToToolTipLayout(QGridLayout *target) const
             [id = m_settingsPage] { Core::ICore::showOptionsDialog(id); },
             Qt::QueuedConnection);
         actions.append(settingsAction);
-    }
+    }*/
     if (!actions.isEmpty()) {
         auto actionsLayout = new QHBoxLayout;
         QMargins margins = actionsLayout->contentsMargins();
         margins.setLeft(margins.left() + 5);
         actionsLayout->setContentsMargins(margins);
         for (QAction *action : std::as_const(actions)) {
+            //qDebug()<<"action"<<action;
             QTC_ASSERT(!action->icon().isNull(), delete action; continue);
             auto button = new QToolButton;
             button->setIcon(action->icon());
@@ -320,6 +323,7 @@ bool TextMark::addToolTipContent(QLayout *target) const
     // Differentiate between tool tips that where explicitly set and default tool tips.
     textLabel->setDisabled(useDefaultToolTip);
     target->addWidget(textLabel);
+
 
     return true;
 }

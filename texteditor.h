@@ -229,6 +229,9 @@ public:
     static Utils::Id ObjCSelection;
     static Utils::Id DebuggerExceptionSelection;
 
+
+
+
     void setExtraSelections(Utils::Id kind, const QList<QTextEdit::ExtraSelection> &selections);
     QList<QTextEdit::ExtraSelection> extraSelections(Utils::Id kind) const;
     QString extraSelectionTooltip(int pos) const;

@@ -138,6 +138,7 @@ void ToolTip::show(
         if (!qscreen)
             qscreen = QGuiApplication::primaryScreen();
         tooltipWidget->setMaximumSize(qscreen->availableSize() * 0.9);
+        //tooltipWidget->setStyleSheet("background-color:red");
         if (contextHelp.isNull()) {
             tooltipWidget->setLayout(content);
         } else {
@@ -349,7 +350,7 @@ void ToolTip::placeTip(const QPoint &pos)
 
 bool ToolTip::eventFilter(QObject *o, QEvent *event)
 {
-    qDebug()<<"ToolTip::eventFilter"<<event;
+    //qDebug()<<"ToolTip::eventFilter"<<event;
     if (m_tip && event->type() == QEvent::ApplicationStateChange
             && QGuiApplication::applicationState() != Qt::ApplicationActive) {
         hideTipImmediately();

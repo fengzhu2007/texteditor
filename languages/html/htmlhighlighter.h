@@ -12,9 +12,6 @@ public:
     Highlighter(QTextDocument *parent = nullptr);
     ~Highlighter() override;
 
-    bool isQmlEnabled() const;
-    void setQmlEnabled(bool duiEnabled);
-
 protected:
     void highlightBlock(const QString &text) override;
 

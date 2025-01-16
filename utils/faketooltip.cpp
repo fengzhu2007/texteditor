@@ -5,6 +5,7 @@
 
 #include <QStyleOption>
 #include <QStylePainter>
+#include <QDebug>
 
 /*!
     \class Utils::FakeToolTip
@@ -40,7 +41,8 @@ void FakeToolTip::paintEvent(QPaintEvent *)
     QStylePainter p(this);
     QStyleOptionFrame opt;
     opt.initFrom(this);
-    p.drawPrimitive(QStyle::PE_PanelTipLabel, opt);
+    opt.palette.setColor(QPalette::Text, Qt::blue);
+    p.drawPrimitive(QStyle::PE_Frame, opt);
     p.end();
 }
 

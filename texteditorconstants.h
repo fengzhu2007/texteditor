@@ -226,6 +226,8 @@ const char TEXT_SNIPPET_GROUP_ID[] = "Text";
 const char GLOBAL_SETTINGS_ID[]    = "Global";
 const char GENERIC_PROPOSAL_ID[] = "TextEditor.GenericProposalId";
 
+const char SEMANTIC_ERROR_ID [] = "TextEditor.SemanticError";
+
 /**
  * Delay before tooltip will be shown near completion assistant proposal
  */

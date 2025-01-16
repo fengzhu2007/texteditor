@@ -840,8 +840,8 @@ void TextEditorWidgetPrivate::showTextMarksToolTip(const QPoint &pos,
     TextMarks allMarks = marks;
 
     auto layout = new QGridLayout;
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(2);
+    layout->setContentsMargins(2, 2, 2, 2);
+    layout->setSpacing(4);
 
     if (mainTextMark) {
         mainTextMark->addToToolTipLayout(layout);
@@ -857,9 +857,7 @@ void TextEditorWidgetPrivate::showTextMarksToolTip(const QPoint &pos,
         if (mark != mainTextMark)
             mark->addToToolTipLayout(layout);
     }
-
-    layout->addWidget(DisplaySettings::createAnnotationSettingsLink(),
-                      layout->rowCount(), 0, 1, -1, Qt::AlignRight);
+    layout->addWidget(DisplaySettings::createAnnotationSettingsLink(),layout->rowCount(), 0, 1, -1, Qt::AlignRight);
     ToolTip::show(pos, layout, q);
 }
 
@@ -872,7 +870,7 @@ void TextEditorEnvironment::init(){
     Utils::Theme *theme = new Utils::Theme(Core::Constants::DEFAULT_DARK_THEME);
     //:/resource/themes/flat-light.creatortheme
     //:/resource/themes/flat-dark.creatortheme
-    //QSettings themeSettings(QString::fromUtf8(":/resource/themes/flat-light.creatortheme"), QSettings::IniFormat);
+    //QSettings themeSettings(QString::fromUtf8(":/resource/themes/flat-dark.creatortheme"), QSettings::IniFormat);
     //theme->readSettings(themeSettings);
 
     Utils::setCreatorTheme(theme);
@@ -4423,9 +4421,10 @@ void TextEditorWidget::paintEvent(QPaintEvent *e)
     data.block = firstVisibleBlock();
     data.context = getPaintContext();
     const QTextCharFormat textFormat = textDocument()->fontSettings().toTextCharFormat(C_TEXT);
+    //qDebug()<<"textFormat"<<textFormat.font();
     data.context.palette.setBrush(QPalette::Text, textFormat.foreground());
     data.context.palette.setBrush(QPalette::Base, textFormat.background());
-
+    painter.setFont(textFormat.font());
     { // paint background
         d->paintWidgetBackground(data, painter);
         // draw backgrond to the right of the wrap column before everything else

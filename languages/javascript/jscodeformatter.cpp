@@ -691,7 +691,7 @@ void CodeFormatter::enter(int newState)
     }else{
         if(m_tokens.size()>m_tokenIndex){
             Token tok = m_tokens.at(m_tokenIndex);
-            qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+            //qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
         }
 
         int savedIndentDepth = m_indentDepth;
@@ -699,7 +699,7 @@ void CodeFormatter::enter(int newState)
         Code::State s(newState, savedIndentDepth);
         m_currentState.push(s);
         m_newStates.push(s);
-        qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
+        //qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
 
     }
     //dump();

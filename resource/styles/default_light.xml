@@ -7,7 +7,7 @@
   <style name="SearchResult" background="#526FFF33"/>
   <style name="SearchScope" background="#526FFF33"/>
   <style name="Parentheses" foreground="#ff0000" background="#b4eeb4"/>
-  <style name="ParenthesesMismatch" background="#ff00ff"/>
+  <style name="ParenthesesMismatch" background="#ff0000cc"/>
   <style name="AutoComplete" foreground="#000080" background="#c0c0ff"/>
   <style name="CurrentLine" background="#c1ddee"/>
   <style name="CurrentLineNumber" foreground="#808080" bold="true"/>
@@ -53,8 +53,8 @@
   <style name="LogChangeLine" foreground="#c00000"/>
   <style name="Warning" underlineColor="#ffbe00" underlineStyle="SingleUnderline"/>
   <style name="WarningContext" underlineColor="#ffbe00" underlineStyle="DotLine"/>
-  <style name="Error" underlineColor="#ff0000" underlineStyle="SingleUnderline"/>
-  <style name="ErrorContext" underlineColor="#ff0000" underlineStyle="DotLine"/>
+  <style name="Error" underlineColor="#ff0000" underlineStyle="WaveUnderline"/>
+  <style name="ErrorContext" underlineColor="#ff0000" underlineStyle="WaveUnderline"/>
   <style name="Declaration"/>
   <style name="OutputArgument"/>
 </style-scheme>

@@ -79,6 +79,8 @@ Theme::Theme(const QString &id, QObject *parent)
 {
     d->id = id;
     d->colors[TextEditor_SearchResult_ScrollBarColor] = {QColor("#ff00c000"),{"#ff00c000"}};
+    d->colors[CodeModel_Error_TextMarkColor] = {QColor("#ffc00000"),{"#ffc00000"}};
+    d->colors[CodeModel_Warning_TextMarkColor] = {QColor("#ffc0c000"),{"#ffc0c000"}};
 }
 
 
@@ -113,7 +115,6 @@ bool Theme::flag(Theme::Flag f) const
 
 QColor Theme::color(Theme::Color role) const
 {
-    qDebug()<<"role"<<d->colors[role].first<<role;
     return d->colors[role].first;
 }
 
