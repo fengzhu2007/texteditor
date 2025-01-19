@@ -677,7 +677,7 @@ void CodeFormatter::enter(int newState)
 
     if(m_tokens.size()>m_tokenIndex){
         Token tok = m_tokens.at(m_tokenIndex);
-        qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+        //qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
     }
 
     int savedIndentDepth = m_indentDepth;
@@ -685,7 +685,7 @@ void CodeFormatter::enter(int newState)
     Code::State s(newState, savedIndentDepth);
     m_currentState.push(s);
     m_newStates.push(s);
-    qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
+    //qDebug()<<"indent:"<<m_indentDepth<<savedIndentDepth;
 
 
     if (newState == bracket_open)
@@ -701,7 +701,7 @@ void CodeFormatter::leave(bool statementDone)
 
     if(m_tokens.size()>m_tokenIndex){
         Token tok = m_tokens.at(m_tokenIndex);
-        qDebug()<<"leave:"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+        //qDebug()<<"leave:"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
     }
     int topState;
     State poppedState;
@@ -1097,7 +1097,7 @@ void CodeFormatter::onEnter(int newState, int *indentDepth, int *savedIndentDept
     switch (newState) {
     case html_element:{
         if(parentState.type==html_element_inner && firstToken){
-            qDebug()<<"11111111111111"<<*indentDepth<<*savedIndentDepth;
+            //qDebug()<<"11111111111111"<<*indentDepth<<*savedIndentDepth;
             *savedIndentDepth += m_indentSize;
             *indentDepth = *savedIndentDepth;
         }else{
@@ -1410,7 +1410,7 @@ void CodeFormatter::adjustIndent(const QList<Code::Token> &tokens, int startLexe
         if(tk.length==2){
             *indentDepth = topState.savedIndentDepth;
             *indentDepth -= m_indentSize;
-            qDebug()<<"*indentDepth"<<currentTokenText()<<*indentDepth;
+            //qDebug()<<"*indentDepth"<<currentTokenText()<<*indentDepth;
         }
         break;
     case Token::TagRightBracket:
