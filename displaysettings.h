@@ -56,6 +56,7 @@ public:
     bool m_animateNavigationWithinFile = false;
     int m_animateWithinFileTimeMax = 333; // read only setting
     bool m_displayAnnotations = true;
+    bool m_highlightSelection = true;
     AnnotationAlignment m_annotationAlignment = AnnotationAlignment::RightSide;
     int m_minimalAnnotationContent = 15;
 

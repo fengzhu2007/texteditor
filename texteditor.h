@@ -226,8 +226,6 @@ public:
     static Utils::Id UndefinedSymbolSelection;
     static Utils::Id UnusedSymbolSelection;
     static Utils::Id OtherSelection;
-    static Utils::Id ObjCSelection;
-    static Utils::Id DebuggerExceptionSelection;
 
 
 
@@ -430,7 +428,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
     void mousePressEvent(QMouseEvent *) override;
     void mouseReleaseEvent(QMouseEvent *) override;
-    //void mouseDoubleClickEvent(QMouseEvent *) override;
+    void mouseDoubleClickEvent(QMouseEvent *) override;
     //void leaveEvent(QEvent *) override;
     //void keyReleaseEvent(QKeyEvent *) override;
     //void dragEnterEvent(QDragEnterEvent *e) override;

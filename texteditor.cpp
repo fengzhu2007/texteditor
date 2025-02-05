@@ -479,6 +479,7 @@ public:
     TextEditorOverlay *m_overlay = nullptr;
     SnippetOverlay *m_snippetOverlay = nullptr;
     TextEditorOverlay *m_searchResultOverlay = nullptr;
+    TextEditorOverlay *m_selectionHighlightOverlay = nullptr;
     bool snippetCheckCursor(const QTextCursor &cursor);
     void snippetTabOrBacktab(bool forward);
 
@@ -523,6 +524,7 @@ public:
     QString m_findText;
     FindFlags m_findFlags;
     void highlightSearchResults(const QTextBlock &block, const PaintEventData &data) const;
+    void highlightSelection(const QTextBlock &block) const;
     QTimer m_delayedUpdateTimer;
 
     void setExtraSelections(Utils::Id kind, const QList<QTextEdit::ExtraSelection> &selections);
@@ -583,7 +585,9 @@ public:
     CommentDefinition m_commentDefinition;
 
     QFutureWatcher<FileSearchResultList> *m_searchWatcher = nullptr;
+    QFutureWatcher<FileSearchResultList> *m_selectionHighlightFuture = nullptr;
     QVector<SearchResult> m_searchResults;
+    QVector<SearchResult> m_selectionResults;
     QTimer m_scrollBarUpdateTimer;
     HighlightScrollBarController *m_highlightScrollBarController = nullptr;
     bool m_scrollBarUpdateScheduled = false;
@@ -697,6 +701,7 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     , m_overlay(new TextEditorOverlay(q))
     , m_snippetOverlay(new SnippetOverlay(q))
     , m_searchResultOverlay(new TextEditorOverlay(q))
+    , m_selectionHighlightOverlay(new TextEditorOverlay(q))
     , m_refactorOverlay(new RefactorOverlay(q))
     , m_marksVisible(false)
     , m_codeFoldingVisible(false)
@@ -711,6 +716,7 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     , m_clipboardAssistProvider(new ClipboardAssistProvider)
     , m_autoCompleter(new AutoCompleter)
 {
+    m_selectionHighlightOverlay->show();
     auto aggregate = new Aggregation::Aggregate;
     m_find = new TextEditorWidgetFind(q);
     connect(m_find, &BaseTextFind::highlightAllRequested,
@@ -799,6 +805,9 @@ TextEditorWidgetPrivate::~TextEditorWidgetPrivate()
     q->disconnect(this);
     //delete m_toolBarWidget;
     delete m_highlightScrollBarController;
+
+    if (m_selectionHighlightFuture.isRunning())
+        m_selectionHighlightFuture.cancel();
 }
 
 static QFrame *createSeparator(const QString &styleSheet)
@@ -907,9 +916,6 @@ Id TextEditorWidget::CursorSelection("TextEdit.CursorSelection");
 Id TextEditorWidget::UndefinedSymbolSelection("TextEdit.UndefinedSymbolSelection");
 Id TextEditorWidget::UnusedSymbolSelection("TextEdit.UnusedSymbolSelection");
 Id TextEditorWidget::OtherSelection("TextEdit.OtherSelection");
-Id TextEditorWidget::ObjCSelection("TextEdit.ObjCSelection");
-Id TextEditorWidget::DebuggerExceptionSelection("TextEdit.DebuggerExceptionSelection");
-Id TextEditorWidget::FakeVimSelection("TextEdit.FakeVimSelection");
 
 TextEditorWidget::TextEditorWidget(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -2807,6 +2813,7 @@ void TextEditorWidgetPrivate::documentAboutToBeReloaded()
 
     // clear search results
     m_searchResults.clear();
+    m_selectionResults.clear();
 }
 
 void TextEditorWidgetPrivate::documentReloadFinished(bool success)
@@ -3521,6 +3528,36 @@ void TextEditorWidgetPrivate::highlightSearchResults(const QTextBlock &block, co
     }
 }
 
+
+void TextEditorWidgetPrivate::highlightSelection(const QTextBlock &block) const
+{
+    if (!m_displaySettings.m_highlightSelection || m_cursors.hasMultipleCursors())
+        return;
+    const QString selection = m_cursors.selectedText();
+    if (selection.trimmed().isEmpty())
+        return;
+
+    const int blockPosition = block.position();
+
+    QString text = block.text();
+    text.replace(QChar::Nbsp, QLatin1Char(' '));
+    const int l = selection.length();
+
+    for (int idx = text.indexOf(selection, 0, Qt::CaseInsensitive);
+         idx >= 0;
+         idx = text.indexOf(selection, idx + 1, Qt::CaseInsensitive)) {
+        const int start = blockPosition + idx;
+        const int end = start + l;
+        if (!Utils::contains(m_selectionHighlightOverlay->selections(),
+                             [&](const OverlaySelection &selection) {
+                                 return selection.m_cursor_begin.position() == start
+                                        && selection.m_cursor_end.position() == end;
+                             })) {
+            m_selectionHighlightOverlay->addOverlaySelection(start, end, {}, {});
+        }
+    }
+}
+
 void TextEditorWidgetPrivate::startCursorFlashTimer()
 {
     const int flashTime = QApplication::cursorFlashTime();
@@ -3559,6 +3596,47 @@ void TextEditorWidgetPrivate::updateCursorSelections()
             selections << QTextEdit::ExtraSelection{cursor, selectionFormat};
     }
     q->setExtraSelections(TextEditorWidget::CursorSelection, selections);
+
+
+    m_selectionHighlightOverlay->clear();
+
+        if (m_selectionHighlightFuture.isRunning())
+            m_selectionHighlightFuture.cancel();
+
+        m_selectionResults.clear();
+        if (!m_highlightScrollBarController)
+            return;
+        //m_highlightScrollBarController->removeHighlights(Constants::SCROLL_BAR_SELECTION);
+
+        if (!m_displaySettings.m_highlightSelection || m_cursors.hasMultipleCursors())
+            return;
+
+        const QString txt = m_cursors.selectedText();
+        if (txt.trimmed().isEmpty())
+            return;
+
+        /*m_selectionHighlightFuture = Utils::asyncRun(Utils::searchInContents,
+                                                     txt,
+                                                     FindFlags{},
+                                                     m_document->filePath(),
+                                                     m_document->plainText());
+
+        Utils::onResultReady(m_selectionHighlightFuture,
+                             this,
+                             [this](const SearchResultItems &resultList) {
+                                 QList<SearchResult> results;
+                                 for (const SearchResultItem &item : resultList) {
+                                     int start = item.mainRange().begin.positionInDocument(
+                                         m_document->document());
+                                     int end = item.mainRange().end.positionInDocument(
+                                         m_document->document());
+                                     results << SearchResult{start, end - start};
+                                 }
+                                 m_selectionResults = results;
+                                 addSelectionHighlightToScrollBar(results);
+                             });*/
+
+
 }
 
 void TextEditorWidgetPrivate::moveCursor(QTextCursor::MoveOperation operation,
@@ -5396,6 +5474,44 @@ void TextEditorWidget::mouseReleaseEvent(QMouseEvent *e)
     }
 }
 
+void TextEditorWidget::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton) {
+        QTextCursor cursor = textCursor();
+        const int position = cursor.position();
+        if (TextBlockUserData::findPreviousOpenParenthesis(&cursor, false, true)) {
+            if (position - cursor.position() == 1 && selectBlockUp())
+                return;
+        }
+    }
+
+    QTextCursor eventCursor = cursorForPosition(QPoint(e->pos().x(), e->pos().y()));
+    const int eventDocumentPosition = eventCursor.position();
+
+    QPlainTextEdit::mouseDoubleClickEvent(e);
+
+    // QPlainTextEdit::mouseDoubleClickEvent just selects the word under the text cursor. If the
+    // event is triggered on a position that is inbetween two whitespaces this event selects the
+    // previous word or nothing if the whitespaces are at the block start. Replace this behavior
+    // with selecting the whitespaces starting from the previous word end to the next word.
+    const QChar character = characterAt(eventDocumentPosition);
+    const QChar prevCharacter = characterAt(eventDocumentPosition - 1);
+    if (character.isSpace() && prevCharacter.isSpace()) {
+        if (prevCharacter != QChar::ParagraphSeparator) {
+            eventCursor.movePosition(QTextCursor::PreviousWord);
+            eventCursor.movePosition(QTextCursor::EndOfWord);
+        } else if (character == QChar::ParagraphSeparator) {
+            return; // no special handling for empty lines
+        }
+        eventCursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
+        MultiTextCursor cursor = multiTextCursor();
+        cursor.replaceMainCursor(eventCursor);
+        setMultiTextCursor(cursor);
+    }
+
+
+}
+
 
 void TextEditorWidgetPrivate::setClipboardSelection()
 {
@@ -6645,7 +6761,7 @@ void TextEditorWidgetPrivate::addSelectionNextFindMatch()
         return;
     }
 
-    /*const QTextDocument::FindFlags findFlags = textDocumentFlagsForFindFlags(m_findFlags);
+    const QTextDocument::FindFlags findFlags = textDocumentFlagsForFindFlags(m_findFlags);
 
     int searchFrom = cursors.last().selectionEnd();
     while (true) {
@@ -6660,7 +6776,7 @@ void TextEditorWidgetPrivate::addSelectionNextFindMatch()
         cursor.addCursor(next);
         q->setMultiTextCursor(cursor);
         break;
-    }*/
+    }
 }
 
 void TextEditorWidgetPrivate::duplicateSelection(bool comment)

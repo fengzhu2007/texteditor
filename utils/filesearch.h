@@ -6,7 +6,6 @@
 #include "utils_global.h"
 
 #include "filepath.h"
-
 #include <QDir>
 #include <QMap>
 #include <QSet>
@@ -42,6 +41,7 @@ QString msgExclusionPatternLabel();
 
 QTCREATOR_UTILS_EXPORT
 QString msgFilePatternToolTip();
+
 
 class QTCREATOR_UTILS_EXPORT FileIterator
 {

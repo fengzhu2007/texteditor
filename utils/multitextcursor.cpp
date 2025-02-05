@@ -10,6 +10,7 @@
 
 #include <QKeyEvent>
 #include <QTextBlock>
+#include <QDebug>
 
 namespace Utils {
 
