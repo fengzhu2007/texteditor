@@ -42,11 +42,13 @@ void Highlighter::highlightBlock(const QString &text)
             case Token::Keyword:
             case Token::AtRules:
             case Token::Selector:
-            case Token::AttrName:
                 setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
                 break;
+            case Token::AttrName:
+                setFormat(token.offset, token.length, formatForCategory(C_FIELD));
+                break;
             case Token::String:
-        case Token::AttrValue:
+            case Token::AttrValue:
                 setFormat(token.offset, token.length, formatForCategory(C_STRING));
                 break;
 

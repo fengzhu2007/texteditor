@@ -338,6 +338,8 @@ public:
     void paintRightMarginLine(const PaintEventData &data, QPainter &painter) const;
     void paintBlockHighlight(const PaintEventData &data, QPainter &painter) const;
     void paintSearchResultOverlay(const PaintEventData &data, QPainter &painter) const;
+    void paintSelectionOverlay(const PaintEventData &data, QPainter &painter) const;
+
     void paintIfDefedOutBlocks(const PaintEventData &data, QPainter &painter) const;
     void paintFindScope(const PaintEventData &data, QPainter &painter) const;
     void paintCurrentLineHighlight(const PaintEventData &data, QPainter &painter) const;
@@ -408,15 +410,20 @@ public:
     void highlightSearchResultsSlot(const QString &txt, FindFlags findFlags);
     void searchResultsReady(int beginIndex, int endIndex);
     void searchFinished();
+    void selectionResultsReady(int beginIndex, int endIndex);
+    void selectionFinished();
     void setupScrollBar();
     void highlightSearchResultsInScrollBar();
+    void highlightSelectionResultsInScrollBar();
     void scheduleUpdateHighlightScrollBar();
+
     void updateHighlightScrollBarNow();
     struct SearchResult {
         int start;
         int length;
     };
     void addSearchResultsToScrollBar(const QVector<SearchResult> &results);
+    void addSelectionHighlightToScrollBar(const QVector<SearchResult> &selections);
     void adjustScrollBarRanges();
 
     void setFindScope(const MultiTextCursor &scope);
@@ -806,8 +813,6 @@ TextEditorWidgetPrivate::~TextEditorWidgetPrivate()
     //delete m_toolBarWidget;
     delete m_highlightScrollBarController;
 
-    if (m_selectionHighlightFuture.isRunning())
-        m_selectionHighlightFuture.cancel();
 }
 
 static QFrame *createSeparator(const QString &styleSheet)
@@ -3600,41 +3605,23 @@ void TextEditorWidgetPrivate::updateCursorSelections()
 
     m_selectionHighlightOverlay->clear();
 
-        if (m_selectionHighlightFuture.isRunning())
-            m_selectionHighlightFuture.cancel();
+    this->highlightSelectionResultsInScrollBar();
 
-        m_selectionResults.clear();
-        if (!m_highlightScrollBarController)
-            return;
-        //m_highlightScrollBarController->removeHighlights(Constants::SCROLL_BAR_SELECTION);
 
-        if (!m_displaySettings.m_highlightSelection || m_cursors.hasMultipleCursors())
-            return;
+    /*m_selectionResults.clear();
+    if (!m_highlightScrollBarController)
+        return;
+    m_highlightScrollBarController->removeHighlights(Constants::SCROLL_BAR_SELECTION);
 
-        const QString txt = m_cursors.selectedText();
-        if (txt.trimmed().isEmpty())
-            return;
+    if (!m_displaySettings.m_highlightSelection || m_cursors.hasMultipleCursors())
+        return;
 
-        /*m_selectionHighlightFuture = Utils::asyncRun(Utils::searchInContents,
-                                                     txt,
-                                                     FindFlags{},
-                                                     m_document->filePath(),
-                                                     m_document->plainText());
+    const QString txt = m_cursors.selectedText();
+    if (txt.trimmed().isEmpty())
+        return;*/
 
-        Utils::onResultReady(m_selectionHighlightFuture,
-                             this,
-                             [this](const SearchResultItems &resultList) {
-                                 QList<SearchResult> results;
-                                 for (const SearchResultItem &item : resultList) {
-                                     int start = item.mainRange().begin.positionInDocument(
-                                         m_document->document());
-                                     int end = item.mainRange().end.positionInDocument(
-                                         m_document->document());
-                                     results << SearchResult{start, end - start};
-                                 }
-                                 m_selectionResults = results;
-                                 addSelectionHighlightToScrollBar(results);
-                             });*/
+
+
 
 
 }
@@ -4008,6 +3995,40 @@ void TextEditorWidgetPrivate::paintSearchResultOverlay(const PaintEventData &dat
     m_searchResultOverlay->fill(&painter,
                                 data.searchResultFormat.background().color(),
                                 data.eventRect);
+}
+
+void TextEditorWidgetPrivate::paintSelectionOverlay(const PaintEventData &data,
+                                                    QPainter &painter) const
+{
+    if (m_cursors.hasMultipleCursors())
+        return;
+    const QString expr = m_cursors.selectedText();
+    if (expr.isEmpty())
+        return;
+
+    const int margin = 5;
+    QTextBlock block = data.block;
+    QPointF offset = data.offset;
+    while (block.isValid()) {
+        QRectF blockBoundingRect = q->blockBoundingRect(block).translated(offset);
+
+        if (blockBoundingRect.bottom() >= data.eventRect.top() - margin
+            && blockBoundingRect.top() <= data.eventRect.bottom() + margin) {
+            highlightSelection(block);
+        }
+        offset.ry() += blockBoundingRect.height();
+
+        if (offset.y() > data.viewportRect.height() + margin)
+            break;
+
+        block = TextEditor::nextVisibleBlock(block, data.doc);
+    }
+
+    QColor selection = m_document->fontSettings().toTextCharFormat(C_SELECTION).background().color();
+    const QColor text = m_document->fontSettings().toTextCharFormat(C_TEXT).background().color();
+    selection.setAlphaF(0.4);
+
+    m_selectionHighlightOverlay->fill(&painter, selection, data.eventRect);
 }
 
 void TextEditorWidgetPrivate::paintIfDefedOutBlocks(const PaintEventData &data,
@@ -4516,6 +4537,8 @@ void TextEditorWidget::paintEvent(QPaintEvent *e)
         d->paintFindScope(data, painter);
         // paint search results on top of the find scope
         d->paintSearchResultOverlay(data, painter);
+        // paint selection highlights
+        d->paintSelectionOverlay(data, painter);
     }
 
     while (data.block.isValid()) {
@@ -6175,6 +6198,35 @@ void TextEditorWidgetPrivate::searchFinished()
     m_searchWatcher = nullptr;
 }
 
+
+void TextEditorWidgetPrivate::selectionResultsReady(int beginIndex, int endIndex)
+{
+    QVector<SearchResult> results;
+    for (int index = beginIndex; index < endIndex; ++index) {
+        const FileSearchResultList resultList = m_selectionHighlightFuture->resultAt(index);
+        for (FileSearchResult result : resultList) {
+            const QTextBlock &block = q->document()->findBlockByNumber(result.lineNumber - 1);
+            const int matchStart = block.position() + result.matchStart;
+            QTextCursor cursor(block);
+            cursor.setPosition(matchStart);
+            cursor.setPosition(matchStart + result.matchLength, QTextCursor::KeepAnchor);
+            if (!q->inFindScope(cursor))
+                continue;
+            results << SearchResult{matchStart, result.matchLength};
+        }
+    }
+    m_selectionResults << results;
+    addSelectionHighlightToScrollBar(results);
+}
+
+void TextEditorWidgetPrivate::selectionFinished()
+{
+    delete m_selectionHighlightFuture;
+    m_selectionHighlightFuture = nullptr;
+}
+
+
+
 void TextEditorWidgetPrivate::adjustScrollBarRanges()
 {
     if (!m_highlightScrollBarController)
@@ -6229,6 +6281,42 @@ void TextEditorWidgetPrivate::highlightSearchResultsInScrollBar()
         m_searchWatcher->setFuture(findInFiles(txt, it, findFlags, fileToContentsMap));
 }
 
+void TextEditorWidgetPrivate::highlightSelectionResultsInScrollBar(){
+    if (!m_highlightScrollBarController)
+        return;
+    m_highlightScrollBarController->removeHighlights(Constants::SCROLL_BAR_SELECTION);
+    m_selectionResults.clear();
+
+    if (m_selectionHighlightFuture) {
+        m_selectionHighlightFuture->disconnect();
+        m_selectionHighlightFuture->cancel();
+        m_selectionHighlightFuture->deleteLater();
+        m_selectionHighlightFuture = nullptr;
+    }
+
+    const QString &txt = m_cursors.selectedText();
+    if (txt.isEmpty())
+        return;
+
+    adjustScrollBarRanges();
+
+    m_selectionHighlightFuture = new QFutureWatcher<FileSearchResultList>();
+    connect(m_selectionHighlightFuture, &QFutureWatcher<FileSearchResultList>::resultsReadyAt,
+            this, &TextEditorWidgetPrivate::selectionResultsReady);
+    connect(m_selectionHighlightFuture, &QFutureWatcher<FileSearchResultList>::finished,
+            this, &TextEditorWidgetPrivate::selectionFinished);
+    m_selectionHighlightFuture->setPendingResultsLimit(10);
+
+    const QTextDocument::FindFlags findFlags = textDocumentFlagsForFindFlags(m_findFlags);
+
+    const FilePath &fileName = m_document->filePath();
+    FileListIterator *it =
+            new FileListIterator({fileName} , {const_cast<QTextCodec *>(m_document->codec())});
+    QMap<FilePath, QString> fileToContentsMap;
+    fileToContentsMap[fileName] = m_document->plainText();
+    m_selectionHighlightFuture->setFuture(findInFiles(txt, it, findFlags, fileToContentsMap));
+}
+
 void TextEditorWidgetPrivate::scheduleUpdateHighlightScrollBar()
 {
     if (m_scrollBarUpdateScheduled)
@@ -6271,6 +6359,33 @@ void TextEditorWidgetPrivate::addSearchResultsToScrollBar(const QVector<SearchRe
     }
 }
 
+void TextEditorWidgetPrivate::addSelectionHighlightToScrollBar(
+    const QVector<SearchResult> &selections)
+{
+    if (!m_highlightScrollBarController)
+        return;
+    for (const SearchResult &result : selections) {
+        const QTextBlock &block = q->document()->findBlock(result.start);
+        if (block.isValid() && block.isVisible()) {
+            if (q->lineWrapMode() == QPlainTextEdit::WidgetWidth) {
+                const int firstLine = block.layout()->lineForTextPosition(result.start - block.position()).lineNumber();
+                const int lastLine = block.layout()->lineForTextPosition(result.start - block.position() + result.length).lineNumber();
+                for (int line = firstLine; line <= lastLine; ++line) {
+                    m_highlightScrollBarController->addHighlight(
+                        {Constants::SCROLL_BAR_SELECTION, block.firstLineNumber() + line,
+                         Theme::TextEditor_Selection_ScrollBarColor, Highlight::NormalPriority});
+                }
+            } else {
+                m_highlightScrollBarController->addHighlight(
+                    {Constants::SCROLL_BAR_SELECTION,
+                     block.blockNumber(),
+                     Theme::TextEditor_Selection_ScrollBarColor,
+                     Highlight::NormalPriority});
+            }
+        }
+    }
+}
+
 Highlight markToHighlight(TextMark *mark, int lineNumber)
 {
     return Highlight(mark->category(),
@@ -6291,6 +6406,9 @@ void TextEditorWidgetPrivate::updateHighlightScrollBarNow()
 
     // update search results
     addSearchResultsToScrollBar(m_searchResults);
+
+    // update search selection
+    addSelectionHighlightToScrollBar(m_selectionResults);
 
     // update text marks
     const TextMarks marks = m_document->marks();

@@ -79,6 +79,7 @@ Theme::Theme(const QString &id, QObject *parent)
 {
     d->id = id;
     d->colors[TextEditor_SearchResult_ScrollBarColor] = {QColor("#ff00c000"),{"#ff00c000"}};
+    d->colors[TextEditor_Selection_ScrollBarColor] = {QColor("#ffECBC1C"),{"#ffECBC1C"}};
     d->colors[CodeModel_Error_TextMarkColor] = {QColor("#ffc00000"),{"#ffc00000"}};
     d->colors[CodeModel_Warning_TextMarkColor] = {QColor("#ffc0c000"),{"#ffc0c000"}};
 }
