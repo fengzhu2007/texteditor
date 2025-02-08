@@ -17,8 +17,8 @@
   <style name="Macro"/>
   <style name="Global"/>
   <style name="Keyword" foreground="#c792ea"/>
-  <style name="PrimitiveType" foreground="#ffff55"/>
-  <style name="Label" foreground="#ffff55"/>
+  <style name="PrimitiveType" foreground="#eeee55"/>
+  <style name="Label" foreground="#88c0d0"/>
   <style name="LineNumber" foreground="#9e9e9e" background="#232323"/>
   <style name="Link" foreground="#0055ff"/>
   <style name="Local"/>
@@ -41,7 +41,7 @@
   <style name="Selection"  background="#4373c2aa"/>
   <style name="Static" foreground="#E45649" italic="true"/>
   <style name="String" foreground="#d8c090"/>
-  <style name="Type" foreground="#55ff55"/>
+  <style name="Type" foreground="#de5a4e"/>
   <style name="VirtualMethod" italic="true"/>
   <style name="QmlTypeId" foreground="#55ff55"/>
   <style name="Binding" foreground="#ff5555"/>

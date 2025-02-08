@@ -332,6 +332,8 @@ add_library(texteditor SHARED
     languages/jsx/jsxscanner.h languages/jsx/jsxscanner.cpp
     languages/jsx/jsxautocompleter.cpp languages/jsx/jsxautocompleter.h languages/jsx/jsxcodeformatter.cpp languages/jsx/jsxcodeformatter.h languages/jsx/jsxhighlighter.cpp languages/jsx/jsxhighlighter.h languages/jsx/jsxindenter.cpp languages/jsx/jsxindenter.h
     semantichighlighter.cpp semantichighlighter.h
+    languages/tsx/tsxautocompleter.cpp languages/tsx/tsxautocompleter.h languages/tsx/tsxcodeformatter.cpp languages/tsx/tsxcodeformatter.h languages/tsx/tsxhighlighter.cpp languages/tsx/tsxhighlighter.h languages/tsx/tsxindenter.cpp languages/tsx/tsxindenter.h languages/tsx/tsxscanner.cpp languages/tsx/tsxscanner.h
+
 
 )
 

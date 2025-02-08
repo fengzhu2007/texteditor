@@ -58,7 +58,7 @@ public:
         Html,
         Javascript,
         Css,
-        Php
+        Php,
     };
     enum Kind {
         EndOfFile,
@@ -123,6 +123,11 @@ public:
         XmlDataLeftTag,
         XmlDataRightTag,
         XmlData,
+
+        //typescript
+        Decorator,
+        Generic,
+
 
 
         Doxygen,

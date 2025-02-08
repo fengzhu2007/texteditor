@@ -42,7 +42,7 @@ enum TextStyle : quint8 {
     C_VIRTUAL_METHOD,
     C_FUNCTION,
     C_KEYWORD,
-    C_PRIMITIVE_TYPE,
+    C_PRIMITIVE_TYPE,//primitive
     C_OPERATOR,
     C_OVERLOADED_OPERATOR,
     C_PUNCTUATION,

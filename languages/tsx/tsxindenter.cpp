@@ -1,11 +1,11 @@
-#include "jsxindenter.h"
+#include "tsxindenter.h"
 
-#include "jsxcodeformatter.h"
+#include "tsxcodeformatter.h"
 #include "tabsettings.h"
 
 #include <QTextDocument>
 #include <QTextBlock>
-namespace Jsx {
+namespace Tsx {
 
 class Indenter final : public TextEditor::TextIndenter
 {
@@ -14,7 +14,7 @@ public:
         : TextEditor::TextIndenter(doc)
     {}
 
-    virtual QString name() override {return QString::fromUtf8("Javascript");}
+    virtual QString name() override {return QString::fromUtf8("Typescript");}
 
     bool isElectricCharacter(const QChar &ch) const final;
     void indentBlock(const QTextBlock &block,
