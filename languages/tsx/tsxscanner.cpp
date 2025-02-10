@@ -7,7 +7,7 @@ using namespace Tsx;
 using namespace Code;
 
 namespace {
-static const QString jsx_keywords[] = {
+static const QString tsx_keywords[] = {
     QLatin1String("abstract"),
     QLatin1String("any"),
     QLatin1String("arguments"),
@@ -22,7 +22,6 @@ static const QString jsx_keywords[] = {
     QLatin1String("catch"),
     QLatin1String("class"),
     QLatin1String("const"),
-    QLatin1String("constructor"),
     QLatin1String("constructor"),
     QLatin1String("continue"),
     QLatin1String("debugger"),
@@ -52,8 +51,8 @@ static const QString jsx_keywords[] = {
     QLatin1String("let"),
     QLatin1String("module"),
     QLatin1String("namespace"),
-    QLatin1String("new"),
     QLatin1String("never"),
+    QLatin1String("new"),
     QLatin1String("null"),
     QLatin1String("number"),
     QLatin1String("object"),
@@ -79,7 +78,6 @@ static const QString jsx_keywords[] = {
     QLatin1String("undefined"),
     QLatin1String("unknown"),
     QLatin1String("var"),
-    QLatin1String("void"),
     QLatin1String("void"),
     QLatin1String("while"),
     QLatin1String("with"),
@@ -978,7 +976,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 do {
                     ++index;
                 } while (index < text.length() && isIdentifierChar(text.at(index)));
-
+                qDebug()<<"token"<<text.mid(start, index - start);
                 if (isKeyword(text.mid(start, index - start)))
                     tokens.append(Token(start, index - start, Token::Keyword,Code::Token::Javascript)); // ### fixme
                 else
@@ -992,7 +990,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
     }
     from = index;
     //qDebug()<<text<<m_stateStack;
-    Html::Scanner().dump(text,tokens);
+    //Html::Scanner().dump(text,tokens);
     return tokens;
 }
 
@@ -1003,14 +1001,15 @@ int Scanner::state() const
 
 bool Scanner::isKeyword(const QString &text) const
 {
-    return std::binary_search(begin(jsx_keywords), end(jsx_keywords), text);
+
+    return std::binary_search(begin(tsx_keywords), end(tsx_keywords), text);
 }
 
 QStringList Scanner::keywords()
 {
     static QStringList words = [] {
         QStringList res;
-        for (const QString *word = begin(jsx_keywords); word != end(jsx_keywords); ++word)
+        for (const QString *word = begin(tsx_keywords); word != end(tsx_keywords); ++word)
             res.append(*word);
         return res;
     }();
