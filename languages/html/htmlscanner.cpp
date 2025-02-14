@@ -253,12 +253,13 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                         tokens.append(Token(index, 4, Token::CommentTagStart));
                         index += 4;
                         setMarkState(&_state,MultiLineComment);
-                        const int ss = index;
+                        int ss = index;
                         //find end comment tag
                         while(index + 2 < text.length()){
                             if(text.at(index) == QLatin1Char('-') && text.at(index+1) == QLatin1Char('-') && text.at(index+2) == QLatin1Char('>')){
                                 tokens.append(Token(ss, index - ss, Token::Comment));
                                 //add comment end tag
+                                ss = -1;
                                 tokens.append(Token(index, 3, Token::CommentTagEnd));
                                 index += 3;
                                 unSetMarkState(&_state,MultiLineComment);
@@ -267,6 +268,11 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                             }
                             ++index;
                         }
+                        if(ss>-1 && index > ss){
+                            //not find comment end tag
+                            tokens.append(Token(ss, index - ss  + 2, Token::Comment));
+                        }
+
                         break;
                     }else if(index+8<text.size() && text.at(index+1)==QLatin1Char('!')
                                && text.at(index+2)==QLatin1Char('[')
@@ -472,36 +478,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 if(ss < index){
                     tokens.append(Token(ss, index - ss, Token::AttrName));
                 }
-
-                /*int ss = -1;
-                while(index < text.length()){
-                    QChar ch = text.at(index);
-                    qDebug()<<"ccc:"<<ch<<ch.isSpace()<<isIdentifierChar(ch);
-                    if(ch.isSpace()==false){
-                        if(isIdentifierChar(ch)==false){
-                            goto bk2;
-                        }else{
-                            ss = index;
-                            break;
-                        }
-                    }
-                    ++index;
-                }
-                qDebug()<<"ch:"<<ch<<la<<text<<ss<<index;
-                if(ss>-1){
-                     //find attr name end
-                    ++index;
-                    while(index < text.length()){
-                        QChar ch = text.at(index);
-                        if(!isIdentifierChar(ch)){
-                            tokens.append(Token(ss, index - ss, Token::AttrName));
-                            goto bk2;
-                            break;
-                        }
-                        ++index;
-                    }
-                }*/
-                //++index;
                 bk2:
                 break;
             }else{
@@ -532,6 +508,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
         }
     }
     from = index;
+    //Scanner::dump(text,tokens);
     return tokens;
 }
 

@@ -510,7 +510,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                     //this->pHtmlScanner->endJS();
                     //unSetMarkState(&_state,Html::Scanner::MultiLineCss);
                     //|Html::Scanner::JavascriptTagStart
-                    _state &= ~(Html::Scanner::MultiLineJavascript | Html::Scanner::JavascriptTagStart);
+                    _state &= ~(Html::Scanner::MultiLineJavascript | Html::Scanner::JavascriptTagStart | Scanner::RegexpMayFollow);
                     goto result;
                 }else{
                     tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));

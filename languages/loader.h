@@ -10,6 +10,11 @@ class SyntaxHighlighter;
 class Indenter;
 class AutoCompleter;
 class CodeFormatter;
+
+
+
+
+
 class TEXTEDITOR_EXPORT LanguageLoader
 {
 public:
@@ -18,11 +23,15 @@ public:
     inline Indenter* indenter(){return m_indenter;}
     inline AutoCompleter* autoCompleter(){return m_autoCompleter;}
     inline CodeFormatter* codeFormatter(){return m_codeFormatter;}
+
+
 private:
     SyntaxHighlighter* m_hightlighter;
     Indenter* m_indenter;
     AutoCompleter* m_autoCompleter;
     CodeFormatter* m_codeFormatter;
+
+
 };
 }
 #endif // LANGUAGELOADER_H
