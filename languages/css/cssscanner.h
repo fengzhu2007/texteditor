@@ -28,8 +28,7 @@ public:
         MultiLineStringDQuote = MultiLineComment<<1,
         MultiLineStringSQuote = MultiLineComment<<2,
 
-        MultiLineAttrList = MultiLineComment<<12,
-        MultiLineAttrValue = MultiLineComment<<13,
+
 
         AtRulesABegin = MultiLineComment<<14,//single line
         AtRulesBBegin = MultiLineComment<<15,//attribute container
@@ -39,7 +38,10 @@ public:
         AtRulesBBeginAttrList = MultiLineComment<<17,//in AtRulesBBegin
 
         AtRulesCBeginSelectorList = MultiLineComment<<18,
-        AtRulesCBeginSelectorAttrList = MultiLineComment<<19//in at rule selector (MultiLineAtRules)
+        AtRulesCBeginSelectorAttrList = MultiLineComment<<19,//in at rule selector (MultiLineAtRules)
+
+        MultiLineAttrList = MultiLineComment<<26,
+        MultiLineAttrValue = MultiLineComment<<27,
 
     };
 

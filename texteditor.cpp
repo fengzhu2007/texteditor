@@ -67,7 +67,7 @@
 #include "codeassist/documentcontentcompletion.h"
 
 #include "codeformatter.h"
-#include "languages/loader.h"
+#include "texteditorenvironment.h"
 
 
 #include <QAbstractTextDocumentLayout>
@@ -880,22 +880,6 @@ void TextEditorWidgetPrivate::showTextMarksToolTip(const QPoint &pos,
 
 
 
-void TextEditorEnvironment::init(){
-    Utils::Theme *theme = new Utils::Theme(Core::Constants::DEFAULT_DARK_THEME);
-    //:/resource/themes/flat-light.creatortheme
-    //:/resource/themes/flat-dark.creatortheme
-    //QSettings themeSettings(QString::fromUtf8(":/resource/themes/flat-dark.creatortheme"), QSettings::IniFormat);
-    //theme->readSettings(themeSettings);
-
-    Utils::setCreatorTheme(theme);
-    //d->settings = new TextEditor::TextEditorSettings();
-    //d->action_manager = new Core::ActionManager(this);
-    TextEditor::SnippetProvider::registerGroup(TextEditor::Constants::TEXT_SNIPPET_GROUP_ID,QObject::tr("Text", "SnippetProvider"));
-}
-void TextEditorEnvironment::destory(){
-    //delete d->settings;
-    Utils::setCreatorTheme(nullptr);
-}
 
 QString TextEditorWidget::plainTextFromSelection(const QTextCursor &cursor) const
 {
@@ -3075,38 +3059,40 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
 void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlighting::Definition &definition)
 {
     if (definition.isValid()) {
-        LanguageLoader loader(definition,m_document->document());
-        auto indenter = loader.indenter();
-        if(indenter!=nullptr){
-            m_document->setIndenter(indenter);
-        }
-        auto autoCompleter = loader.autoCompleter();
-        if(autoCompleter!=nullptr){
-            q->setAutoCompleter(autoCompleter);
-
-        }
-        auto codeFormatter = loader.codeFormatter();
-        if(codeFormatter!=nullptr){
-            m_document->setFormatter(codeFormatter);
-            auto provider = m_document->completionAssistProvider();
-            if(provider!=nullptr){
-                provider->setCodeFormatter(codeFormatter);
+        auto loader = TextEditorEnvironment::getIntance()->loader(definition.name(),m_document->document());
+        if(loader!=nullptr){
+            auto indenter = loader->indenter();
+            if(indenter!=nullptr){
+                m_document->setIndenter(indenter);
             }
-        }
-
-        auto highlighter = loader.hightlighter();
-        if(highlighter!=nullptr){
-            m_document->setSyntaxHighlighter(highlighter);
+            auto autoCompleter = loader->autoCompleter();
+            if(autoCompleter!=nullptr){
+                q->setAutoCompleter(autoCompleter);
+            }
+            auto codeFormatter = loader->codeFormatter();
+            if(codeFormatter!=nullptr){
+                m_document->setFormatter(codeFormatter);
+                auto provider = m_document->completionAssistProvider();
+                if(provider!=nullptr){
+                    provider->setCodeFormatter(codeFormatter);
+                }
+            }
+            auto highlighter = loader->hightlighter();
+            if(highlighter!=nullptr){
+                m_document->setSyntaxHighlighter(highlighter);
+            }else{
+                auto highlighter = new Highlighter();
+                m_document->setSyntaxHighlighter(highlighter);
+                highlighter->setDefinition(definition);
+            }
+            setupFromDefinition(definition);
+            delete loader;//destory loader
         }else{
-            auto highlighter = new Highlighter();
-            m_document->setSyntaxHighlighter(highlighter);
-            highlighter->setDefinition(definition);
+            q->setCodeFoldingSupported(false);
         }
-        setupFromDefinition(definition);
     } else {
         q->setCodeFoldingSupported(false);
     }
-
     m_document->setFontSettings(TextEditorSettings::fontSettings());
 }
 

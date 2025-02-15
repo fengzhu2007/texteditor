@@ -197,7 +197,7 @@ void AutoCompleter::initProvider(const Highlighter::Definition& def,DocumentCont
     QStringList functions;
     QStringList classes;
     QStringList constants;
-    //QStringList others;
+    QStringList others;
     for(auto one:list){
         auto name = one.toLower();
         if(name.contains("function")){
@@ -208,13 +208,15 @@ void AutoCompleter::initProvider(const Highlighter::Definition& def,DocumentCont
             keywords += def.keywordList(one);
         }else if(name.contains("constant") || name.contains("variable")){
             constants += def.keywordList(one);
+        }else{
+            others += def.keywordList(one);
         }
     }
     provider->setKeywordList(keywords);
     provider->setFunctionList(functions);
     provider->setClassList(classes);
     provider->setVariableList(constants);
-    //provider->setOtherList(others);
+    provider->setOtherList(others);
 }
 
 QString AutoCompleter::replaceSelection(QTextCursor &cursor, const QString &textToInsert) const

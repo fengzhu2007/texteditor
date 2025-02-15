@@ -376,7 +376,6 @@
         <file>resource/styles/inkpot.xml</file>
         <file>resource/styles/intellij.xml</file>
         <file>resource/styles/mabakor.xml</file>
-        <file>resource/styles/modnokai_night_shift_v2.xml</file>
         <file>resource/styles/default_light.xml</file>
     </qresource>
 </RCC>

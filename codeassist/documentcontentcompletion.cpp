@@ -319,6 +319,12 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
             item->setIcon(this->m_classIcon);
             items.append(item);
         }
+        for(const QString &word:this->m_keywords.others()){
+            auto item = new AssistProposalItem();
+            item->setText(word);
+            item->setIcon(this->m_variantIcon);
+            items.append(item);
+        }
 
         setAsyncProposalAvailable(new GenericProposal(pos, items));
     });

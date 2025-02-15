@@ -304,6 +304,9 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                 }else{
                     tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Css));
                 }
+            }else if(la==QLatin1Char('?') && this->pHtmlScanner!=nullptr){
+                setMarkState(&_state,Html::Scanner::MultiLinePhp);
+                goto result;
             }else{
                 tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Css));
             }

@@ -27,7 +27,7 @@ public:
         MultiLineStringBQuote = MultiLineComment<<3,
         MultiLineMask = MultiLineComment | MultiLineStringDQuote | MultiLineStringBQuote,
 
-        RegexpMayFollow = MultiLineComment<<11, // flag that may be combined with the above
+        RegexpMayFollow = MultiLineComment<<26, // flag that may be combined with the above
 
         // templates can be nested, which means that the scanner/lexer cannot
         // be a simple state machine anymore, but should have a stack to store

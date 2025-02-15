@@ -157,6 +157,19 @@ static int findRegExpEnd(const QString &text, int start)
     return index;
 }
 
+static inline void setMarkState(int * state,int s){
+    *state |= s;
+}
+
+static inline void unSetMarkState(int * state,int s){
+    *state &= ~s;
+}
+
+
+static inline bool isMarkState(int state,int s){
+    return (state & s)==s;
+}
+
 
 static inline int multiLineState(int state)
 {
@@ -495,17 +508,15 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             if (la == ch || la == QLatin1Char('=')) {
                 tokens.append(Token(index, 2, Token::Delimiter,Code::Token::Javascript));
                 index += 2;
-            }else if (la == ch || la == QLatin1Char('?')) {
+            }else if (la == ch ) {
+                //enter php code content
                 tokens.append(Token(index, 2, Token::Keyword,Code::Token::Javascript));
                 index += 2;
+            }else if(la == QLatin1Char('?') && this->pHtmlScanner!=nullptr){
+                setMarkState(&_state,Html::Scanner::MultiLinePhp);
+                goto result;
             }else if(la == QLatin1Char('/')){
                 //like  </
-                /*if(index + 2 < text.length() && text.at(index+2).isLetter() && this->pHtmlScanner!=nullptr){
-                    //html tag
-                    this->pHtmlScanner->endJS();
-                }else{
-                    tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
-                }*/
                 if(this->pHtmlScanner!=nullptr){
                     //this->pHtmlScanner->endJS();
                     //unSetMarkState(&_state,Html::Scanner::MultiLineCss);

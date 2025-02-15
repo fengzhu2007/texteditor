@@ -80,11 +80,6 @@ enum TextMarkRequestKind
     TaskMarkRequest
 };
 
-class TEXTEDITOR_EXPORT TextEditorEnvironment{
-public:
-    static void init();
-    static void destory();
-};
 
 class TEXTEDITOR_EXPORT TextEditorWidget : public QPlainTextEdit
 {

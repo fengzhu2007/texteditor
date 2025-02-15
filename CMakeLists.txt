@@ -333,6 +333,14 @@ add_library(texteditor SHARED
     languages/jsx/jsxautocompleter.cpp languages/jsx/jsxautocompleter.h languages/jsx/jsxcodeformatter.cpp languages/jsx/jsxcodeformatter.h languages/jsx/jsxhighlighter.cpp languages/jsx/jsxhighlighter.h languages/jsx/jsxindenter.cpp languages/jsx/jsxindenter.h
     semantichighlighter.cpp semantichighlighter.h
     languages/tsx/tsxautocompleter.cpp languages/tsx/tsxautocompleter.h languages/tsx/tsxcodeformatter.cpp languages/tsx/tsxcodeformatter.h languages/tsx/tsxhighlighter.cpp languages/tsx/tsxhighlighter.h languages/tsx/tsxindenter.cpp languages/tsx/tsxindenter.h languages/tsx/tsxscanner.cpp languages/tsx/tsxscanner.h
+    texteditorenvironment.h texteditorenvironment.cpp
+    languages/css/loader.h languages/css/loader.cpp
+    languages/html/loader.cpp languages/html/loader.h
+    languages/javascript/loader.cpp languages/javascript/loader.h
+    languages/jsx/loader.cpp languages/jsx/loader.h
+
+    languages/python/loader.cpp languages/python/loader.h
+    languages/tsx/loader.cpp languages/tsx/loader.h
 
 
 )
