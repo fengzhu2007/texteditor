@@ -15,7 +15,7 @@
   <style name="Field" foreground="#4fb2ad"/>
   <style name="Function" foreground="#7c9afa"/>
   <style name="Macro"/>
-  <style name="Global"/>
+  <style name="Global" foreground="#ffd700"/>
   <style name="Keyword" foreground="#c792ea"/>
   <style name="PrimitiveType" foreground="#eeee55"/>
   <style name="Label" foreground="#88c0d0"/>

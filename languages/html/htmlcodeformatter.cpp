@@ -723,7 +723,7 @@ bool isAutoClose(QStringView tag){
     }
 
     bool CodeFormatter::isIdentifier(QChar chr){
-        return chr.isLetterOrNumber() || chr == '_' || chr == '$';
+        return chr.isLetterOrNumber() || chr == '_' || chr == '-' || chr == '$';
     }
 
 }

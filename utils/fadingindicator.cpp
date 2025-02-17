@@ -37,6 +37,7 @@ public:
         QPalette pal = palette();
         pal.setColor(QPalette::WindowText, pal.color(QPalette::Window));
         m_label->setPalette(pal);
+        //m_label->setStyleSheet("color:red");
         auto layout = new QHBoxLayout;
         setLayout(layout);
         layout->addWidget(m_label);

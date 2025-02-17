@@ -42,6 +42,8 @@ public:
 
         MultiLineAttrList = MultiLineComment<<26,
         MultiLineAttrValue = MultiLineComment<<27,
+        PseudoClasses = MultiLineComment<<28,
+        RootPseudoClasses = MultiLineComment<<29,
 
     };
 

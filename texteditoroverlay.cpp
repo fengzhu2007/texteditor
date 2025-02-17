@@ -81,8 +81,8 @@ void TextEditorOverlay::addOverlaySelection(int begin, int end,
 
     if (m_selections.isEmpty())
         m_firstSelectionOriginalBegin = begin;
-    else if (begin < m_firstSelectionOriginalBegin)
-        qWarning() << "overlay selections not in order";
+    //else if (begin < m_firstSelectionOriginalBegin)
+    //    qWarning() << "overlay selections not in order";
 
     m_selections.append(selection);
     update();

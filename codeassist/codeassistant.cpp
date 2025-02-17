@@ -256,7 +256,6 @@ void CodeAssistantPrivate::requestProposal(AssistReason reason,
                 }else{
                     emit q->finished();
                 }
-
             }
         });
 
@@ -429,12 +428,14 @@ void CodeAssistantPrivate::invalidateCurrentRequestData()
 CompletionAssistProvider *CodeAssistantPrivate::identifyActivationSequence()
 {
     auto checkActivationSequence = [this](CompletionAssistProvider *provider) {
+
         if (!provider)
             return false;
         const int length = provider->activationCharSequenceLength();
         if (!length)
             return false;
         QString sequence = m_editorWidget->textAt(m_editorWidget->position() - length, length);
+
         // In pretty much all cases the sequence will have the appropriate length. Only in the
         // case of typing the very first characters in the document for providers that request a
         // length greater than 1 (currently only C++, which specifies 3), the sequence needs to

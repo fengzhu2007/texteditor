@@ -252,9 +252,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             }
             break;
         case '{':
-            //qDebug()<<"{ current state:"<<_state;
             tokens.append(Token(index++,1, Token::LeftBrace,Code::Token::Css));
-
             if(isMarkState(_state,AtRulesBBegin)){
                 setMarkState(&_state,AtRulesBBeginAttrList);//at rule attribute list
             }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
@@ -264,12 +262,14 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             }else{
                 setMarkState(&_state,MultiLineAttrList);//normal selector attribute list
             }
-            //qDebug()<<"{ current state:"<<_state;
             break;
         case '}':
             tokens.append(Token(index++,1, Token::RightBrace,Code::Token::Css));
             if(isMarkState(_state,MultiLineAttrValue)){
                 unSetMarkState(&_state,MultiLineAttrValue);
+            }
+            if(isMarkState(_state,RootPseudoClasses)){
+                unSetMarkState(&_state,RootPseudoClasses);
             }
             if(isMarkState(_state,AtRulesBBeginAttrList)){
                 unSetMarkState(&_state,AtRulesBBeginAttrList | AtRulesBBegin);
@@ -286,11 +286,19 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             if(isMarkState(_state,MultiLineAttrValue)){
                 unSetMarkState(&_state,MultiLineAttrValue);
             }
+            if(isMarkState(_state,AtRulesABegin)){
+                unSetMarkState(&_state,AtRulesABegin);
+            }
             break;
         case ':':
             tokens.append(Token(index++,1, Token::Colon,Code::Token::Css));
             if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
                 setMarkState(&_state,MultiLineAttrValue);
+            }else{
+                //start PseudoClasses
+                if(_state==0 || isMarkState(_state,AtRulesCBeginSelectorList)){
+                    setMarkState(&_state,PseudoClasses);
+                }
             }
             break;
         case '<':
@@ -325,8 +333,22 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                     if(!isIdentifierChar(la)){
                         if(isMarkState(_state,MultiLineAttrValue)){
                             tokens.append(Code::Token(ss, index - ss, Code::Token::AttrValue,Code::Token::Css));
+                        }else if(isMarkState(_state,PseudoClasses)){
+                            int len = index - ss;
+                            tokens.append(Code::Token(ss, len, Code::Token::PseudoClasses,Code::Token::Css));
+                            unSetMarkState(&_state,PseudoClasses);
+                            if(len==4){
+                                auto pseudoClass = text.mid(ss,len).toLower();
+                                if(pseudoClass==QLatin1String("root")){
+                                    setMarkState(&_state,RootPseudoClasses);
+                                }
+                            }
                         }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::AttrName,Code::Token::Css));
+                            if(isMarkState(_state,RootPseudoClasses)){
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::Variant,Code::Token::Css));
+                            }else{
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::AttrName,Code::Token::Css));
+                            }
                         }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
                             tokens.append(Code::Token(ss, index - ss, Code::Token::Selector,Code::Token::Css));
                         }else if(isMarkState(_state,AtRulesCBegin)){
@@ -340,8 +362,22 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                     }else if(index == text.length() - 1){
                         if(isMarkState(_state,MultiLineAttrValue)){
                             tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrValue,Code::Token::Css));
+                        }else if(isMarkState(_state,PseudoClasses)){
+                            int len = index - ss + 1;
+                            tokens.append(Code::Token(ss,len, Code::Token::PseudoClasses,Code::Token::Css));
+                            unSetMarkState(&_state,PseudoClasses);
+                            if(len==4){
+                                auto pseudoClass = text.mid(ss,len).toLower();
+                                if(pseudoClass==QLatin1String("root")){
+                                    setMarkState(&_state,RootPseudoClasses);
+                                }
+                            }
                         }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrName,Code::Token::Css));
+                            if(isMarkState(_state,RootPseudoClasses)){
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Variant,Code::Token::Css));
+                            }else{
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrName,Code::Token::Css));
+                            }
                         }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
                             tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Selector,Code::Token::Css));
                         }else if(isMarkState(_state,AtRulesCBegin)){
@@ -368,6 +404,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
     if(pHtmlScanner!=nullptr){
         pHtmlScanner->_state = _state;
     }
+    //Html::Scanner::dump(text,tokens);
     return tokens;
 }
 

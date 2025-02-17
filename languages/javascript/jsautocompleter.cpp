@@ -232,7 +232,7 @@ bool AutoCompleter::contextAllowsElectricCharacters(const QTextCursor &cursor) c
 
 bool AutoCompleter::isInComment(const QTextCursor &cursor) const
 {
-    return tokenUnderCursor(cursor).is(Code::Token::Comment,Code::Token::Php);
+    return tokenUnderCursor(cursor).is(Code::Token::Comment,Code::Token::Javascript);
 }
 
 QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,

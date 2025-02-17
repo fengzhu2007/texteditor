@@ -210,7 +210,7 @@ static void createProposal(QFutureInterface<QStringList> &future,CodeFormatter* 
         QList<Code::Token> tokens = codeFormatter->tokenize(text);
         int wordUnderCursorFound = 0;
         for(auto tk:tokens){
-            if(tk.kind == Code::Token::Keyword || tk.kind==Code::Token::Identifier){
+            if(tk.kind == Code::Token::Keyword || tk.kind==Code::Token::Identifier || tk.kind==Code::Token::Variant){
                 const QString word = text.mid(tk.offset,tk.length);
                 if (word == wordUnderCursor) {
                     // Only add the word under cursor if it
@@ -245,7 +245,7 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
     }else{
         do {
             chr = interface->characterAt(--pos);
-        } while (chr.isLetterOrNumber() || chr == '_');
+        } while (chr.isLetterOrNumber() || chr == '_' );
     }
 
 

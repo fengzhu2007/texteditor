@@ -56,6 +56,7 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::AttrValue:
              setFormat(token.offset, token.length, formatForCategory(C_STRING));
              break;
+        case Token::Variant:
         case Token::AttrName:
              setFormat(token.offset, token.length, formatForCategory(C_FIELD));
              break;
@@ -66,7 +67,9 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::Keyword:
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
             break;
-
+        case Token::PseudoClasses:
+            setFormat(token.offset, token.length, formatForCategory(C_GLOBAL));
+            break;
         case Token::String:
         case Token::StringBracket:
             setFormat(token.offset, token.length, formatForCategory(C_STRING));

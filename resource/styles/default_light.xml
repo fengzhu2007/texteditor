@@ -18,7 +18,7 @@
   <style name="String" foreground="#008000"/>
   <style name="Type" foreground="#de5a4e"/>
   <style name="Local"/>
-  <style name="Global"/>
+  <style name="Global" foreground="#bcbc22"/>
   <style name="Field" foreground="#E45649"/>
   <style name="Static" foreground="#E45649"/>
   <style name="VirtualMethod" foreground="#000000" background="#ffffff" italic="true"/>

@@ -35,8 +35,6 @@ static Token tokenUnderCursor(const QTextCursor &cursor)
     int tokenIndex = 0;
     for (; tokenIndex < tokens.size(); ++tokenIndex) {
         const Token &token = tokens.at(tokenIndex);
-        //qDebug()<<"token:"<<token.kind<<"index:"<<tokenIndex<<token.begin()<<token.end();
-
         if (token.is(Token::Comment,Token::Html) || token.is(Token::String,Token::Html)) {
             if (pos > token.begin() && pos <= token.end())
                 break;
@@ -240,7 +238,7 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
     case '>':{
         //find tag name
         //not in php css js
-        qDebug()<<"html text:"<<cursor.block().text();
+        //qDebug()<<"html text:"<<cursor.block().text();
         //qDebug()<<"position:"<<cursor.positionInBlock();
         const QString tag = findNearlyTagName(cursor.block(),cursor.positionInBlock());
         if(!tag.isEmpty()){

@@ -106,6 +106,8 @@ public:
         //css
         Selector,
         AtRules,
+        PseudoClasses,
+        Variant,
         CssOther,
         Invalid,
 
