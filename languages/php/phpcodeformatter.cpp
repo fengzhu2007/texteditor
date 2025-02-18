@@ -91,6 +91,9 @@ namespace Php {
                 }
                 break;
             }
+            /*if(kind==Code::Token::RightParenthesis){
+                qDebug()<<"state"<<stateToString(state().type);
+            }*/
             int type = pHtmlFormatter!=nullptr?pHtmlFormatter->m_currentState.top().type:m_currentState.top().type;
             switch (type) {
             case topmost_intro_php:
@@ -1161,7 +1164,7 @@ namespace Php {
             break;
 
         case binding_assignment:
-        case objectliteral_assignment:
+        //case objectliteral_assignment:
             if (lastToken)
                 *indentDepth = *savedIndentDepth + 4;
             else
@@ -1172,12 +1175,12 @@ namespace Php {
             *indentDepth = tokenPosition;
             break;
 
-        case expression_or_label:
+        /*case expression_or_label:
             if (*indentDepth == tokenPosition)
                 *indentDepth += 2*m_indentSize;
             else
                 *indentDepth = tokenPosition;
-            break;
+            break;*/
 
         case expression:
             if(parentState.type == top_php){
@@ -1186,7 +1189,7 @@ namespace Php {
                 // expression_or_objectdefinition doesn't want the indent
                 // expression_or_label already has it
                 if (parentState.type != expression_or_objectdefinition && parentState.type != expression_or_label && parentState.type != binding_assignment) {
-                    *indentDepth += 2*m_indentSize;
+                    //*indentDepth += 2*m_indentSize;
                 }
             }
             // expression_or_objectdefinition and expression_or_label have already consumed the first token
@@ -1214,7 +1217,7 @@ namespace Php {
                 *savedIndentDepth = parentState.savedIndentDepth;
                 *indentDepth = *savedIndentDepth + m_indentSize;
             } else if (!lastToken) {
-                *indentDepth = tokenPosition + 1;
+                //*indentDepth = tokenPosition + 1;
             } else {
                 *indentDepth = *savedIndentDepth + m_indentSize;
             }
@@ -1229,16 +1232,16 @@ namespace Php {
         case statement_with_condition_paren_open:
         case function_arglist_open:
         case paren_open:
-            if (!lastToken)
-                *indentDepth = tokenPosition + 1;
-            else
+            if (!lastToken){
+                //*indentDepth = tokenPosition + 1;
+            }else
                 *indentDepth += m_indentSize;
             break;
 
         case ternary_op:
-            if (!lastToken)
-                *indentDepth = tokenPosition + tk.length + 1;
-            else
+            if (!lastToken){
+                //*indentDepth = tokenPosition + tk.length + 1;
+            }else
                 *indentDepth += m_indentSize;
             break;
 
@@ -1382,6 +1385,15 @@ namespace Php {
             for (int i = 0; state(i).type != topmost_intro_php; ++i) {
                 const int type = state(i).type;
                 if (type == bracket_open) {
+                    *indentDepth = state(i).savedIndentDepth;
+                    break;
+                }
+            }
+            break;
+        case Code::Token::RightParenthesis:
+            for (int i = 0; state(i).type != topmost_intro_php; ++i) {
+                const int type = state(i).type;
+                if (type == paren_open) {
                     *indentDepth = state(i).savedIndentDepth;
                     break;
                 }

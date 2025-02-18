@@ -77,10 +77,6 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState
             pHtmlFormatter->m_currentToken = m_currentToken;
         }
 
-        //qDebug() << "Token JS:" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1;
-
-
-
         const int kind = extendedTokenKind(m_currentToken);
         if (kind == Code::Token::Comment && state().type != multiline_comment_cont && state().type != multiline_comment_start) {
             *tokenIndex += 1;

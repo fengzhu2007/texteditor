@@ -1343,7 +1343,7 @@ Core::BaseTextFind* TextEditorWidget::finder(){
     return d->m_find;
 }
 
-void TextEditorWidget::findText(const QString& text,int flags,bool hightlight){
+bool TextEditorWidget::findText(const QString& text,int flags,bool hightlight){
     Core::FindFlags findFlags;
     if((flags & FindBackward)>0){
         findFlags.setFlag(FindBackward,true);
@@ -1362,7 +1362,7 @@ void TextEditorWidget::findText(const QString& text,int flags,bool hightlight){
     }
     if(hightlight)
         d->m_find->highlightAllRequested(text,findFlags);
-    d->m_find->findStep(text,findFlags);
+    return d->m_find->findStep(text,findFlags)==Core::IFindSupport::Found;
 }
 
 void TextEditorWidget::replaceText(const QString& before,const QString& after,int flags,bool hightlight){

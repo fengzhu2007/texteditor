@@ -457,7 +457,7 @@ protected:
 public:
     QString selectedText() const;
     Core::BaseTextFind *finder();
-    void findText(const QString& text,int flags,bool hightlight=true);
+    bool findText(const QString& text,int flags,bool hightlight=true);
     void replaceText(const QString& before,const QString& after,int flags,bool hightlight=true);
     int replaceAll(const QString& before,const QString& after,int flags);
     void clearHighlights();
