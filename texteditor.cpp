@@ -2121,6 +2121,7 @@ static inline bool isPrintableText(const QString &text)
 
 void TextEditorWidget::keyPressEvent(QKeyEvent *e)
 {
+
     ICore::restartTrimmer();
 
     ExecuteOnDestruction eod([&]() { d->clearBlockSelection(); });
@@ -2741,8 +2742,8 @@ bool TextEditorWidget::event(QEvent *e)
 
     switch (e->type()) {
     case QEvent::ShortcutOverride: {
-         auto ke = static_cast<QKeyEvent *>(e);
 
+         auto ke = static_cast<QKeyEvent *>(e);
             if (ke->key() == Qt::Key_Escape
                 && (d->m_snippetOverlay->isVisible() || multiTextCursor().hasMultipleCursors())) {
                 e->accept();
@@ -2751,9 +2752,14 @@ bool TextEditorWidget::event(QEvent *e)
             }else {
                 // hack copied from QInputControl::isCommonTextEditShortcut
                 // Fixes: QTCREATORBUG-22854
-                e->setAccepted((ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier
-                                || ke->modifiers() == Qt::KeypadModifier)
-                               && (ke->key() < Qt::Key_Escape));
+                if(ke->modifiers() == Qt::ControlModifier){
+                    if(ke->key() == Qt::Key_A){
+                        //select all
+                        this->selectAll();
+                        return true;
+                    }
+                }
+                e->setAccepted((ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier || ke->modifiers() == Qt::KeypadModifier)  && (ke->key() < Qt::Key_Escape));
                 d->m_maybeFakeTooltipEvent = false;
             }
 
@@ -2769,8 +2775,6 @@ bool TextEditorWidget::event(QEvent *e)
     default:
         break;
     }
-    //qDebug()<<"TextEditorWidget::event6:"<<e;
-
     return QPlainTextEdit::event(e);
 }
 

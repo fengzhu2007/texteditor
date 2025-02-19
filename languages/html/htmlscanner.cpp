@@ -124,7 +124,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 ++index;
             }
             if(ss>-1 && index > ss){
-                tokens.append(Token(ss, index - ss, Token::Comment));
+                tokens.append(Token(ss, index - ss + 2, Token::Comment));
 
             }
             ++index;

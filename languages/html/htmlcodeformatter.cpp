@@ -367,7 +367,7 @@ bool isAutoClose(QStringView tag){
 
         // restore indent depth
         State poppedState = m_currentState.pop();
-        if(poppedState.type==comment_content || poppedState.type==topmost_intro_js || poppedState.type==top_css){
+        if(/*poppedState.type==comment_content || */poppedState.type==topmost_intro_js || poppedState.type==top_css){
             m_indentDepth = m_currentState.top().savedIndentDepth;
         }else{
             m_indentDepth = poppedState.savedIndentDepth;
@@ -380,7 +380,9 @@ bool isAutoClose(QStringView tag){
 
         // if statement is done, may need to leave recursively
         if (statementDone) {
+
             if (topState == topmost_intro_php) {
+                //qDebug()<<"topmost_intro_php"<<currentTokenText();
                 leave(true);
             }else if(topState==html){
                 leave();
@@ -430,10 +432,6 @@ bool isAutoClose(QStringView tag){
         const int startLexerState = loadLexerState(block.previous());
         adjustIndent(m_tokens, startLexerState, &m_indentDepth);
     }
-
-
-
-
 
 
     const Token &CodeFormatter::tokenAt(int idx) const
