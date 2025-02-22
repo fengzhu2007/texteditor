@@ -169,7 +169,7 @@ bool isAutoClose(QStringView tag){
                         //  />
                         leave(true);//leave open_tag and html
                     }
-                }else if( Token::TagStart){
+                }else if(kind== Token::TagStart){
                     //auto_tag
                     const QStringView tok = QStringView(m_currentLine).mid(m_currentToken.begin(),m_currentToken.length);
                     if(isAutoClose(tok)){

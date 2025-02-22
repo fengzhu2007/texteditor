@@ -343,6 +343,7 @@ add_library(texteditor SHARED
     languages/tsx/loader.cpp languages/tsx/loader.h
 
 
+
 )
 
 if(APPLE)
