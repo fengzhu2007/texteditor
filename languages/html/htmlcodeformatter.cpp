@@ -620,6 +620,7 @@ bool isAutoClose(QStringView tag){
             *indentDepth = -1;
             return;
         }
+
         Token tok = tokenAt(0);
         if(tok.lang == Code::Token::Php){
             //qDebug()<<"php adjustIndent"<<m_currentLine.mid(tok.begin(),tok.length)<<*indentDepth;

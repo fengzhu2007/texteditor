@@ -1350,6 +1350,7 @@ namespace Php {
                 return;
             }
         }
+
         // don't touch multi-line strings at all
         if ((startLexerState & Scanner::MultiLineStringDQuote) == Scanner::MultiLineStringDQuote || (startLexerState & Scanner::MultiLineStringSQuote) == Scanner::MultiLineStringSQuote || (startLexerState & Scanner::MultiLineStringTQuote) == Scanner::MultiLineStringTQuote) {
             *indentDepth = -1;
