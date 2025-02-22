@@ -126,8 +126,9 @@ bool isAutoClose(QStringView tag){
                 }
 
             }
+            int type = m_currentState.top().type;
             if(kind == Token::TagLeftBracket){
-                int type = m_currentState.top().type;
+
                 if(type>=topmost_intro_css){
                     this->leaveCSS();
                     goto result;
@@ -136,7 +137,8 @@ bool isAutoClose(QStringView tag){
                     goto result;
                 }
             }
-            switch (m_currentState.top().type) {
+
+            switch (type) {
             case top_html:
                 if(kind == Token::TagLeftBracket && m_currentToken.length == 1){
                     //<
@@ -204,7 +206,12 @@ bool isAutoClose(QStringView tag){
                 break;
 
             default:
-                qWarning() << "html Unhandled state" << m_currentState.top().type;
+                if(type>=topmost_intro_php && type <topmost_intro_js){
+                    this->phpFormatter.recalculateStateAfter(block,lexerState,m_currentLine,&m_tokenIndex);
+                }else{
+                    qWarning() << "html Unhandled state" << m_currentState.top().type;
+                }
+
                 break;
             } // end of state switch
 
@@ -391,14 +398,23 @@ bool isAutoClose(QStringView tag){
     }
 
     void CodeFormatter::leavePHP(){
-        while(m_currentState.size()>1){
+        if(m_currentState.size()>1){
+            int type = m_currentState.top().type;
+            if(type==topmost_intro_php){
+                leave();
+            }else if(type==top_php){
+                leave();
+                leave();
+            }
+        }
+        /*while(m_currentState.size()>1){
             int type = m_currentState.top().type;
             if(type>=topmost_intro_php && type<topmost_intro_js){
                 leave();
             }else{
                 break;
             }
-        }
+        }*/
     }
 
     void CodeFormatter::leaveJS(){
