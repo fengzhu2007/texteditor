@@ -692,7 +692,7 @@ namespace Php {
             pHtmlFormatter->m_currentState.push(s);
             pHtmlFormatter->m_newStates.push(s);
             //Token tok = pHtmlFormatter->currentToken();
-            //qDebug() << "php enter state 1" << stateToString(newState)<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText();
+            //qDebug() << "php enter state 1" << stateToString(newState)<<"indent:"<<pHtmlFormatter->m_indentDepth<<pHtmlFormatter->currentTokenText()<<pHtmlFormatter->m_currentLine;
         }else{
             int savedIndentDepth = m_indentDepth;
             onEnter(newState, &m_indentDepth, &savedIndentDepth);
@@ -957,6 +957,10 @@ namespace Php {
         if (!block.isValid())
             return;
 
+        if(pHtmlFormatter){
+            pHtmlFormatter->saveCurrentState(block);
+            return ;
+        }
         BlockData blockData;
         blockData.m_blockRevision = block.revision();
         blockData.m_beginState = pHtmlFormatter!=nullptr?pHtmlFormatter->m_beginState:m_beginState;
@@ -970,7 +974,7 @@ namespace Php {
     void CodeFormatter::restoreCurrentState(const QTextBlock &block)
     {
         if(pHtmlFormatter!=nullptr){
-            pHtmlFormatter->recalculateStateAfter(block);
+            pHtmlFormatter->restoreCurrentState(block);
             return ;
         }
         if (block.isValid()) {
@@ -1360,6 +1364,13 @@ namespace Php {
         //qDebug()<<"adjustIndent11:"<<*indentDepth;
         const int kind = extendedTokenKind(tokenAt(0));
         switch (kind) {
+        case Code::Token::PhpLeftBracket:
+            //qDebug()<<"html state size"<<pHtmlFormatter->m_htmlStoredState.size();
+            //qDebug()<<"code state size"<<pHtmlFormatter->m_codeStoredState.size();
+
+            *indentDepth -= m_indentSize;
+
+            break;
         case Code::Token::TQouteTag:
             *indentDepth = -1;
             break;
@@ -1459,7 +1470,11 @@ namespace Php {
             break;
         }
 
+        if(*indentDepth<0){
+            *indentDepth = 0;
+        }
 
+        //qDebug()<<"adjustIndent22:"<<*indentDepth;
     }
 
 

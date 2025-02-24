@@ -35,8 +35,7 @@ bool isAutoClose(QStringView tag){
         , jsFormatter(this)
         , cssFormatter(this)
     {
-
-
+        m_hasPHPState = false;
     }
 
     CodeFormatter::CodeFormatter(const TabSettings &tabSettings)
@@ -47,6 +46,7 @@ bool isAutoClose(QStringView tag){
         , jsFormatter(this)
         , cssFormatter(this)
     {
+        m_hasPHPState = false;
         setTabSize(tabSettings.m_tabSize);
         setIndentSize(tabSettings.m_indentSize);
     }
@@ -82,7 +82,7 @@ bool isAutoClose(QStringView tag){
             const int kind = extendedTokenKind(m_currentToken);
            // qDebug() << "Token" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1;
             if(kind == Token::PhpLeftBracket){
-                enter(Php::CodeFormatter::topmost_intro_php);
+                this->enterPHP();
                 m_tokenIndex+=1;
             }
             if(m_currentToken.lang == Token::Php){
@@ -208,10 +208,10 @@ bool isAutoClose(QStringView tag){
             default:
                 if(type>=topmost_intro_php && type <topmost_intro_js){
                     this->phpFormatter.recalculateStateAfter(block,lexerState,m_currentLine,&m_tokenIndex);
+                    goto result;
                 }else{
                     qWarning() << "html Unhandled state" << m_currentState.top().type;
                 }
-
                 break;
             } // end of state switch
 
@@ -224,10 +224,12 @@ bool isAutoClose(QStringView tag){
 
     int CodeFormatter::indentFor(const QTextBlock &block)
     {
-        //qDebug()<<"11111:"<<m_indentDepth<<block.text();
+        //qDebug()<<"11111:"<<m_indentDepth<<m_currentLine;
         restoreCurrentState(block.previous());
-        //qDebug()<<"22222:"<<m_indentDepth<<block.text();
+        //qDebug()<<"22222:"<<m_indentDepth<<m_currentLine;
         correctIndentation(block);
+
+        //qDebug()<<"33333:"<<m_indentDepth<<m_currentLine;
         return m_indentDepth;
     }
 
@@ -339,9 +341,12 @@ bool isAutoClose(QStringView tag){
         }
     }
 
+
+
     void CodeFormatter::enter(int newState)
     {
         int savedIndentDepth = m_indentDepth;
+
         onEnter(newState, &m_indentDepth, &savedIndentDepth);
         State s(newState, savedIndentDepth);
         m_currentState.push(s);
@@ -383,6 +388,10 @@ bool isAutoClose(QStringView tag){
 
         int topState = m_currentState.top().type;
 
+        if(topState==top_html){
+            m_codeStoredState.clear();
+        }
+
         //qDebug() << "html left state" << stateToString(poppedState.type) << ", now in state" << stateToString(topState) <<"indent:"<<m_indentDepth<<currentTokenText()<<"size:"<<m_currentState.size();
 
         // if statement is done, may need to leave recursively
@@ -397,24 +406,67 @@ bool isAutoClose(QStringView tag){
         }
     }
 
-    void CodeFormatter::leavePHP(){
-        if(m_currentState.size()>1){
-            int type = m_currentState.top().type;
-            if(type==topmost_intro_php){
-                leave();
-            }else if(type==top_php){
-                leave();
-                leave();
-            }
-        }
-        /*while(m_currentState.size()>1){
-            int type = m_currentState.top().type;
-            if(type>=topmost_intro_php && type<topmost_intro_js){
-                leave();
+    void CodeFormatter::enterPHP(){
+        //remove last html state
+        auto savedIndentDepth = m_currentState.top().savedIndentDepth;
+        while(m_currentState.size()>0){
+            auto type = m_currentState.top().type;
+            if(type<topmost_intro_php || type>=topmost_intro_js){
+                //not php state
+                m_htmlStoredState.push(m_currentState.pop());
             }else{
                 break;
             }
-        }*/
+        }
+
+        if(m_codeStoredState.size()>0){
+            //qDebug()<<"restore php111"<<m_indentDepth<<m_currentLine;
+            //restore php state
+            while(m_codeStoredState.size()>0){
+                m_currentState.push(m_codeStoredState.pop());
+            }
+            //m_indentDepth = m_currentState.top().savedIndentDepth;
+            //qDebug()<<"restore php222"<<m_indentDepth<<m_currentLine;
+        }else{
+            m_indentDepth = savedIndentDepth;
+            //qDebug()<<"enterPHP1111"<<m_indentDepth;
+            enter(Php::CodeFormatter::topmost_intro_php);
+            //qDebug()<<"enterPHP2222"<<m_indentDepth;
+        }
+    }
+
+    void CodeFormatter::leavePHP(){
+        //qDebug()<<"leavePHP0000000000000"<< m_currentState.top().type<<phpFormatter.stateToString(m_currentState.top().type)<<m_currentLine;
+        int type = m_currentState.top().type;
+        while(m_currentState.size()>0){
+            auto type = m_currentState.top().type;
+            if(type>=topmost_intro_php && type<topmost_intro_js){
+                //php code state
+                //qDebug()<<"leavePHP state"<<type;
+                m_codeStoredState.push(m_currentState.pop());
+            }else{
+                //qDebug()<<"leavePHP last state"<<type;
+                break;
+            }
+        }
+        while(m_htmlStoredState.size()>0){
+            m_currentState.push(m_htmlStoredState.pop());
+        }
+        if(m_currentState.size()>0){
+            for(int i=0;i<m_currentState.size();i++){
+                auto state = m_currentState.at(i);
+                //qDebug()<<"leave php html state"<<stateToString(state.type)<<m_currentLine;
+            }
+            m_indentDepth = m_currentState.top().savedIndentDepth;
+            //qDebug()<<"leavePHP"<<stateToString(m_currentState.top().type)<<m_currentState.top().savedIndentDepth<<m_currentLine;
+        }else{
+            //qDebug()<<"leavePHP empty html";
+        }
+
+        m_indentDepth += m_indentSize;
+
+        //qDebug()<<"leavePHP"<< type<<phpFormatter.stateToString(type)<<"current:"<<stateToString(m_currentState.top().type)<<m_currentLine;
+
     }
 
     void CodeFormatter::leaveJS(){
@@ -496,6 +548,8 @@ bool isAutoClose(QStringView tag){
         blockData.m_blockRevision = block.revision();
         blockData.m_beginState = m_beginState;
         blockData.m_endState = m_currentState;
+        blockData.m_storedState = m_htmlStoredState;
+        blockData.m_otherState = m_codeStoredState;
         blockData.m_indentDepth = m_indentDepth;
 
         QTextBlock saveableBlock(block);
@@ -510,6 +564,8 @@ bool isAutoClose(QStringView tag){
                 m_indentDepth = blockData.m_indentDepth;
                 m_currentState = blockData.m_endState;
                 m_beginState = m_currentState;
+                m_htmlStoredState = blockData.m_storedState;
+                m_codeStoredState = blockData.m_otherState;
                 return;
             }
         }
@@ -584,8 +640,16 @@ bool isAutoClose(QStringView tag){
 
     QString CodeFormatter::stateToString(int type) const
     {
-        const QMetaEnum &metaEnum = staticMetaObject.enumerator(staticMetaObject.indexOfEnumerator("StateType"));
-        return QString::fromUtf8(metaEnum.valueToKey(type));
+        if(type>=topmost_intro_css){
+            return cssFormatter.stateToString(type);
+        }else if(type>=topmost_intro_js){
+            return jsFormatter.stateToString(type);
+        }else if(type>=topmost_intro_php){
+            return phpFormatter.stateToString(type);
+        }else{
+            const QMetaEnum &metaEnum = staticMetaObject.enumerator(staticMetaObject.indexOfEnumerator("StateType"));
+            return QString::fromUtf8(metaEnum.valueToKey(type));
+        }
     }
 
 
@@ -600,8 +664,12 @@ bool isAutoClose(QStringView tag){
         switch (newState) {
         case html:
             if(firstToken){
+                if(parentState.type!=top_html){
+
+                }
                 *savedIndentDepth = *indentDepth;
                 *indentDepth += m_indentSize;
+                //qDebug()<<"enter html 123"<<m_currentLine<<stateToString(parentState.type);
             }
             break;
         case close_tag:
@@ -658,6 +726,7 @@ bool isAutoClose(QStringView tag){
                 break;
             }
         }
+
     }
 
     /*******************************EditorCodeFormatter  START *************************************/

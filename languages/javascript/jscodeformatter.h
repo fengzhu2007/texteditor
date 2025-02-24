@@ -59,7 +59,7 @@ public: // must be public to make Q_GADGET introspection work
     enum StateType {
         invalid = 0,
 
-        topmost_intro_js=80,
+        topmost_intro_js=200,
         top_js, // root for js
         objectdefinition_or_js, // file starts with identifier
 

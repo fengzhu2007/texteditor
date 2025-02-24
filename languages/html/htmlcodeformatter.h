@@ -76,12 +76,12 @@ public: // must be public to make Q_GADGET introspection work
         top_php,
 
 
-        topmost_intro_js = 80,
+        topmost_intro_js = 200,
         top_js,
 
 
 
-        topmost_intro_css = 130,
+        topmost_intro_css = 300,
         top_css,
     };
     Q_ENUM(StateType)
@@ -126,6 +126,7 @@ private:
     bool tryInsideExpression(bool alsoExpression = false);
     bool tryStatement();
 
+    void enterPHP();
     void enter(int newState);
     void leave(bool statementDone = false);
     void leavePHP();
@@ -133,12 +134,16 @@ private:
     void leaveCSS();
     void correctIndentation(const QTextBlock &block);
 
+
+
 private:
     static QStack<State> initialState();
 
     QStack<State> m_beginState;
     QStack<State> m_currentState;
     QStack<State> m_newStates;
+    QStack<State> m_htmlStoredState;
+    QStack<State> m_codeStoredState;
 
     QList<Code::Token> m_tokens;
     QString m_currentLine;
@@ -151,6 +156,8 @@ private:
     int m_tabSize;
 
     int m_indentSize;
+
+    bool m_hasPHPState;
 
 
 protected:

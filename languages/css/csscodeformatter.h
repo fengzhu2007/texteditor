@@ -59,7 +59,7 @@ public: // must be public to make Q_GADGET introspection work
     enum StateType {
         invalid = 0,
 
-        topmost_intro_css=130,
+        topmost_intro_css=300,
         top_css, // root for css
 
         definition_or_css, // file starts with identifier

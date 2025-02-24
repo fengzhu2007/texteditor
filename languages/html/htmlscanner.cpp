@@ -84,7 +84,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
             tokens << jsTokens;
             continue;
         }else if(isMarkState(_state,MultiLineStringDQuote) || isMarkState(_state,MultiLineStringSQuote)){
-
             const QChar quote = ((_state & MultiLineStringDQuote)==MultiLineStringDQuote ? QLatin1Char('"') : QLatin1Char('\''));
             const int start = index;
             while (index < text.length()) {
@@ -428,6 +427,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 }
 
                 tokens.append(Code::Token(start, index - start, Code::Token::String,Code::Token::Html));
+
                 break;
             }else{
                 tokens.append(Token(index, 1, Token::InnerText));
@@ -453,8 +453,10 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 //attr name
                 //find attr
                 //first not space
-                ++index;
+                qDebug()<<"index"<<index<<ch;
                 int ss = index;
+                //++index;
+
                 while(index < text.length()){
                     QChar ch = text.at(index);
                     if(!ch.isSpace()){
@@ -475,10 +477,11 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                     }
                     ++index;
                 }
+                bk2:
                 if(ss < index){
                     tokens.append(Token(ss, index - ss, Token::AttrName));
                 }
-                bk2:
+
                 break;
             }else{
 

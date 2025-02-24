@@ -305,7 +305,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             if(la == QLatin1Char('/')){
                 //like  </
                 if(this->pHtmlScanner!=nullptr){
-                    //this->pHtmlScanner->endCSS();
                      unSetMarkState(&_state,Html::Scanner::MultiLineCss);
                      unSetMarkState(&_state,Html::Scanner::CSSTagStart);
                     goto result;
@@ -320,76 +319,77 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
             }
             break;
         default:
-
             if(!ch.isSpace()){
                 const int ss = index;
                 index += 1;
-                while(index < text.length()){
-
-                    QChar la = text.at(index);
-                    //qDebug()<<"default token:"<<text<<text.length()<<index<<la<<isIdentifierChar(la);
-
-                    //is identifier char or is the last char
-                    if(!isIdentifierChar(la)){
-                        if(isMarkState(_state,MultiLineAttrValue)){
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::AttrValue,Code::Token::Css));
-                        }else if(isMarkState(_state,PseudoClasses)){
-                            int len = index - ss;
-                            tokens.append(Code::Token(ss, len, Code::Token::PseudoClasses,Code::Token::Css));
-                            unSetMarkState(&_state,PseudoClasses);
-                            if(len==4){
-                                auto pseudoClass = text.mid(ss,len).toLower();
-                                if(pseudoClass==QLatin1String("root")){
-                                    setMarkState(&_state,RootPseudoClasses);
+                if(index>=text.length()){
+                    tokens.append(Code::Token(ss,index - ss, Token::Identifier,Code::Token::Css));
+                    goto bk1;
+                }else{
+                    while(index < text.length()){
+                        QChar la = text.at(index);
+                        //is identifier char or is the last char
+                        if(!isIdentifierChar(la)){
+                            if(isMarkState(_state,MultiLineAttrValue)){
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::AttrValue,Code::Token::Css));
+                            }else if(isMarkState(_state,PseudoClasses)){
+                                int len = index - ss;
+                                tokens.append(Code::Token(ss, len, Code::Token::PseudoClasses,Code::Token::Css));
+                                unSetMarkState(&_state,PseudoClasses);
+                                if(len==4){
+                                    auto pseudoClass = text.mid(ss,len).toLower();
+                                    if(pseudoClass==QLatin1String("root")){
+                                        setMarkState(&_state,RootPseudoClasses);
+                                    }
                                 }
-                            }
-                        }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
-                            if(isMarkState(_state,RootPseudoClasses)){
-                                tokens.append(Code::Token(ss, index - ss, Code::Token::Variant,Code::Token::Css));
-                            }else{
-                                tokens.append(Code::Token(ss, index - ss, Code::Token::AttrName,Code::Token::Css));
-                            }
-                        }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::Selector,Code::Token::Css));
-                        }else if(isMarkState(_state,AtRulesCBegin)){
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::Identifier,Code::Token::Css));
-                        }else if(isMarkState(_state,AtRulesBBegin)){
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::Identifier,Code::Token::Css));
-                        }else{
-                            tokens.append(Code::Token(ss, index - ss, Code::Token::Selector,Code::Token::Css));
-                        }
-                        goto bk1;
-                    }else if(index == text.length() - 1){
-                        if(isMarkState(_state,MultiLineAttrValue)){
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrValue,Code::Token::Css));
-                        }else if(isMarkState(_state,PseudoClasses)){
-                            int len = index - ss + 1;
-                            tokens.append(Code::Token(ss,len, Code::Token::PseudoClasses,Code::Token::Css));
-                            unSetMarkState(&_state,PseudoClasses);
-                            if(len==4){
-                                auto pseudoClass = text.mid(ss,len).toLower();
-                                if(pseudoClass==QLatin1String("root")){
-                                    setMarkState(&_state,RootPseudoClasses);
+                            }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
+                                if(isMarkState(_state,RootPseudoClasses)){
+                                    tokens.append(Code::Token(ss, index - ss, Code::Token::Variant,Code::Token::Css));
+                                }else{
+                                    tokens.append(Code::Token(ss, index - ss, Code::Token::AttrName,Code::Token::Css));
                                 }
-                            }
-                        }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
-                            if(isMarkState(_state,RootPseudoClasses)){
-                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Variant,Code::Token::Css));
+                            }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::Selector,Code::Token::Css));
+                            }else if(isMarkState(_state,AtRulesCBegin)){
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::Identifier,Code::Token::Css));
+                            }else if(isMarkState(_state,AtRulesBBegin)){
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::Identifier,Code::Token::Css));
                             }else{
-                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrName,Code::Token::Css));
+                                tokens.append(Code::Token(ss, index - ss, Code::Token::Selector,Code::Token::Css));
                             }
-                        }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Selector,Code::Token::Css));
-                        }else if(isMarkState(_state,AtRulesCBegin)){
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Identifier,Code::Token::Css));
-                        }else if(isMarkState(_state,AtRulesBBegin)){
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Identifier,Code::Token::Css));
-                        }else{
-                            tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Selector,Code::Token::Css));
+                            goto bk1;
+                        }else if(index == text.length() - 1){
+                            if(isMarkState(_state,MultiLineAttrValue)){
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrValue,Code::Token::Css));
+                            }else if(isMarkState(_state,PseudoClasses)){
+                                int len = index - ss + 1;
+                                tokens.append(Code::Token(ss,len, Code::Token::PseudoClasses,Code::Token::Css));
+                                unSetMarkState(&_state,PseudoClasses);
+                                if(len==4){
+                                    auto pseudoClass = text.mid(ss,len).toLower();
+                                    if(pseudoClass==QLatin1String("root")){
+                                        setMarkState(&_state,RootPseudoClasses);
+                                    }
+                                }
+                            }else if(isMarkState(_state,MultiLineAttrList) || isMarkState(_state,AtRulesBBeginAttrList) || isMarkState(_state,AtRulesCBeginSelectorAttrList)){
+                                if(isMarkState(_state,RootPseudoClasses)){
+                                    tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Variant,Code::Token::Css));
+                                }else{
+                                    tokens.append(Code::Token(ss, index - ss + 1, Code::Token::AttrName,Code::Token::Css));
+                                }
+                            }else if(isMarkState(_state,AtRulesCBeginSelectorList)){
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Selector,Code::Token::Css));
+                            }else if(isMarkState(_state,AtRulesCBegin)){
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Identifier,Code::Token::Css));
+                            }else if(isMarkState(_state,AtRulesBBegin)){
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Identifier,Code::Token::Css));
+                            }else{
+                                tokens.append(Code::Token(ss, index - ss + 1, Code::Token::Selector,Code::Token::Css));
+                            }
+                            goto bk1;
                         }
-                        goto bk1;
+                        ++index;
                     }
-                    ++index;
                 }
             }
             ++index;

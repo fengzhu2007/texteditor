@@ -40,6 +40,8 @@ public:
 
     QStack<State> m_beginState;
     QStack<State> m_endState;
+    QStack<State> m_storedState;
+    QStack<State> m_otherState;
     int m_indentDepth;
     int m_blockRevision;
 };
