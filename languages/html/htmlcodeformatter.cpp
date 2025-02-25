@@ -463,7 +463,13 @@ bool isAutoClose(QStringView tag){
             //qDebug()<<"leavePHP empty html";
         }
 
-        m_indentDepth += m_indentSize;
+
+        if(m_currentState.top().type==top_html){
+            m_indentDepth = 0;
+        }else{
+            m_indentDepth += m_indentSize;
+        }
+        // qDebug()<<"current state"<<stateToString(m_currentState.top().type)<<"indent:"<<m_indentDepth;
 
         //qDebug()<<"leavePHP"<< type<<phpFormatter.stateToString(type)<<"current:"<<stateToString(m_currentState.top().type)<<m_currentLine;
 
@@ -665,11 +671,14 @@ bool isAutoClose(QStringView tag){
         case html:
             if(firstToken){
                 if(parentState.type!=top_html){
-
+                    //*savedIndentDepth = *indentDepth;
+                    //*indentDepth += m_indentSize;
+                }else{
+                    //*savedIndentDepth = 0;
                 }
                 *savedIndentDepth = *indentDepth;
                 *indentDepth += m_indentSize;
-                //qDebug()<<"enter html 123"<<m_currentLine<<stateToString(parentState.type);
+                //qDebug()<<"enter html 123"<<m_currentLine<<stateToString(parentState.type)<<*savedIndentDepth<<*indentDepth;
             }
             break;
         case close_tag:

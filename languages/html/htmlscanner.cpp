@@ -453,7 +453,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 //attr name
                 //find attr
                 //first not space
-                qDebug()<<"index"<<index<<ch;
+                //qDebug()<<"index"<<index<<ch;
                 int ss = index;
                 //++index;
 

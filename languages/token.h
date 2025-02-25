@@ -15,13 +15,13 @@ struct State {
         , type(0)
     {}
 
-    State(quint8 ty, quint16 savedDepth)
+    State(quint16 ty, quint16 savedDepth)
         : savedIndentDepth(savedDepth)
         , type(ty)
     {}
 
     quint16 savedIndentDepth;
-    quint8 type;
+    quint16 type;
 
     bool operator==(const State &other) const {
         return type == other.type

@@ -102,7 +102,7 @@ static QString findNearlyTagName(const QTextBlock& bk,int position){
         if(position>0){
             //find previous
             QChar ch = blockText.at(position-1);
-            if(ch==QLatin1Char('/') || ch==QLatin1Char('?') || ch==QLatin1Char('-') || ch==QLatin1Char(']')){
+            if(ch==QLatin1Char('/') || ch==QLatin1Char('?') /*|| ch==QLatin1Char('-')*/ || ch==QLatin1Char(']')){
                 return tag;
             }
         }
