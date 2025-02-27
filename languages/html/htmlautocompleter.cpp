@@ -128,6 +128,7 @@ static QString findMatchedTagName(const QTextBlock& bk,int last){
     Scanner tokenize;
     QString tag;
     int status = 0;
+    int offset = 0;
     while(block.isValid()){
         const int blockState = blockStartState(block);
         const QString blockText = block.text();
@@ -137,16 +138,23 @@ static QString findMatchedTagName(const QTextBlock& bk,int last){
             if(last==-1 || ((it->offset + it->length) < last)){
                 if(it->kind==Token::TagStart || it->kind == Token::TagEnd){
                     tag = blockText.mid(it->begin(),it->length);
-                    if(!Html::isAutoClose(QStringView(tag))){
-                        if(it->kind==Token::TagEnd){
-                            status -= 1;
-                        }else{
-                            status += 1;
-                            if(status>=1){
-                                return tag;
+                    if(offset>0){
+                        offset--;
+                    }else{
+                        if(!Html::isAutoClose(QStringView(tag))){
+                            if(it->kind==Token::TagEnd){
+                                status -= 1;
+                            }else{
+                                status += 1;
+                                if(status>=1){
+                                    return tag;
+                                }
                             }
                         }
                     }
+                }else if(it->kind==Token::TagRightBracket && it->length==2){
+                    //auto close tag end
+                    offset++;
                 }
             }
             last = -1;

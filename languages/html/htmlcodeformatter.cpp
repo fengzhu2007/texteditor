@@ -735,7 +735,6 @@ bool isAutoClose(QStringView tag){
                 break;
             }
         }
-
     }
 
     /*******************************EditorCodeFormatter  START *************************************/
