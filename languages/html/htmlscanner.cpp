@@ -400,7 +400,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
         case '\'':
         case '"':
             if(isMarkState(_state,MultiLineElement)){
-
                 const QChar quote = ch;
                 const int start = index;
                 ++index;
@@ -414,7 +413,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                     else
                         ++index;
                 }
-
                 if (index < text.length()) {
                     ++index;
                     // good one
@@ -456,13 +454,15 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 //qDebug()<<"index"<<index<<ch;
                 int ss = index;
                 //++index;
-
                 while(index < text.length()){
                     QChar ch = text.at(index);
                     if(!ch.isSpace()){
                         if(!isIdentifierChar(ch)){
                             goto bk2;
                         }
+                        /*if(ch!=QLatin1Char('=')){
+                            goto bk2;
+                        }*/
                         ss = index;
                         break;
                     }
@@ -472,6 +472,9 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 //++index;
                 while(index<text.length()){
                     QChar ch = text.at(index);
+                    if(ch.isSpace() || ch==QLatin1Char('=')){
+                        break;
+                    }
                     if(!isIdentifierChar(ch)){
                         break;
                     }
@@ -480,6 +483,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState)
                 bk2:
                 if(ss < index){
                     tokens.append(Token(ss, index - ss, Token::AttrName));
+                }else{
+                    index++;
                 }
 
                 break;
