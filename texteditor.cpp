@@ -2428,7 +2428,6 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
             autoText = autoCompleter()->autoComplete(cursor, eventText, skipChar,&adjustPos);
         }
         const bool cursorWithinSnippet = d->snippetCheckCursor(cursor);
-        //qDebug()<<"autoText"<<autoText;
 
         QChar electricChar;
         if (d->m_document->typingSettings().m_autoIndent) {

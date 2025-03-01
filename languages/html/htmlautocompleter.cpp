@@ -264,10 +264,7 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
         }
     }
     case '/':{
-        //qDebug()<<"cursor:"<<cursor.columnNumber();
-
-        //return {};
-        int before = cursor.columnNumber() - 1;
+        int before = cursor.positionInBlock() - 1;
         if(before>-1 && block.text().at(before)==QChar('<')){
             const QString tag = findMatchedTagName(cursor.block(),cursor.columnNumber());
             if(!tag.isEmpty()){
@@ -283,7 +280,6 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
                 return {};
             }
         }
-
     }
     default:
         break;

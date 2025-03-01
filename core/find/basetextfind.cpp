@@ -12,7 +12,7 @@
 #include <QRegularExpression>
 #include <QTextBlock>
 #include <QTextCursor>
-
+#include <QDebug>
 namespace Core {
 
 QRegularExpression BaseTextFind::regularExpression(const QString &txt, FindFlags flags)
@@ -372,6 +372,7 @@ bool BaseTextFind::find(const QString &txt, FindFlags findFlags, QTextCursor sta
         setTextCursor(start);
         return true;
     }
+
     QRegularExpression regexp = regularExpression(txt, findFlags);
     QTextCursor found = findOne(regexp, start, textDocumentFlagsForFindFlags(findFlags));
     if (wrapped)

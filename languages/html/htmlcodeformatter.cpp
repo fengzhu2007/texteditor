@@ -226,10 +226,7 @@ bool isAutoClose(QStringView tag){
     {
         //qDebug()<<"11111:"<<m_indentDepth<<m_currentLine;
         restoreCurrentState(block.previous());
-        //qDebug()<<"22222:"<<m_indentDepth<<m_currentLine;
         correctIndentation(block);
-
-        //qDebug()<<"33333:"<<m_indentDepth<<m_currentLine;
         return m_indentDepth;
     }
 
