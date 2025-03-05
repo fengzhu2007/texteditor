@@ -450,6 +450,10 @@ public:
     void rememberCurrentSyntaxDefinition();
     void openLinkUnderCursor(bool openInNextSplit);
 
+    qreal charWidth() const;
+
+    void forceUpdateScrollbarSize();
+
 public:
     TextEditorWidget *q;
     BaseTextFind *m_find = nullptr;
@@ -457,6 +461,7 @@ public:
     //uint m_optionalActionMask = TextEditorActionHandler::None;
     bool m_contentsChanged = false;
     bool m_lastCursorChangeWasInteresting = false;
+    std::shared_ptr<void> m_suggestionBlocker;
 
     QSharedPointer<TextDocument> m_document;
     QList<QMetaObject::Connection> m_documentConnections;
@@ -624,6 +629,14 @@ public:
     QList<int> m_visualIndentCache;
     int m_visualIndentOffset = 0;
     bool m_hightlighted = false;
+
+
+    void insertSuggestion(std::unique_ptr<TextSuggestion> &&suggestion);
+    void updateSuggestion();
+    void clearCurrentSuggestion();
+    QTextBlock m_suggestionBlock;
+
+
 };
 
 class TextEditorWidgetFind : public BaseTextFind
@@ -1275,6 +1288,66 @@ void TextEditorWidgetPrivate::handleMoveBlockSelection(QTextCursor::MoveOperatio
         cursors.append(generateCursorsForBlockSelection(blockSelection));
     }
     q->setMultiTextCursor(MultiTextCursor(cursors));
+}
+
+void TextEditorWidgetPrivate::insertSuggestion(std::unique_ptr<TextSuggestion> &&suggestion)
+{
+    clearCurrentSuggestion();
+
+    if (m_suggestionBlocker.use_count() > 1)
+        return;
+
+    auto cursor = q->textCursor();
+    cursor.setPosition(suggestion->currentPosition());
+    QTextOption option = suggestion->replacementDocument()->defaultTextOption();
+    option.setTabStopDistance(charWidth() * m_document->tabSettings().m_tabSize);
+    suggestion->replacementDocument()->setDefaultTextOption(option);
+    auto options = suggestion->replacementDocument()->defaultTextOption();
+    m_suggestionBlock = cursor.block();
+    m_document->insertSuggestion(std::move(suggestion));
+    forceUpdateScrollbarSize();
+}
+
+qreal TextEditorWidgetPrivate::charWidth() const
+{
+    return QFontMetricsF(q->font()).horizontalAdvance(QLatin1Char('x'));
+}
+
+
+void TextEditorWidgetPrivate::forceUpdateScrollbarSize()
+{
+    q->resizeEvent(new QResizeEvent(q->size(), q->size()));
+}
+
+void TextEditorWidgetPrivate::updateSuggestion()
+{
+    if (!m_suggestionBlock.isValid())
+        return;
+    const QTextCursor cursor = m_cursors.mainCursor();
+    if (cursor.block() == m_suggestionBlock) {
+        TextSuggestion *suggestion = TextDocumentLayout::suggestion(m_suggestionBlock);
+        if (QTC_GUARD(suggestion)) {
+            const int pos = cursor.position();
+            if (pos >= suggestion->currentPosition()) {
+                suggestion->setCurrentPosition(pos);
+                if (suggestion->filterSuggestions(q)) {
+                    TextDocumentLayout::updateSuggestionFormats(
+                        m_suggestionBlock, m_document->fontSettings());
+                    return;
+                }
+            }
+        }
+    }
+    clearCurrentSuggestion();
+}
+
+void TextEditorWidgetPrivate::clearCurrentSuggestion()
+{
+    if (TextBlockUserData *userData = TextDocumentLayout::textUserData(m_suggestionBlock)) {
+        userData->clearSuggestion();
+        m_document->updateLayout();
+    }
+    m_suggestionBlock = QTextBlock();
 }
 
 void TextEditorWidget::selectEncoding()
@@ -4616,6 +4689,26 @@ void TextEditorWidget::paintBlock(QPainter *painter,
                                   const QVector<QTextLayout::FormatRange> &selections,
                                   const QRect &clipRect) const
 {
+    if (TextSuggestion *suggestion = TextDocumentLayout::suggestion(block)) {
+        QTextBlock suggestionBlock = suggestion->replacementDocument()->firstBlock();
+        QPointF suggestionOffset = offset;
+        suggestionOffset.rx() += document()->documentMargin();
+        while (suggestionBlock.isValid()) {
+            const QVector<QTextLayout::FormatRange> blockSelections
+                = suggestionBlock.blockNumber() == 0 ? selections
+                                                      : QVector<QTextLayout::FormatRange>{};
+            suggestionBlock.layout()->draw(painter,
+                                            suggestionOffset,
+                                            blockSelections,
+                                            clipRect);
+            suggestionOffset.ry() += suggestion->replacementDocument()
+                                         ->documentLayout()
+                                         ->blockBoundingRect(suggestionBlock)
+                                         .height();
+            suggestionBlock = suggestionBlock.next();
+        }
+        return;
+    }
     block.layout()->draw(painter, offset, selections, clipRect);
 }
 
@@ -8186,6 +8279,36 @@ HighlightScrollBarController *TextEditorWidget::highlightScrollBarController() c
 {
     return d->m_highlightScrollBarController;
 }
+
+void TextEditorWidget::insertSuggestion(std::unique_ptr<TextSuggestion> &&suggestion){
+    d->insertSuggestion(std::move(suggestion));
+}
+
+void TextEditorWidget::clearSuggestion(){
+    d->clearCurrentSuggestion();
+}
+
+TextSuggestion *TextEditorWidget::currentSuggestion() const{
+    if (d->m_suggestionBlock.isValid())
+            return TextDocumentLayout::suggestion(d->m_suggestionBlock);
+        return nullptr;
+}
+
+bool TextEditorWidget::suggestionVisible() const{
+    return currentSuggestion();
+}
+
+bool TextEditorWidget::suggestionsBlocked() const{
+    return d->m_suggestionBlocker.use_count() > 1;
+}
+
+
+TextEditorWidget::SuggestionBlocker TextEditorWidget::blockSuggestions(){
+    if (!suggestionsBlocked())
+            clearSuggestion();
+        return d->m_suggestionBlocker;
+}
+
 
 // The remnants of PlainTextEditor.
 void TextEditorWidget::setupGenericHighlighter()

@@ -56,17 +56,17 @@ void CodeFormatter::recalculateStateAfter(const QTextBlock &block)
 
 void CodeFormatter::recalculateStateAfter(const QTextBlock &block,int lexerState,const QString& currentLine,int* tokenIndex){
     m_currentLine = currentLine;
-
     for (; *tokenIndex < m_tokens.size(); ) {
         m_currentToken = tokenAt(*tokenIndex);
-        //qDebug() << "Token JS:" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1;
+
         const int kind = extendedTokenKind(m_currentToken);
         if (kind == Code::Token::Comment && state().type != multiline_comment_cont && state().type != multiline_comment_start) {
             *tokenIndex += 1;
             continue;
         }
-
         int type = m_currentState.top().type;
+        //qDebug() << "Token JS:" << m_currentLine.mid(m_currentToken.begin(), m_currentToken.length)<<m_currentToken.kind << m_tokenIndex << "in line" << block.blockNumber() + 1<<stateToString(type);
+
         switch (type) {
         case topmost_intro_js:
             switch (kind) {
@@ -716,7 +716,6 @@ void CodeFormatter::leave(bool statementDone)
     topState = m_currentState.top().type;
     //qDebug()<<"m_current index:"<<m_indentDepth;
     m_indentDepth = poppedState.savedIndentDepth;
-
     if(poppedState.type==html_element){
         m_indentDepth = column(m_tokens.at(0).begin());
         //const int tokenPosition = column(tk.begin());

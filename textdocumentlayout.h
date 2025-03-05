@@ -7,7 +7,7 @@
 
 #include "textmark.h"
 #include "textdocument.h"
-
+#include "textsuggestion.h"
 #include "utils/id.h"
 
 #include "syntax-highlighting/state.h"
@@ -133,6 +133,10 @@ public:
     QByteArray expectedRawStringSuffix() { return m_expectedRawStringSuffix; }
     void setExpectedRawStringSuffix(const QByteArray &suffix) { m_expectedRawStringSuffix = suffix; }
 
+    void insertSuggestion(std::unique_ptr<TextSuggestion> &&suggestion);
+    TextSuggestion *suggestion() const;
+    void clearSuggestion();
+
 private:
     TextMarks m_marks;
     int m_foldingIndent : 16;
@@ -144,6 +148,7 @@ private:
     int m_additionalAnnotationHeight = 0;
     Parentheses m_parentheses;
     CodeFormatterData *m_codeFormatterData;
+    std::unique_ptr<TextSuggestion> m_suggestion;
     KSyntaxHighlighting::State m_syntaxState;
     QByteArray m_expectedRawStringSuffix; // A bit C++-specific, but let's be pragmatic.
     QStack<int> m_states;
@@ -191,6 +196,8 @@ public:
     static void setFolded(const QTextBlock &block, bool folded);
     static void setExpectedRawStringSuffix(const QTextBlock &block, const QByteArray &suffix);
     static QByteArray expectedRawStringSuffix(const QTextBlock &block);
+    static TextSuggestion *suggestion(const QTextBlock &block);
+    static void updateSuggestionFormats(const QTextBlock &block, const FontSettings &fontSettings);
 
     class TEXTEDITOR_EXPORT FoldValidator
     {

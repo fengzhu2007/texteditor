@@ -17,6 +17,49 @@ QT_END_NAMESPACE
 namespace Utils {
 namespace Text {
 
+
+class QTCREATOR_UTILS_EXPORT Position
+{
+public:
+    int line = 0; // 1-based
+    int column = -1; // 0-based
+
+    bool operator<(const Position &other) const
+    { return line < other.line || (line == other.line && column < other.column); }
+    bool operator==(const Position &other) const;
+
+    bool operator!=(const Position &other) const { return !(operator==(other)); }
+
+    bool isValid() const { return line > 0 && column >= 0; }
+
+    int positionInDocument(QTextDocument *doc) const;
+    QTextCursor toTextCursor(QTextDocument *doc) const;
+
+    static Position fromFileName(QStringView fileName, int &postfixPos);
+    static Position fromPositionInDocument(const QTextDocument *document, int pos);
+    static Position fromCursor(const QTextCursor &cursor);
+
+    int toPositionInDocument(const QTextDocument *document) const;
+};
+
+class QTCREATOR_UTILS_EXPORT Range
+{
+public:
+    int length(const QString &text) const;
+
+    Position begin;
+    Position end;
+
+    bool operator<(const Range &other) const { return begin < other.begin; }
+    bool operator==(const Range &other) const;
+
+    bool operator!=(const Range &other) const { return !(operator==(other)); }
+
+    QTextCursor toTextCursor(QTextDocument *doc) const;
+};
+
+
+
 struct Replacement
 {
     Replacement() = default;
@@ -64,5 +107,9 @@ QTCREATOR_UTILS_EXPORT LineColumn utf16LineColumn(const QByteArray &utf8Buffer, 
 QTCREATOR_UTILS_EXPORT QString utf16LineTextInUtf8Buffer(const QByteArray &utf8Buffer,
                                                          int currentUtf8Offset);
 
+QTCREATOR_UTILS_EXPORT QDebug &operator<<(QDebug &stream, const Position &pos);
 } // Text
 } // Utils
+
+Q_DECLARE_METATYPE(Utils::Text::Position)
+Q_DECLARE_METATYPE(Utils::Text::Range)

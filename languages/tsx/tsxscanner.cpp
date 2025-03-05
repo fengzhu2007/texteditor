@@ -491,7 +491,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
 
     while (index < text.length()) {
         const QChar ch = text.at(index);
-        //qDebug()<<"ch"<<ch;
         QChar la; // lookahead char
         if (index + 1 < text.length())
             la = text.at(index + 1);
@@ -661,7 +660,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
             if(isMarkState(_state,TernaryExpression)==false){
                 //not a?b:c;
                 //let name:string
-                qDebug()<<"typename"<<index;
                 index = this->findTypename(tokens,text,index);
             }else{
                 unSetMarkState(&_state,TernaryExpression);
@@ -698,6 +696,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                     ++length;
                     ++i;
                 }
+
                 if(length>0){
                     if(cc.isSpace() || cc.isLetterOrNumber()){
                         //like <div
@@ -733,7 +732,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                         }
                     }else if(cc==QLatin1Char('>')){
                         index = i;
-                        if(tokens.last().kind==Token::Identifier){
+                        //qDebug()<<"222222222222222222223333333333333"<<tokens.size()<<_state;
+                        if(tokens.size()==0 || tokens.last().kind==Token::Identifier){
                             //lie name<T>
                             //GenericExpression
                             tokens.append(Token(from, 1, Token::Delimiter));//<
@@ -991,6 +991,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
     from = index;
     //qDebug()<<text<<m_stateStack;
     //Html::Scanner().dump(text,tokens);
+    qDebug()<<"Scanner::operator()2"<<text;
     return tokens;
 }
 

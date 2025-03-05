@@ -44,6 +44,7 @@ class BaseTextFind;
 namespace TextEditor {
 class TextDocument;
 class TextMark;
+class TextSuggestion;
 class RefactorOverlay;
 class SyntaxHighlighter;
 class AssistInterface;
@@ -381,6 +382,17 @@ public:
     int centerVisibleBlockNumber() const;
 
     Core::HighlightScrollBarController *highlightScrollBarController() const;
+
+
+    void insertSuggestion(std::unique_ptr<TextSuggestion> &&suggestion);
+    void clearSuggestion();
+    TextSuggestion *currentSuggestion() const;
+    bool suggestionVisible() const;
+    bool suggestionsBlocked() const;
+
+    using SuggestionBlocker = std::shared_ptr<void>;
+    // Returns an object that blocks suggestions until it is destroyed.
+    SuggestionBlocker blockSuggestions();
 
 
 #ifdef WITH_TESTS
