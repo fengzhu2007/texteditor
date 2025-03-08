@@ -976,7 +976,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 do {
                     ++index;
                 } while (index < text.length() && isIdentifierChar(text.at(index)));
-                qDebug()<<"token"<<text.mid(start, index - start);
+                //qDebug()<<"token"<<text.mid(start, index - start);
                 if (isKeyword(text.mid(start, index - start)))
                     tokens.append(Token(start, index - start, Token::Keyword,Code::Token::Javascript)); // ### fixme
                 else
@@ -991,7 +991,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
     from = index;
     //qDebug()<<text<<m_stateStack;
     //Html::Scanner().dump(text,tokens);
-    qDebug()<<"Scanner::operator()2"<<text;
+    //qDebug()<<"Scanner::operator()2"<<text;
     return tokens;
 }
 
