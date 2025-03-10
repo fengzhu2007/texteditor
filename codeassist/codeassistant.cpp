@@ -85,6 +85,7 @@ private:
     IAssistProcessor *m_asyncProcessor = nullptr;
     AssistKind m_assistKind = TextEditor::Completion;
     IAssistProposalWidget *m_proposalWidget = nullptr;
+    TextEditorWidget::SuggestionBlocker m_suggestionBlocker;
     QScopedPointer<IAssistProposal> m_proposal;
     bool m_receivedContentWhileWaiting = false;
     QTimer m_automaticProposalTimer;
@@ -313,6 +314,16 @@ void CodeAssistantPrivate::displayProposal(IAssistProposal *newProposal, AssistR
         destroyContext();
         return;
     }
+
+    if (m_editorWidget->suggestionVisible()) {
+        if (reason != ExplicitlyInvoked) {
+            destroyContext();
+            return;
+        }
+        m_editorWidget->clearSuggestion();
+    }
+
+
     const QString prefix = m_editorWidget->textAt(basePosition,
                                                   m_editorWidget->position() - basePosition);
     if (!newProposal->hasItemsToPropose(prefix, reason)) {

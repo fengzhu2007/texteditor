@@ -39,7 +39,7 @@
   <style name="JsImportVar" foreground="#0055af" background="#ffffff" italic="true"/>
   <style name="JsGlobalVar" foreground="#0055af" background="#ffffff" italic="true"/>
   <style name="Binding" foreground="#800000"/>
-  <style name="DisabledCode" background="#efefef"/>
+  <style name="DisabledCode" background="#efefef" foreground="#999999"/>
   <style name="AddedLine" foreground="#00aa00"/>
   <style name="RemovedLine" foreground="#ff0000"/>
   <style name="DiffFile" foreground="#000080"/>

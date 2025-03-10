@@ -749,8 +749,29 @@ void TextDocumentLayout::requestUpdateNow()
     requestUpdate();
 }
 
+static QRectF replacementBoundingRect(const QTextDocument *replacement)
+{
+    QTC_ASSERT(replacement, return {});
+    auto *layout = static_cast<QPlainTextDocumentLayout *>(replacement->documentLayout());
+    QRectF boundingRect;
+    QTextBlock block = replacement->firstBlock();
+    while (block.isValid()) {
+        const QRectF blockBoundingRect = layout->blockBoundingRect(block);
+        boundingRect.setWidth(std::max(boundingRect.width(), blockBoundingRect.width()));
+        boundingRect.setHeight(boundingRect.height() + blockBoundingRect.height());
+        block = block.next();
+    }
+    return boundingRect;
+}
+
 QRectF TextDocumentLayout::blockBoundingRect(const QTextBlock &block) const
 {
+    if (TextSuggestion *suggestion = TextDocumentLayout::suggestion(block)) {
+        // since multiple code paths expects that we have a valid block layout after requesting the
+        // block bounding rect explicitly create that layout here
+        ensureBlockLayout(block);
+        return replacementBoundingRect(suggestion->replacementDocument());
+    }
     QRectF boundingRect = QPlainTextDocumentLayout::blockBoundingRect(block);
 
     if (TextEditorSettings::fontSettings().relativeLineSpacing() != 100) {
