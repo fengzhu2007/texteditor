@@ -273,7 +273,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         tokens.append(Token(start, index - start, Token::String,Code::Token::Javascript));
         setRegexpMayFollow(&_state, false);
     };
-
     if (multiLineState(_state) == MultiLineComment) {
         int start = -1;
         while (index < text.length()) {
@@ -297,7 +296,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         //qDebug()<<"MultiLineCommentMultiLineCommentMultiLineComment";
         if (_scanComments && start != -1)
             tokens.append(Token(start, index - start, Token::Comment,Code::Token::Javascript));
-    } else if (multiLineState(_state) == MultiLineStringDQuote || multiLineState(_state) == MultiLineStringSQuote) {
+    } else if (isMarkState(_state,MultiLineStringDQuote)  || isMarkState(_state,MultiLineStringSQuote)) {
         const QChar quote = (_state == MultiLineStringDQuote ? QLatin1Char('"') : QLatin1Char('\''));
         const int start = index;
         while (index < text.length()) {
@@ -312,12 +311,13 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
         }
         if (index < text.length()) {
             ++index;
-            setMultiLineState(&_state, Normal);
+            //setMultiLineState(&_state, Normal);
+            unSetMarkState(&_state,MultiLineStringDQuote|MultiLineStringSQuote);
         }
         if (start < index)
             tokens.append(Token(start, index - start, Token::String,Code::Token::Javascript));
         setRegexpMayFollow(&_state, false);
-    } else if (multiLineState(_state) == MultiLineStringBQuote) {
+    } else if (isMarkState(_state,MultiLineStringBQuote)) {
         scanTemplateString();
     }
 
@@ -402,6 +402,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int& startState)
                 else
                     setMultiLineState(&_state, MultiLineStringSQuote);
             }
+
+            //qDebug()<<text.trimmed()<<_state<<isMarkState(_state,MultiLineStringDQuote)<<isMarkState(_state,MultiLineStringSQuote);
 
             tokens.append(Token(start, index - start, Token::String,Code::Token::Javascript));
             setRegexpMayFollow(&_state, false);

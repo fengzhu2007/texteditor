@@ -45,6 +45,7 @@ void Highlighter::highlightBlock(const QString &text)
         case Token::Selector:
         case Token::AtRules:
         case Token::TagDefine:
+            //qDebug()<<"token:"<<token.kind<<text.mid(token.offset,token.length);
             setFormat(token.offset, token.length, formatForCategory(C_KEYWORD));
              break;
         case Token::CommentTagStart:

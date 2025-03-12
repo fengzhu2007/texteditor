@@ -601,8 +601,7 @@ void TextDocumentLayout::updateSuggestionFormats(const QTextBlock &block,
         cursor.setPosition(position);
         const QString trailingText = block.text().mid(position);
         if (!trailingText.isEmpty()) {
-            const int trailingIndex = suggestionDoc->firstBlock().text().indexOf(trailingText,
-                                                                                 position);
+            const int trailingIndex = suggestionDoc->firstBlock().text().indexOf(trailingText,position);
             if (trailingIndex >= 0) {
                 cursor.setPosition(trailingIndex, QTextCursor::KeepAnchor);
                 cursor.setCharFormat(replacementFormat);
