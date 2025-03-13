@@ -74,6 +74,7 @@ class StorageSettings;
 class TypingSettings;
 
 
+
 enum TextMarkRequestKind
 {
     BreakpointRequest,
@@ -258,6 +259,7 @@ public:
     void setStorageSettings(const TextEditor::StorageSettings &);
     void setCompletionSettings(const TextEditor::CompletionSettings &);
     void setExtraEncodingSettings(const TextEditor::ExtraEncodingSettings &);
+
 
     void circularPaste();
     void pasteWithoutFormat();

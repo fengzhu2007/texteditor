@@ -342,6 +342,7 @@ add_library(texteditor SHARED
     languages/python/loader.cpp languages/python/loader.h
     languages/tsx/loader.cpp languages/tsx/loader.h
     textsuggestion.cpp textsuggestion.h
+    aisettings.h aisettings.cpp
 
 
 

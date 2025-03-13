@@ -2579,8 +2579,8 @@ void TextEditorWidget::keyPressEvent(QKeyEvent *e)
 
     if (!ro && d->m_contentsChanged && isPrintableText(eventText) && !inOverwriteMode){
         d->m_codeAssistant.process();
-    }
 
+    }
 }
 
 class PositionedPart : public ParsedSnippet::Part
@@ -7548,6 +7548,7 @@ void TextEditorWidget::setExtraEncodingSettings(const ExtraEncodingSettings &ext
 {
     d->m_document->setExtraEncodingSettings(extraEncodingSettings);
 }
+
 
 void TextEditorWidget::fold()
 {

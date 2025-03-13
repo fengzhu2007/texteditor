@@ -180,6 +180,7 @@ void TextEditorSettings::setCommentSettings(const CommentsSettings& settings){
     d->m_commentsSettings = settings;
 }
 
+
 void TextEditorSettings::registerCodeStyleFactory(ICodeStylePreferencesFactory *factory)
 {
     d->m_languageToFactory.insert(factory->languageId(), factory);
@@ -295,7 +296,7 @@ QJsonObject TextEditorSettings::toJson(){
         {"highlighter",d->m_highlighterSettings.toJson()},
         {"extraEncoding",d->m_extraEncodingSettings.toJson()},
         {"comments",d->m_commentsSettings.toJson()},
-        {"tab",TabSettings().toJson()},
+        {"tab",TabSettings().toJson()}
     };
 
 }

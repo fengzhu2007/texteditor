@@ -95,8 +95,6 @@ public:
 
     static QString name();
 
-
-
 signals:
     void fontSettingsChanged(const TextEditor::FontSettings &);
     void typingSettingsChanged(const TextEditor::TypingSettings &);
@@ -107,6 +105,7 @@ signals:
     void completionSettingsChanged(const TextEditor::CompletionSettings &);
     void extraEncodingSettingsChanged(const TextEditor::ExtraEncodingSettings &);
     void commentsSettingsChanged(const TextEditor::CommentsSettings &);
+
 };
 
 } // namespace TextEditor
