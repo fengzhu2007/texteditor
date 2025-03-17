@@ -2195,7 +2195,6 @@ static inline bool isPrintableText(const QString &text)
 
 void TextEditorWidget::keyPressEvent(QKeyEvent *e)
 {
-
     ICore::restartTrimmer();
 
     ExecuteOnDestruction eod([&]() { d->clearBlockSelection(); });
@@ -2838,7 +2837,6 @@ bool TextEditorWidget::event(QEvent *e)
 
     switch (e->type()) {
     case QEvent::ShortcutOverride: {
-
          auto ke = static_cast<QKeyEvent *>(e);
             if (ke->key() == Qt::Key_Escape
                 && (d->m_snippetOverlay->isVisible() || multiTextCursor().hasMultipleCursors() || d->m_suggestionBlock.isValid())) {
@@ -2858,7 +2856,6 @@ bool TextEditorWidget::event(QEvent *e)
                 e->setAccepted((ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier || ke->modifiers() == Qt::KeypadModifier)  && (ke->key() < Qt::Key_Escape));
                 d->m_maybeFakeTooltipEvent = false;
             }
-
         return true;
     }
     case QEvent::ApplicationPaletteChange: {
