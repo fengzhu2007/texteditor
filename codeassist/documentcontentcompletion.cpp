@@ -210,7 +210,7 @@ static void createProposal(QFutureInterface<QStringList> &future,CodeFormatter* 
         QList<Code::Token> tokens = codeFormatter->tokenize(text);
         int wordUnderCursorFound = 0;
         for(auto tk:tokens){
-            if(tk.kind == Code::Token::Keyword || tk.kind==Code::Token::Identifier || tk.kind==Code::Token::Variant){
+            if(codeFormatter->isVariantKind(tk.kind)){
                 const QString word = text.mid(tk.offset,tk.length);
                 if (word == wordUnderCursor) {
                     // Only add the word under cursor if it

@@ -54,6 +54,7 @@ public:
     virtual QList<Code::Token> tokenize(const QString& text) override;
 
     virtual bool isIdentifier(QChar chr) override;
+    virtual bool isVariantKind(int kind) override;
 
 public: // must be public to make Q_GADGET introspection work
     enum StateType {

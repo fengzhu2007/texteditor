@@ -66,5 +66,8 @@ bool CodeFormatter::isIdentifier(QChar chr){
     return (chr.isLetterOrNumber() || chr == '_');
 }
 
+bool CodeFormatter::isVariantKind(int kind){
+    return (kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
+}
 
 }

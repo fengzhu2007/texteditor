@@ -41,6 +41,7 @@ public:
 
     virtual bool isInStringORCommentLiteral(const QTextBlock& block,int pos);
     virtual bool isIdentifier(QChar chr);
+    virtual bool isVariantKind(int kind);
 };
 
 

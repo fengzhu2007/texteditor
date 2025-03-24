@@ -724,7 +724,11 @@ QList<Code::Token> CodeFormatter::tokenize(const QString& text){
 }
 
 bool CodeFormatter::isIdentifier(QChar chr){
-    return chr.isLetterOrNumber() || chr == '_' || chr == '-';
+    return chr.isLetterOrNumber() || chr == '_' || chr == '-'|| chr == '.';
+}
+
+bool CodeFormatter::isVariantKind(int kind){
+    return (kind == Code::Token::Selector || kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
 }
 
 } // namespace css

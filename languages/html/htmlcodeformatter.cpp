@@ -812,7 +812,12 @@ bool isAutoClose(QStringView tag){
     }
 
     bool CodeFormatter::isIdentifier(QChar chr){
-        return chr.isLetterOrNumber() || chr == '_' || chr == '-' || chr == '$';
+        return chr.isLetterOrNumber() || chr == '_' || chr == '-' || chr == '$' || chr == '.';
+    }
+
+
+    bool CodeFormatter::isVariantKind(int kind){
+        return (kind == Code::Token::TagStart || kind == Code::Token::Selector || kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
     }
 
 }
