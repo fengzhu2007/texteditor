@@ -81,6 +81,8 @@ public:
 
     inline QStack<int>& statesStack() {return m_stateStack;}
 
+    int scanInnerText(QList<Code::Token>& tokens,const QString& text,int index);
+
 private:
     int findTypename(QList<Code::Token>& tokens,const QString &text,int index);
     int findGenericName(QList<Code::Token>& tokens,const QString &text,int index);

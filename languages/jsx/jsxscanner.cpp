@@ -425,7 +425,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
         scanTemplateString();
     }else if(isCurrentState(m_stateStack,MultiLineInnerText)){
         int ss = index;
-
         while(ss< text.length()){
             const QChar ch = text.at(ss);
             if(ch.isSpace()){
@@ -589,7 +588,6 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
             tokens.append(Token(index++, 1, Token::RightBracket,Code::Token::Javascript));
             setRegexpMayFollow(&_state, false);
             break;
-
         case '{':{
             enterState(&m_stateStack,RegexpMayFollow);
             tokens.append(Token(index++, 1, Token::LeftBrace,Code::Token::Javascript));
@@ -633,12 +631,10 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
 
         case '+':
         case '-':
+            tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
+            break;
         case '<':
             if(la.isLetter()){
-                /*if(isMarkState(_state,MultiLineInnerText) && start>-1 && index>start){
-                    tokens.append(Token(start, index - start, Token::InnerText));
-                    unSetMarkState(&_state,MultiLineInnerText);
-                }*/
                 int from = index++;
                 //find tag name
                 int i = index;
@@ -688,7 +684,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                         enterState(&m_stateStack,MultiLineElement);//enter element
                         tokens.append(Token(index++, 1, Token::TagRightBracket));
                         enterState(&m_stateStack,MultiLineInnerText);//enter
-                        start = index;
+                        index = scanInnerText(tokens,text,index);
+                        //start = index;
                         setRegexpMayFollow(&_state, false);//end JS expression
                         break;
                     }else if((cc==QLatin1Char('/') && (i+1) < text.length() && text.at(i+1)==QLatin1Char('>'))){
@@ -716,6 +713,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 tokens.append(Token(index++, 1, Token::TagRightBracket));
 
                 enterState(&m_stateStack,MultiLineInnerText);//enter
+                index = scanInnerText(tokens,text,index);
                 break;
             }else if(la == QLatin1Char('/')){
                 //like  </
@@ -738,9 +736,9 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 int length = index - from;
                 if(length>0){
                     if(cc.isSpace()){
-                        tokens.append(Token(from, length, Token::TagStart));
+                        tokens.append(Token(from, length, Token::TagEnd));
                     }else if(cc == QLatin1Char('>')){
-                        tokens.append(Token(from, length, Token::TagStart));
+                        tokens.append(Token(from, length, Token::TagEnd));
                         tokens.append(Token(index++, 1, Token::TagRightBracket));
                         //int depth = elementDepth(_state);
                         //setElementMask(&_state,depth-1);
@@ -787,7 +785,8 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                     unSetMarkState(&_state,MultiLineAttrValue);
                     leaveState(&m_stateStack);//>  end element start tag
                     enterState(&m_stateStack,MultiLineInnerText);
-                    start = index;//text start
+                    index = scanInnerText(tokens,text,index);
+                    //start = index;//text start
                     break;
 
                 }else if(isMarkState(_state,ElementEndTag) && isCurrentState(m_stateStack,RegexpMayFollow)==false){
@@ -803,17 +802,18 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
             break;
 
         case '|':
-        case '&':
+        case '&':{
             if (la == ch) {
                 tokens.append(Token(index, 2, Token::Delimiter,Code::Token::Javascript));
                 index += 2;
             } else {
-                tokens.append(Token(index++, 1, Token::Delimiter,Code::Token::Javascript));
+                tokens.append(Token(index++, 1,Token::Delimiter,Code::Token::Javascript));
             }
             setRegexpMayFollow(&_state, true);
-            break;
 
-        case '?':
+            break;
+        }
+        case '?':{
             switch (la.unicode()) {
             case '?':
             case '.':
@@ -825,7 +825,9 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
                 break;
             }
             setRegexpMayFollow(&_state, true);
+
             break;
+        }
         case '=':
             if (la == ch) {
                 tokens.append(Token(index, 2, Token::Delimiter,Code::Token::Javascript));
@@ -914,6 +916,38 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
     //qDebug()<<text<<m_stateStack;
     //Html::Scanner().dump(text,tokens);
     return tokens;
+}
+
+int Scanner::scanInnerText(QList<Code::Token>& tokens,const QString& text,int index){
+    int ss = index;
+    while(ss< text.length()){
+        const QChar ch = text.at(ss);
+        if(ch.isSpace()){
+            ss++;
+            index++;
+
+        }else{
+            break;
+        }
+    }
+    int length = 0;
+    while(true){
+        if(index>=text.length()){
+            length = index - ss;
+            break;
+        }else{
+            auto c = text.at(index);
+            if(isTagScope(c)){
+                length = index - ss;
+                break;
+            }
+        }
+        ++index;
+    }
+    if(length>0)
+        tokens.append(Token(ss, length, Token::InnerText,Code::Token::Javascript));
+
+    return index;
 }
 
 int Scanner::state() const
