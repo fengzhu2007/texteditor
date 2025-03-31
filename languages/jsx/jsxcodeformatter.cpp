@@ -672,13 +672,17 @@ bool CodeFormatter::isIdentifier(QChar chr){
     return chr.isLetterOrNumber() || chr == '_' || chr == '$';
 }
 
+bool CodeFormatter::isVariantKind(int kind){
+    return (kind == Code::Token::TagStart ||  kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
+}
+
 void CodeFormatter::enter(int newState)
 {
 
-    if(m_tokens.size()>m_tokenIndex){
+    /*if(m_tokens.size()>m_tokenIndex){
         Token tok = m_tokens.at(m_tokenIndex);
-        //qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
-    }
+        qDebug()<<"enter:"<<this->stateToString(newState)<<"current"<<this->stateToString(m_currentState.top().type)<<m_currentLine.mid(tok.begin(),tok.length);
+    }*/
 
     int savedIndentDepth = m_indentDepth;
     onEnter(newState, &m_indentDepth, &savedIndentDepth);

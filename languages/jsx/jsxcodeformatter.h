@@ -51,6 +51,7 @@ public:
     void initState();
 
     virtual bool isIdentifier(QChar chr) override;
+    virtual bool isVariantKind(int kind) override;
 
 
 
