@@ -51,7 +51,7 @@ public:
     void initState();
 
     virtual bool isIdentifier(QChar chr) override;
-
+    virtual int indentifierPosition(const QTextBlock& block,int pos) override;
 
 
 public: // must be public to make Q_GADGET introspection work

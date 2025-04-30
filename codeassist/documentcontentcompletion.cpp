@@ -205,6 +205,7 @@ QList<AssistProposalItemInterface *> DocumentContentCompletionProcessor::generat
 static void createProposal(QFutureInterface<QStringList> &future,CodeFormatter* codeFormatter, const QString &text,
                            const QString &wordUnderCursor,const Keywords& keywords)
 {
+    qDebug()<<"createProposal"<<wordUnderCursor;
     QSet<QString> words;
     if(codeFormatter!=nullptr){
         QList<Code::Token> tokens = codeFormatter->tokenize(text);
@@ -236,41 +237,54 @@ IAssistProposal *DocumentContentCompletionProcessor::perform(const AssistInterfa
 
     int pos = interface->position();
 
+
+    /*if(m_codeFormatter!=nullptr){
+        if(m_codeFormatter->isInStringORCommentLiteral(block,pos - block.position())){
+            return nullptr;
+        }
+    }*/
+
     QChar chr;
     // Skip to the start of a name
     if(m_codeFormatter!=nullptr){
-        do{
+
+        //QTextCursor startPositionCursor(interface->textDocument());
+        //startPositionCursor.setPosition(pos);
+        //QTextBlock block = startPositionCursor.block();
+        QTextBlock block = interface->textDocument()->findBlock(pos);
+        pos = m_codeFormatter->indentifierPosition(block,pos);
+        qDebug()<<"ret:"<<pos<<interface->position();
+        if(pos==-1){
+            return nullptr;
+        }
+        /*do{
             chr = interface->characterAt(--pos);
-        }while (m_codeFormatter->isIdentifier(chr));
+        }while (m_codeFormatter->isIdentifier(chr));*/
+
+
     }else{
         do {
             chr = interface->characterAt(--pos);
         } while (chr.isLetterOrNumber() || chr == '_' );
+        ++pos;
     }
 
 
-    ++pos;
     int length = interface->position() - pos;
 
-    if (interface->reason() == IdleEditor) {
+    /*if (interface->reason() == IdleEditor) {
         QChar characterUnderCursor = interface->characterAt(interface->position());
         if (characterUnderCursor.isLetterOrNumber()
                 || length < TextEditorSettings::completionSettings().m_characterThreshold) {
             return nullptr;
         }
-    }
-
-    QTextCursor startPositionCursor(interface->textDocument());
-    startPositionCursor.setPosition(pos);
-    QTextBlock block = startPositionCursor.block();
-
-    if(m_codeFormatter!=nullptr){
-        if(m_codeFormatter->isInStringORCommentLiteral(block,pos - block.position())){
-            return nullptr;
-        }
-    }
+    }*/
 
 
+
+
+
+    //qDebug()<<"perform"<<pos<<length;
 
 
     const QString wordUnderCursor = interface->textAt(pos, length);

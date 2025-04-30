@@ -66,6 +66,18 @@ bool CodeFormatter::isIdentifier(QChar chr){
     return (chr.isLetterOrNumber() || chr == '_');
 }
 
+int CodeFormatter::indentifierPosition(const QTextBlock& block,int pos){
+    QChar chr;
+    auto text = block.text();
+    if(pos<1){
+        return 0;
+    }
+    do{
+        chr = text.at(--pos);
+    }while (this->isIdentifier(chr) && pos>0);
+    return pos;
+}
+
 bool CodeFormatter::isVariantKind(int kind){
     return (kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
 }
