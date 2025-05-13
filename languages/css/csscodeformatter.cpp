@@ -727,6 +727,31 @@ bool CodeFormatter::isIdentifier(QChar chr){
     return chr.isLetterOrNumber() || chr == '_' || chr == '-'|| chr == '.';
 }
 
+int CodeFormatter::indentifierPosition(const QTextBlock& block,int pos){
+    int offset = block.position();
+    int position = pos - offset - 1;
+    if(position<0 || position >= block.length()){
+        return -1;
+    }
+    auto tokens = this->tokenize(block);
+    auto text = block.text();
+    for(auto tk:tokens){
+        if(tk.offset<=position && position <(tk.offset+tk.length)){
+            if(tk.kind==Code::Token::String || tk.kind==Code::Token::Comment){
+                return -1;
+            }else{
+                QChar chr = text.at(tk.offset);
+                if(this->isIdentifier(chr)){
+                    return tk.offset + offset;
+                }else{
+                    return -1;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
 bool CodeFormatter::isVariantKind(int kind){
     return (kind == Code::Token::Selector || kind == Code::Token::Keyword || kind==Code::Token::Identifier || kind==Code::Token::Variant);
 }

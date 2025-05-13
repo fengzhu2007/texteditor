@@ -359,6 +359,7 @@ int AutoCompleter::paragraphSeparatorAboutToBeInserted(QTextCursor &cursor)
     // verify that we indeed do have an extra opening brace in the document
     QTextBlock block = cursor.block();
     const QString textFromCusror = block.text().mid(cursor.positionInBlock()).trimmed();
+    qDebug()<<"paragraphSeparatorAboutToBeInserted"<<textFromCusror;
     if(textFromCusror.isEmpty()==false && textFromCusror.at(0) != QLatin1Char('}')){
          return 0;
     }

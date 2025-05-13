@@ -248,6 +248,7 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,
         return QString();
 
     const QChar ch = text.at(0);
+
     switch (ch.unicode()) {
     case '(':
         return QString(QLatin1Char(')'));
@@ -295,6 +296,10 @@ QString AutoCompleter::insertParagraphSeparator(const QTextCursor &cursor) const
 
         return QLatin1String("}\n");
     }
-
-    return QLatin1String("}");
+    auto underString = cursor.block().text().mid(cursor.positionInBlock()).trimmed();
+    if(underString.length()==0 || underString.at(0)!=QLatin1Char('}')){
+        return QLatin1String("}");
+    }else{
+        return QLatin1String("");
+    }
 }

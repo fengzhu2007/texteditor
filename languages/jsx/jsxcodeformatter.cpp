@@ -1466,6 +1466,29 @@ int CodeFormatter::loadLexerState(const QTextBlock &block) const
     return TextDocumentLayout::lexerState(block);
 }
 
+QList<Code::Token> CodeFormatter::tokenize(const QTextBlock& block){
+    const QTextBlock previous = block.previous();
+    int startState = TextEditor::TextDocumentLayout::lexerState(previous);
+    Q_ASSERT(startState != -1);
+    Scanner tokenize;
+    tokenize.setScanComments(true);
+
+    QString text = block.text();
+    text.append(QLatin1Char('\n'));
+    int from = 0;
+    QStack<int> stateStack;
+    return tokenize(from,text, startState,stateStack);
+}
+
+QList<Code::Token> CodeFormatter::tokenize(const QString& text){
+    Scanner tokenize;
+    tokenize.setScanComments(true);
+    int from = 0;
+    int startState = 0;
+    QStack<int> stateStack;
+    return tokenize(from,text, startState,stateStack);
+}
+
 bool CodeFormatter::isIdentifier(QChar chr){
     return chr.isLetterOrNumber() || chr == '_' || chr == '$';
 }
@@ -1485,18 +1508,19 @@ int CodeFormatter::indentifierPosition(const QTextBlock& block,int pos){
     for(auto tk:tokens){
         if(tk.offset<=position && position <(tk.offset+tk.length)){
             if(tk.kind==Code::Token::String || tk.kind==Code::Token::Comment){
-                return -1;
+                return -2;
             }else{
                 QChar chr = text.at(tk.offset);
                 if(this->isIdentifier(chr)){
                     return tk.offset + offset;
                 }else{
-                    return -1;
+                    return -3;
                 }
             }
         }
     }
-    return -1;
+    qDebug()<<"position"<<position<<tokens.size()<<text;
+    return -4;
 }
 
 } // namespace js

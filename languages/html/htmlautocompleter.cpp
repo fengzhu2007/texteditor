@@ -216,6 +216,8 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
 
 
     const QChar ch = text.at(0);
+
+
     switch (ch.unicode()) {
     case '(':
         return QString(QLatin1Char(')'));
@@ -302,6 +304,7 @@ QString AutoCompleter::insertMatchingQuote(const QTextCursor &/*tc*/, const QStr
 
 QString AutoCompleter::insertParagraphSeparator(const QTextCursor &cursor) const
 {
+
     if (shouldInsertNewline(cursor)) {
         QTextCursor selCursor = cursor;
         selCursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
@@ -310,8 +313,13 @@ QString AutoCompleter::insertParagraphSeparator(const QTextCursor &cursor) const
 
         return QLatin1String("}\n");
     }
+    auto underString = cursor.block().text().mid(cursor.positionInBlock()).trimmed();
+    if(underString.length()==0 || underString.at(0)!=QLatin1Char('}')){
+        return QLatin1String("}");
+    }else{
+        return QLatin1String("");
+    }
 
-    return QLatin1String("}");
 }
 
 int AutoCompleter::paragraphSeparatorAboutToBeInserted(QTextCursor &cursor){

@@ -49,6 +49,8 @@ public:
     virtual void invalidateCache(QTextDocument *document) override;
 
     void initState();
+    virtual QList<Code::Token> tokenize(const QTextBlock& block) override;
+    virtual QList<Code::Token> tokenize(const QString& text) override;
 
     virtual bool isIdentifier(QChar chr) override;
     virtual int indentifierPosition(const QTextBlock& block,int pos) override;
