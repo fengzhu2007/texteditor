@@ -596,9 +596,7 @@ QList<Token> Scanner::operator()(int& from,const QString &text, int startState,c
             if (depth > 0) {
                 setExpressionMask(&_state,depth+1);
             }
-
         } break;
-
         case '}': {
             leaveState(&m_stateStack);
             setRegexpMayFollow(&_state, false);

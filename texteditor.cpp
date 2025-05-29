@@ -1942,8 +1942,11 @@ void TextEditorWidget::insertLineBelow()
     MultiTextCursor cursor = multiTextCursor();
     cursor.beginEditBlock();
     for (QTextCursor &c : cursor) {
+        //qDebug()<<"line"<<c.block().blockNumber()<<c.block().text()<<"pos:"<<c.positionInBlock();
+
         c.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
         c.insertBlock();
+        //c.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
         d->m_document->autoIndent(c);
     }
     cursor.endEditBlock();
@@ -2850,6 +2853,24 @@ bool TextEditorWidget::event(QEvent *e)
                     if(ke->key() == Qt::Key_A){
                         //select all
                         this->selectAll();
+                        return true;
+                    }else if(ke->key()==Qt::Key_D){
+                        MultiTextCursor cursor = multiTextCursor();
+                        cursor.beginEditBlock();
+
+                        auto iter = cursor.begin();
+                        while(iter!=cursor.end()){
+                            //qDebug()<<"start pos"<<(*iter).position();
+                            auto text = (*iter).block().text();
+                            (*iter).movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
+                            (*iter).insertBlock();
+                            //(*iter).movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
+                            (*iter).insertText(text);
+                            d->m_document->autoIndent((*iter));
+                            iter++;
+                        }
+                        cursor.endEditBlock();
+                        setMultiTextCursor(cursor);
                         return true;
                     }
                 }
