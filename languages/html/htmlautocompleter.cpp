@@ -36,7 +36,7 @@ static Token tokenUnderCursor(const QTextCursor &cursor)
     for (; tokenIndex < tokens.size(); ++tokenIndex) {
         const Token &token = tokens.at(tokenIndex);
         if (token.is(Token::Comment,Token::Html) || token.is(Token::String,Token::Html)) {
-            if (pos > token.begin() && pos <= token.end())
+            if (pos >= token.begin() && pos < token.end())
                 break;
         } else {
             if (pos >= token.begin() && pos < token.end())
@@ -107,7 +107,9 @@ static QString findNearlyTagName(const QTextBlock& bk,int position){
             }
         }
         int index = 0;
+
         const QList<Token> tokens = tokenize(index,blockText, blockState);
+
         for (auto it = tokens.rbegin(); it != tokens.rend(); ++it) {
             if(it->kind==Token::TagStart){
                 tag = blockText.mid(it->begin(),it->length);
@@ -119,6 +121,7 @@ static QString findNearlyTagName(const QTextBlock& bk,int position){
             }
         }
         block = block.previous();
+        position = block.length() - 1;
     }
     return QString();
 }
@@ -248,13 +251,15 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
     case '>':{
         //find tag name
         //not in php css js
-        //qDebug()<<"html text:"<<cursor.block().text();
-        //qDebug()<<"position:"<<cursor.positionInBlock();
-        const QString tag = findNearlyTagName(cursor.block(),cursor.positionInBlock());
-        if(!tag.isEmpty()){
-            return QString("</"+tag+">");
+        auto token = tokenUnderCursor(cursor);
+        if(token.kind!=Code::Token::String && token.kind!=Code::Token::Comment){
+            const QString tag = findNearlyTagName(cursor.block(),cursor.positionInBlock());
+            if(!tag.isEmpty()){
+                return QString("</"+tag+">");
+            }
+        }else{
+            return {};
         }
-        return QString();
     }
     case '-':{
         const int pos = cursor.position();
@@ -276,8 +281,13 @@ QString AutoCompleter::insertMatchingBrace(const QTextCursor &cursor,const QStri
             return tag;
         }else{
             if((state & Html::Scanner::MultiLineElement) == Html::Scanner::MultiLineElement){
-                *adjustPos+=1;
-                return QString(">");
+                auto token = tokenUnderCursor(cursor);
+                if(token.kind!=Code::Token::String && token.kind!=Code::Token::Comment){
+                    *adjustPos+=1;
+                    return QString(">");
+                }else{
+                    return {};
+                }
             }else{
                 return {};
             }
