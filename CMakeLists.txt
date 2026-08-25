@@ -341,6 +341,11 @@ add_library(texteditor SHARED
 
     languages/python/loader.cpp languages/python/loader.h
     languages/tsx/loader.cpp languages/tsx/loader.h
+    languages/gdscript/gdscriptscanner.h languages/gdscript/gdscriptscanner.cpp
+    languages/gdscript/gdscripthighlighter.h languages/gdscript/gdscripthighlighter.cpp
+    languages/gdscript/gdscriptindenter.h languages/gdscript/gdscriptindenter.cpp
+    languages/gdscript/gdscriptautocompleter.h languages/gdscript/gdscriptautocompleter.cpp
+    languages/gdscript/loader.h languages/gdscript/loader.cpp
     textsuggestion.cpp textsuggestion.h
 
 

@@ -433,6 +433,7 @@ protected:
                             const QPointF &offset,
                             const QVector<QTextLayout::FormatRange> &selections,
                             const QRect &clipRect) const;
+    virtual void paintDiffOverlay(QPainter *painter, const QRect &clip);
     void timerEvent(QTimerEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
     void mousePressEvent(QMouseEvent *) override;

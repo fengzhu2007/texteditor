@@ -11,6 +11,7 @@
 #include "languages/jsx/loader.h"
 #include "languages/python/loader.h"
 #include "languages/tsx/loader.h"
+#include "languages/gdscript/loader.h"
 
 namespace TextEditor {
 
@@ -23,6 +24,7 @@ TextEditorEnvironment::TextEditorEnvironment() {
     this->registerLangLoader<Jsx::Loader>({"JavaScript React (JSX)"});
     this->registerLangLoader<Python::Loader>({"Python"});
     this->registerLangLoader<Tsx::Loader>({"TypeScript","TypeScript React (TSX)"});
+    this->registerLangLoader<GDScript::Loader>({"GDScript"});
 }
 
 void TextEditorEnvironment::init(){

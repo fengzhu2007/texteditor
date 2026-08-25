@@ -4765,6 +4765,9 @@ void TextEditorWidget::paintEvent(QPaintEvent *e)
 
     d->paintOverlays(data, painter);
 
+    // paint diff overlay (for inline diff display)
+    paintDiffOverlay(&painter, data.eventRect);
+
     // draw the cursor last, on top of everything
     d->paintCursor(data, painter);
     // paint a popup with the content of the collapsed block
@@ -4799,6 +4802,14 @@ void TextEditorWidget::paintBlock(QPainter *painter,
         return;
     }
     block.layout()->draw(painter, offset, selections, clipRect);
+}
+
+void TextEditorWidget::paintDiffOverlay(QPainter *painter, const QRect &clip)
+{
+    Q_UNUSED(painter);
+    Q_UNUSED(clip);
+    // Default implementation does nothing
+    // Subclasses can override this to paint custom diff overlays
 }
 
 int TextEditorWidget::visibleFoldedBlockNumber() const
