@@ -11,6 +11,29 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
 
+# v2 split of TextEditorWidget: build the split implementation from v2/
+# instead of the legacy single-file texteditor.cpp.
+option(ADY_TEXTEDITOR_V2 "Build the split TextEditorWidget implementation (v2/)" ON)
+
+if (ADY_TEXTEDITOR_V2)
+    set(TEXTEDITOR_WIDGET_SOURCES
+        texteditor.h
+        v2/texteditorwidget_p.h
+        v2/texteditorwidget.cpp
+        v2/texteditorwidget_settings.cpp
+        v2/texteditorwidget_commands.cpp
+        v2/texteditorwidget_keys.cpp
+        v2/texteditorwidget_paint.cpp
+        v2/texteditorwidget_highlight.cpp
+        v2/texteditorwidget_extraarea.cpp
+        v2/texteditorwidget_mouse.cpp
+        v2/texteditorwidget_clipboard.cpp
+        v2/texteditorwidget_find.cpp
+    )
+else()
+    set(TEXTEDITOR_WIDGET_SOURCES texteditor.h texteditor.cpp)
+endif()
+
 
 #set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 #set(BUILD_BINARY OFF CACHE BOOL "Build shared libraries" FORCE)
@@ -204,7 +227,7 @@ add_library(texteditor SHARED
     indenter.h
     linecolumn.h linecolumn.cpp
     textstyles.h
-    texteditor.h texteditor.cpp
+    ${TEXTEDITOR_WIDGET_SOURCES}
     osspecificaspects.h
     refactoroverlay.h refactoroverlay.cpp
     predicates.h

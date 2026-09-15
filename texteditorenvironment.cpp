@@ -24,7 +24,7 @@ TextEditorEnvironment::TextEditorEnvironment() {
     this->registerLangLoader<Jsx::Loader>({"JavaScript React (JSX)"});
     this->registerLangLoader<Python::Loader>({"Python"});
     this->registerLangLoader<Tsx::Loader>({"TypeScript","TypeScript React (TSX)"});
-    this->registerLangLoader<GDScript::Loader>({"GDScript"});
+    this->registerLangLoader<GDScript::Loader>({"Godot"});
 }
 
 void TextEditorEnvironment::init(){
