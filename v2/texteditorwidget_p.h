@@ -616,8 +616,8 @@ public:
 
     CodeAssistant m_codeAssistant;
 
-    //QList<BaseHoverHandler *> m_hoverHandlers; // Not owned
-    //HoverHandlerRunner m_hoverHandlerRunner;
+    QList<BaseHoverHandler *> m_hoverHandlers; // Not owned
+    HoverHandlerRunner m_hoverHandlerRunner;
 
     QPointer<QSequentialAnimationGroup> m_navigationAnimation;
 

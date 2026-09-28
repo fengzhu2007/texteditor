@@ -9,6 +9,9 @@
 #include "core/icontext.h"
 
 #include <functional>
+#include <QList>
+#include <QTextCursor>
+#include <QObject>
 
 QT_BEGIN_NAMESPACE
 class QPoint;
@@ -68,6 +71,46 @@ private:
     //Core::HelpItem m_lastHelpItemIdentified;
     int m_priority = -1;
     bool m_isContextHelpRequest = false;
+};
+
+class TEXTEDITOR_EXPORT HoverHandlerRunner : public QObject
+{
+public:
+    using Callback = std::function<void(TextEditorWidget *, BaseHoverHandler *, int)>;
+
+    HoverHandlerRunner(QObject *parent, QList<BaseHoverHandler *> &handlers)
+        : QObject(parent), m_handlers(handlers) {}
+
+    void startChecking(TextEditorWidget *widget, const QTextCursor &cursor, const Callback &callback)
+    {
+        abortHandlers();
+        const int pos = cursor.position();
+        BaseHoverHandler *bestHandler = nullptr;
+        int bestPriority = 0; // Priority_None
+
+        for (BaseHoverHandler *handler : m_handlers) {
+            handler->checkPriority(
+                widget, pos,
+                [handler, &bestHandler, &bestPriority](int priority) {
+                    if (priority > bestPriority) {
+                        bestPriority = priority;
+                        bestHandler = handler;
+                    }
+                });
+        }
+
+        if (bestHandler)
+            callback(widget, bestHandler, pos);
+    }
+
+    void abortHandlers()
+    {
+        for (BaseHoverHandler *handler : m_handlers)
+            handler->abort();
+    }
+
+private:
+    QList<BaseHoverHandler *> &m_handlers;
 };
 
 } // namespace TextEditor

@@ -28,7 +28,7 @@ TextEditorWidgetPrivate::TextEditorWidgetPrivate(TextEditorWidget *parent)
     , m_requestMarkEnabled(true)
     , m_lineSeparatorsAllowed(false)
     , m_maybeFakeTooltipEvent(false)
-    //, m_hoverHandlerRunner(parent, m_hoverHandlers)
+    , m_hoverHandlerRunner(parent, m_hoverHandlers)
     , m_clipboardAssistProvider(new ClipboardAssistProvider)
     , m_autoCompleter(new AutoCompleter)
 {
@@ -1061,7 +1061,7 @@ void TextEditorWidgetPrivate::removeSyntaxInfoBar()
 void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlighting::Definition &definition)
 {
     if (definition.isValid()) {
-        auto loader = TextEditorEnvironment::getIntance()->loader(definition.name(),m_document->document());
+        auto loader = q->createLanguageLoader(definition.name(), m_document->document());
         if(loader!=nullptr){
             auto indenter = loader->indenter();
             if(indenter!=nullptr){
@@ -1096,6 +1096,30 @@ void TextEditorWidgetPrivate::configureGenericHighlighter(const KSyntaxHighlight
         q->setCodeFoldingSupported(false);
     }
     m_document->setFontSettings(TextEditorSettings::fontSettings());
+}
+
+
+LanguageLoader *TextEditorWidget::createLanguageLoader(const QString &languageName, QTextDocument *doc)
+{
+    auto *env = TextEditorEnvironment::getIntance();
+    if (env)
+        return env->loader(languageName, doc);
+    return nullptr;
+}
+
+
+bool TextEditorWidget::applySyntaxHighlighter(const QString &definitionName)
+{
+    auto definition = Highlighter::definitionForName(definitionName);
+    if (!definition.isValid())
+        return false;
+
+    auto *highlighter = new Highlighter();
+    highlighter->setDefinition(definition);
+    d->m_document->setSyntaxHighlighter(highlighter);
+    d->setupFromDefinition(definition);
+    d->m_document->setFontSettings(TextEditorSettings::fontSettings());
+    return true;
 }
 
 
@@ -1292,6 +1316,13 @@ void TextEditorWidget::setRefactorMarkers(const RefactorMarkers &markers)
     d->m_refactorOverlay->setMarkers(markers);
     for (const RefactorMarker &marker : markers)
         emit requestBlockUpdate(marker.cursor.block());
+}
+
+
+void TextEditorWidget::addHoverHandler(BaseHoverHandler *handler)
+{
+    if (!d->m_hoverHandlers.contains(handler))
+        d->m_hoverHandlers.append(handler);
 }
 
 

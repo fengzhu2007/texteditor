@@ -51,6 +51,8 @@ class AssistInterface;
 class IAssistProvider;
 class ICodeStylePreferences;
 class CompletionAssistProvider;
+class BaseHoverHandler;
+class LanguageLoader;
 using RefactorMarkers = QList<RefactorMarker>;
 using TextMarks = QList<TextMark *>;
 
@@ -234,6 +236,8 @@ public:
     RefactorMarkers refactorMarkers() const;
     void setRefactorMarkers(const RefactorMarkers &markers);
 
+    void addHoverHandler(BaseHoverHandler *handler);
+
 
     // keep the auto completion even if the focus is lost
     void keepAutoCompletionHighlight(bool keepHighlight);
@@ -365,6 +369,15 @@ public:
     void configureGenericHighlighter();
     /// Overwrite the current highlighter with a new generic highlighter based on the given mimetype
     //void configureGenericHighlighter(const Utils::MimeType &mimeType);
+
+    /// Create a language loader for the given language name and document.
+    /// Override this to provide custom language interpreters.
+    /// Returns nullptr if no custom loader is available (falls back to built-in registry).
+    virtual LanguageLoader *createLanguageLoader(const QString &languageName, QTextDocument *doc);
+
+    /// Apply KSyntaxHighlighting directly by definition name, bypassing LanguageLoader.
+    /// Returns true if the definition was found and highlighting was applied.
+    bool applySyntaxHighlighter(const QString &definitionName);
 
     Q_INVOKABLE void inSnippetMode(bool *active); // Used by FakeVim.
 

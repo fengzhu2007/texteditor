@@ -4,7 +4,6 @@
 #include "colorpreviewhoverhandler.h"
 #include "texteditor.h"
 
-#include <coreplugin/icore.h>
 #include <utils/executeondestruction.h>
 #include <utils/tooltip/tooltip.h>
 #include <utils/qtcassert.h>

@@ -204,15 +204,15 @@ void TextEditorWidgetPrivate::processTooltipRequest(const QTextCursor &c)
     if (handled)
         return;
 
-    /*if (m_hoverHandlers.isEmpty()) {
+    if (m_hoverHandlers.isEmpty()) {
         emit q->tooltipRequested(toolTipPoint, c.position());
         return;
-    }*/
+    }
 
-    /*const auto callback = [toolTipPoint](TextEditorWidget *widget, BaseHoverHandler *handler, int) {
+    const auto callback = [toolTipPoint](TextEditorWidget *widget, BaseHoverHandler *handler, int) {
         handler->showToolTip(widget, toolTipPoint);
-    };*/
-    //m_hoverHandlerRunner.startChecking(c, callback);
+    };
+    m_hoverHandlerRunner.startChecking(q, c, callback);
 }
 
 
@@ -768,7 +768,7 @@ void TextEditorWidget::focusInEvent(QFocusEvent *e)
 void TextEditorWidget::focusOutEvent(QFocusEvent *e)
 {
     QPlainTextEdit::focusOutEvent(e);
-    //d->m_hoverHandlerRunner.abortHandlers();
+    d->m_hoverHandlerRunner.abortHandlers();
     if (viewport()->cursor().shape() == Qt::BlankCursor)
         viewport()->setCursor(Qt::IBeamCursor);
     d->m_cursorFlashTimer.stop();

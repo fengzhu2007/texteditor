@@ -237,6 +237,7 @@ add_library(texteditor SHARED
     fontsettings.h fontsettings.cpp
     autocompleter.h autocompleter.cpp
     basehoverhandler.h basehoverhandler.cpp
+    colorpreviewhoverhandler.h colorpreviewhoverhandler.cpp
     behaviorsettings.h behaviorsettings.cpp
     circularclipboard.h circularclipboard.cpp
     circularclipboardassist.h circularclipboardassist.cpp
