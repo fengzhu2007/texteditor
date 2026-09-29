@@ -376,8 +376,11 @@ public:
     virtual LanguageLoader *createLanguageLoader(const QString &languageName, QTextDocument *doc);
 
     /// Apply KSyntaxHighlighting directly by definition name, bypassing LanguageLoader.
+    /// When useEditorThemeColors is true, syntax highlighting colors come from the
+    /// editor's FontSettings (matching System A custom highlighters) instead of the
+    /// KSH Theme file colors.
     /// Returns true if the definition was found and highlighting was applied.
-    bool applySyntaxHighlighter(const QString &definitionName);
+    bool applySyntaxHighlighter(const QString &definitionName, bool useEditorThemeColors = false);
 
     Q_INVOKABLE void inSnippetMode(bool *active); // Used by FakeVim.
 

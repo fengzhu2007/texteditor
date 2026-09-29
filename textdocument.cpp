@@ -893,8 +893,21 @@ void TextDocument::setSyntaxHighlighter(SyntaxHighlighter *highlighter)
     if (d->m_highlighter)
         delete d->m_highlighter;
     d->m_highlighter = highlighter;
-    d->m_highlighter->setParent(this);
-    d->m_highlighter->setDocument(&d->m_document);
+    if (d->m_highlighter) {
+        d->m_highlighter->setParent(this);
+        d->m_highlighter->setDocument(&d->m_document);
+    }
+}
+
+SyntaxHighlighter *TextDocument::takeSyntaxHighlighter()
+{
+    SyntaxHighlighter *h = d->m_highlighter;
+    d->m_highlighter = nullptr;
+    if (h) {
+        h->setParent(nullptr);
+        h->setDocument(nullptr);
+    }
+    return h;
 }
 
 void TextDocument::cleanWhitespace(const QTextCursor &cursor)

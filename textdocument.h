@@ -124,6 +124,9 @@ public:
     QTextDocument *document() const;
     void setSyntaxHighlighter(SyntaxHighlighter *highlighter);
     SyntaxHighlighter *syntaxHighlighter() const;
+    // Detach and return the current highlighter without deleting it.
+    // Caller takes ownership.  Returns nullptr if no highlighter is set.
+    SyntaxHighlighter *takeSyntaxHighlighter();
 
     bool reload(QString *errorString, QTextCodec *codec);
     void cleanWhitespace(const QTextCursor &cursor);

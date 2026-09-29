@@ -39,6 +39,9 @@ public:
 
     static void handleShutdown();
 
+    /// When true, applyFormat() uses editor FontSettings colors instead of KSH Theme colors.
+    void setUseEditorThemeColors(bool use) { m_useEditorThemeColors = use; }
+
 protected:
     void highlightBlock(const QString &text) override;
     void applyFormat(int offset, int length, const KSyntaxHighlighting::Format &format) override;
@@ -46,6 +49,7 @@ protected:
 
 private:
     KSyntaxHighlighting::Theme m_theme;
+    bool m_useEditorThemeColors = false;
 };
 
 } // namespace TextEditor

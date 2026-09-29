@@ -1108,13 +1108,14 @@ LanguageLoader *TextEditorWidget::createLanguageLoader(const QString &languageNa
 }
 
 
-bool TextEditorWidget::applySyntaxHighlighter(const QString &definitionName)
+bool TextEditorWidget::applySyntaxHighlighter(const QString &definitionName, bool useEditorThemeColors)
 {
     auto definition = Highlighter::definitionForName(definitionName);
     if (!definition.isValid())
         return false;
 
     auto *highlighter = new Highlighter();
+    highlighter->setUseEditorThemeColors(useEditorThemeColors);
     highlighter->setDefinition(definition);
     d->m_document->setSyntaxHighlighter(highlighter);
     d->setupFromDefinition(definition);

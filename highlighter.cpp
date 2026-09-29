@@ -315,24 +315,28 @@ void Highlighter::applyFormat(int offset, int length, const KSyntaxHighlighting:
 {
     const KSyntaxHighlighting::Theme defaultTheme = this->m_theme;
     QTextCharFormat qformat = formatForCategory(format.textStyle());
-
-    if (format.hasTextColor(defaultTheme)) {
-        const QColor textColor = format.textColor(defaultTheme);
-        if (format.hasBackgroundColor(defaultTheme)) {
-            const QColor backgroundColor = format.hasBackgroundColor(defaultTheme);
-            if (StyleHelper::isReadableOn(backgroundColor, textColor)) {
-                qformat.setForeground(textColor);
-                qformat.setBackground(backgroundColor);
+    // qformat now holds editor FontSettings colors (via categoryForTextStyle mapping).
+    // When m_useEditorThemeColors is true, skip KSH Theme color overrides so the
+    // editor's own theme colors are used for syntax highlighting.
+    if (!m_useEditorThemeColors) {
+        if (format.hasTextColor(defaultTheme)) {
+            const QColor textColor = format.textColor(defaultTheme);
+            if (format.hasBackgroundColor(defaultTheme)) {
+                const QColor backgroundColor = format.hasBackgroundColor(defaultTheme);
+                if (StyleHelper::isReadableOn(backgroundColor, textColor)) {
+                    qformat.setForeground(textColor);
+                    qformat.setBackground(backgroundColor);
+                } else if (StyleHelper::isReadableOn(qformat.background().color(), textColor)) {
+                    qformat.setForeground(textColor);
+                }
             } else if (StyleHelper::isReadableOn(qformat.background().color(), textColor)) {
                 qformat.setForeground(textColor);
             }
-        } else if (StyleHelper::isReadableOn(qformat.background().color(), textColor)) {
-            qformat.setForeground(textColor);
+        } else if (format.hasBackgroundColor(defaultTheme)) {
+            const QColor backgroundColor = format.hasBackgroundColor(defaultTheme);
+            if (StyleHelper::isReadableOn(backgroundColor, qformat.foreground().color()))
+                qformat.setBackground(backgroundColor);
         }
-    } else if (format.hasBackgroundColor(defaultTheme)) {
-        const QColor backgroundColor = format.hasBackgroundColor(defaultTheme);
-        if (StyleHelper::isReadableOn(backgroundColor, qformat.foreground().color()))
-            qformat.setBackground(backgroundColor);
     }
 
     if (format.isBold(defaultTheme))
