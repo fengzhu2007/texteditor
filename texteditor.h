@@ -196,6 +196,11 @@ public:
 
     QWidget *extraArea() const;
     virtual int extraAreaWidth(int *markWidthPtr = nullptr) const;
+    // Width that subclasses reserve for additional gutter content (e.g. diff
+    // annotations) on top of the base extra area (marks/line numbers/folding).
+    // The base class includes this in its viewport-margin sync so subclass
+    // gutters stay in sync with the viewport and never underlap the text.
+    virtual int additionalExtraAreaWidth() const;
     virtual void extraAreaPaintEvent(QPaintEvent *);
     virtual void extraAreaLeaveEvent(QEvent *);
     virtual void extraAreaContextMenuEvent(QContextMenuEvent *);

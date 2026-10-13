@@ -171,6 +171,12 @@ QWidget *TextEditorWidget::extraArea() const
 }
 
 
+int TextEditorWidget::additionalExtraAreaWidth() const
+{
+    return 0;
+}
+
+
 int TextEditorWidget::extraAreaWidth(int *markWidthPtr) const
 {
     auto documentLayout = qobject_cast<TextDocumentLayout*>(document()->documentLayout());
@@ -225,8 +231,15 @@ int TextEditorWidget::extraAreaWidth(int *markWidthPtr) const
             space += foldBoxWidth();
     }
 
-    if (viewportMargins() != QMargins{isLeftToRight() ? space : 0, 0, isLeftToRight() ? 0 : space, 0})
-        d->slotUpdateExtraAreaWidth(space);
+    // Keep the viewport margins in sync with the *total* extra area width,
+    // including the width subclasses reserve for their own gutter content.
+    // Syncing to the base width alone fights with subclass widths: margins
+    // flapped between the base width and the subclass total, and every flip
+    // re-entered this function through viewport resize / updateRequest
+    // handling until the stack overflowed.
+    const int total = space + additionalExtraAreaWidth();
+    if (viewportMargins() != QMargins{isLeftToRight() ? total : 0, 0, isLeftToRight() ? 0 : total, 0})
+        d->slotUpdateExtraAreaWidth(total);
 
     return space;
 }
@@ -236,10 +249,23 @@ void TextEditorWidgetPrivate::slotUpdateExtraAreaWidth(std::optional<int> width)
 {
     if (!width.has_value())
         width = q->extraAreaWidth();
-    if (q->isLeftToRight())
+
+    // Only touch the viewport margins when they actually change: every
+    // setViewportMargins() re-layouts the viewport, and the resulting resize
+    // can synchronously re-enter this slot through updateRequest (full
+    // viewport rect) - unconditional calls turn that into an endless loop.
+    const QMargins current = q->viewportMargins();
+    if (q->isLeftToRight()) {
+        if (current.left() == *width && current.top() == 0
+            && current.right() == 0 && current.bottom() == 0)
+            return;
         q->setViewportMargins(*width, 0, 0, 0);
-    else
+    } else {
+        if (current.left() == 0 && current.top() == 0
+            && current.right() == *width && current.bottom() == 0)
+            return;
         q->setViewportMargins(0, 0, *width, 0);
+    }
 }
 
 
