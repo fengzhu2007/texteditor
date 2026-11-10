@@ -254,7 +254,7 @@ void TextMark::dragToLine(int lineNumber)
 void TextMark::addToToolTipLayout(QGridLayout *target) const
 {
     auto contentLayout = new QVBoxLayout;
-    contentLayout->setMargin(0);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
     addToolTipContent(contentLayout);
     if (contentLayout->count() <= 0)
         return;

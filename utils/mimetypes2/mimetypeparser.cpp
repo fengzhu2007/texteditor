@@ -261,7 +261,7 @@ bool MimeTypeParserBase::parse(QIODevice *dev, const QString &fileName, QString 
                 break;
             }
             case ParseError:
-                reader.raiseError(QLatin1String("Unexpected element <") + reader.name() + QLatin1Char('>'));
+                reader.raiseError(QStringLiteral("Unexpected element <") + reader.name().toString() + QLatin1Char('>'));
                 break;
             default:
                 break;

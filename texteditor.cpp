@@ -105,6 +105,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QStack>
+#include <utility>
 
 /*!
     \namespace TextEditor
@@ -3960,7 +3961,7 @@ void TextEditorWidgetPrivate::updateLineAnnotation(const PaintEventData &data,
     }
 
     if (previousRects != newRects) {
-        for (const AnnotationRect &annotationRect : qAsConst(newRects))
+        for (const AnnotationRect &annotationRect : std::as_const(newRects))
             q->viewport()->update(annotationRect.rect.toAlignedRect());
         for (const AnnotationRect &annotationRect : previousRects)
             q->viewport()->update(annotationRect.rect.toAlignedRect());

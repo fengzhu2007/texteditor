@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
+if(QT_VERSION_MAJOR EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core5Compat)
+endif()
 
 # v2 split of TextEditorWidget: build the split implementation from v2/
 # instead of the legacy single-file texteditor.cpp.
@@ -87,7 +90,11 @@ endif (TARGET_ARCHITECTURE MATCHES ".*(x86)|(amd).*")
 
 
 
-qt5_add_resources(RESOURCE_ADDED ${RESOURCES})
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_add_resources(RESOURCE_ADDED ${RESOURCES})
+else()
+    qt5_add_resources(RESOURCE_ADDED ${RESOURCES})
+endif()
 
 
 add_library(texteditor SHARED
@@ -384,6 +391,10 @@ else()
     target_link_libraries(texteditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
 
 
+endif()
+
+if(QT_VERSION_MAJOR EQUAL 6)
+    target_link_libraries(texteditor PRIVATE Qt6::Core5Compat)
 endif()
 
 target_compile_definitions(texteditor PRIVATE TEXTEDITOR_LIBRARY)
